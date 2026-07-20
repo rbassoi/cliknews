@@ -24,7 +24,7 @@ This is version 1 of ClikNews. It mostly implements all features of v1 and add s
 ## Quick Start
 
 ### Preparation
-Mailtrain creates three URL endpoints, which are referred to as "trusted", "sandbox" and "public". This allows Mailtrain
+ClikNews creates three URL endpoints, which are referred to as "trusted", "sandbox" and "public". This allows ClikNews
 to guarantee security and avoid XSS attacks in the multi-user settings. The function of these three endpoints is as follows:
 - *trusted* - This is the main endpoint for the UI that a logged-in user uses to manage lists, send campaigns, etc.
 - *sandbox* - This is an endpoint not directly visible to a user. It is used to host WYSIWYG template editors.
@@ -32,8 +32,8 @@ to guarantee security and avoid XSS attacks in the multi-user settings. The func
 
 The recommended deployment of Mailtrain would use 3 DNS entries that all points to the **same** IP address. For example as follows:
 - *lists.example.com* - public endpoint (A record `lists` under `example.com` domain)
-- *mailtrain.example.com* - trusted endpoint (CNAME record `mailtrain` under `example.com` domain that points to `lists`)
-- *sbox-mailtrain.example.com* - sandbox endpoint (CNAME record `sbox-mailtrain` under `example.com` domain that points to `lists`)
+- *cliknews.example.com* - trusted endpoint (CNAME record `cliknews` under `example.com` domain that points to `lists`)
+- *sbox-cliknews.example.com* - sandbox endpoint (CNAME record `sbox-cliknews` under `example.com` domain that points to `lists`)
 
 
 ### Installation on fresh CentOS 7 or Ubuntu 18.04 LTS (public website secured by SSL)
@@ -94,7 +94,7 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
     systemctl enable mailtrain
     ```
 
-6. Open the trusted endpoint (like `https://mailtrain.example.com`)
+6. Open the trusted endpoint (like `https://cliknews.example.com`)
 
 7. Authenticate as `admin`:`test`
 
@@ -130,10 +130,10 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
     apt-get install -y git
     ```
 
-3. Download Mailtrain using git to the `/opt/mailtrain` directory
+3. Download Mailtrain using git to the `/opt/cliknews` directory
     ```
     cd /opt
-    git clone https://github.com/Mailtrain-org/mailtrain.git
+    git clone https://github.com/rbassoi/cliknews.git
     cd mailtrain
     git checkout v2
     ```
@@ -151,10 +151,10 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
     bash setup/install-ubuntu1804-local.sh
     ```
 
-5. Start Mailtrain and enable to be started by default when your server starts.
+5. Start ClikNews and enable to be started by default when your server starts.
     ```
-    systemctl start mailtrain
-    systemctl enable mailtrain
+    systemctl start cliknews
+    systemctl enable cliknews
     ```
 
 6. Open the trusted endpoint http://localhost:3000
@@ -170,10 +170,10 @@ This setup starts a stack composed of Mailtrain, MongoDB, Redis, and MariaDB. It
 - http://localhost:3003 - sandbox endpoint
 - http://localhost:3004 - public endpoint
 
-To make this publicly accessible, you should add reverse proxy that makes these endpoints publicly available over HTTPS. If using the proxy, you also need to set the URL bases and `--withProxy` parameter via `MAILTRAIN_SETTING` as shown below.
+To make this publicly accessible, you should add reverse proxy that makes these endpoints publicly available over HTTPS. If using the proxy, you also need to set the URL bases and `--withProxy` parameter via `CLIKNEWS_SETTING` as shown below.
 An example of such proxy would be:
-- http://localhost:3000 -> https://mailtrain.example.com
-- http://localhost:3003 -> https://sbox-mailtrain.example.com
+- http://localhost:3000 -> https://cliknews.example.com
+- http://localhost:3003 -> https://sbox-cliknews.example.com
 - http://localhost:3004 -> https://lists.example.com
 
 To deploy Mailtrain with Docker, you need the following two dependencies installed:
@@ -185,7 +185,7 @@ These are the steps to start Mailtrain via docker-compose:
 
 1. Download Mailtrain's docker-compose build file
     ```
-    curl -O https://raw.githubusercontent.com/Mailtrain-org/mailtrain/v2/docker-compose.yml
+    curl -O https://raw.githubusercontent.com/rbassoi/cliknews/v1/docker-compose.yml
     ```
 
 2. Deploy Mailtrain via docker-compose (in the directory to which you downloaded the `docker-compose.yml` file). This will take quite some time when run for the first time. Subsequent executions will be fast.
