@@ -1,8 +1,8 @@
-# Mailtrain v2
+# ClikNews V1
 
-Mailtrain is a self hosted newsletter application built on Node.js (v14+) and MySQL (v8+) or MariaDB (v10+).
+ClikNews is a self hosted newsletter application built on Node.js (v14+) and MySQL (v8+) or MariaDB (v10+).
 
-This is version 2 of Mailtrain. It mostly implements all features of v1 and add some more. It is a complete rewrite, so you will have to install it from scratch.
+This is version 1 of ClikNews. It mostly implements all features of v1 and add some more. It is a complete rewrite, so you will have to install it from scratch.
 
 If you are upgrading from Mailtrain v1, backup the DB and use it for Mailtrain v2. Mailtrain v2 should be able to upgrade the DB to the new schema.
 
