@@ -4,10 +4,6 @@ ClikNews is a self hosted newsletter application built on Node.js (v14+) and MyS
 
 This is version 1 of ClikNews. It mostly implements all features of v1 and add some more. It is a complete rewrite, so you will have to install it from scratch.
 
-If you are upgrading from Mailtrain v1, backup the DB and use it for Mailtrain v2. Mailtrain v2 should be able to upgrade the DB to the new schema.
-
-![](https://mailtrain.org/mailtrain.png)
-
 ## Features
 
 * Subscriber lists management
