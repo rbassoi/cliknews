@@ -1,0 +1,17 @@
+<mj-section>
+    <mj-column>
+        <mj-text mj-class="h3">
+            {{#translate}}pleaseConfirmUnsubscription{{/translate}}
+        </mj-text>
+        <mj-button mj-class="button" href="{{confirmUrl}}">
+            {{#translate}}yesUnsubscribeMe{{/translate}}
+        </mj-button>
+        <mj-text mj-class="p">
+            {{#translate}}ifYouReceivedThisEmailByMistakeSimply-2{{/translate}}
+        </mj-text>
+        <mj-text mj-class="p">
+            {{#translate}}forQuestionsAboutThisListPleaseContact{{/translate}}:
+            <br/><a href="mailto:{{contactAddress}}">{{contactAddress}}</a>
+        </mj-text>
+    </mj-column>
+</mj-section>

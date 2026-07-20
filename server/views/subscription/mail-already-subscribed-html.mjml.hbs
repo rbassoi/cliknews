@@ -1,0 +1,24 @@
+<mj-section>
+    <mj-column>
+        <mj-text mj-class="h3">
+            {{#translate}}emailAddressAlreadyRegistered{{/translate}}
+        </mj-text>
+        <mj-text mj-class="p">
+            {{#translate}}weHaveReceivedASubscriptionRequestYour{{/translate}}
+        </mj-text>
+        <mj-text mj-class="p">
+            {{#translate}}ifYouReceivedThisEmailByMistakeSimply{{/translate}}
+        </mj-text>
+        <mj-text mj-class="p">
+            {{#translate}}ifYouWantToModifyYourSubscriptionThenYou{{/translate}}
+            <a href="{{preferencesUrl}}">{{#translate}}manageYourPreferences{{/translate}}</a> {{#translate}}or{{/translate}} <a href="{{unsubscribeUrl}}">{{#translate}}unsubscribeHere{{/translate}}</a>.
+        </mj-text>
+        <mj-button mj-class="button" href="{{homepage}}">
+            {{#translate}}returnToOurWebsite{{/translate}}
+        </mj-button>
+        <mj-text mj-class="p">
+            {{#translate}}forQuestionsAboutThisListPleaseContact{{/translate}}
+            <br/><a href="mailto:{{contactAddress}}">{{contactAddress}}</a>
+        </mj-text>
+    </mj-column>
+</mj-section>

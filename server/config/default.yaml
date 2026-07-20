@@ -1,0 +1,453 @@
+# This file is the default config file for Mailtrain. To use a environment specific
+# configuration add new file {ENV}.{ext} (eg. production.yaml) to the same folder.
+# {ENV} is defined by NODE_ENV environment variable.
+#
+# Do not modify this file directly, otherwise you might lose your modifications when upgrading
+#
+# You should only define the options you want to change in your additional config file.
+# For example if the only thing you want to change is the port number for the www server
+# then your additional config file should look like this:
+#   # production.yaml
+#   www:
+#     port: 80
+
+# Process title visible in monitoring logs and process listing
+title: mailtrain
+
+# GDPR related settings (https://en.wikipedia.org/wiki/General_Data_Protection_Regulation)
+gdpr:
+  # If enabled, after a user unsubscribes or complains, his/her data are removed from the subscription.
+  # Only hashed email remains to prevent resubscription via import
+  deleteDataAfterUnsubscribe:
+    enabled: true
+    secondsAfterUnsubscribe: 86400 # 1 day
+
+  # If enabled, after the time below, an entry of a subscriber that unsubscribed or complained
+  # is completely removed from the subscribers list (including the hashed email)
+  deleteSubscriptionAfterUnsubscribe:
+    enabled: true
+    secondsAfterUnsubscribe: 2592000 # 30 days
+
+# Enabled HTML editors
+editors:
+- mosaico
+- mosaicoWithFsTemplate
+- grapesjs
+- ckeditor4
+- codeeditor
+
+# Enabled tag languages
+tagLanguages:
+- simple  # e.g. [FIRST_NAME] - this the style of merge tags found in Mailtrain v1
+- hbs     # e.g. {{#if FIRST_NAME}}Hello {{firstName}}!{{else}}Hello!{{/if}} - this syntax uses Handlebars templating language (http://handlebarsjs.com)
+
+# Default language to use
+defaultLanguage: en-US
+
+# Enabled languages
+enabledLanguages:
+- en-US
+- es-ES
+- pt-BR
+- de-DE
+- fr-FR
+- fk-FK
+
+# Inject custom scripts in subscription/layout.mjml.hbs
+# customSubscriptionScripts: [/custom/hello-world.js]
+
+# Customize the random string generation for cid
+cid:
+   alphabet: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+   length: 10
+
+# Enable to use Redis session cache or disable if Redis is not installed
+redis:
+  enabled: false
+  host: localhost
+  port: 6379
+  db: 5
+  # Uncomment if your Redis installation requires a password
+  # password=""
+
+
+# If you start out as a root user (eg. if you want to use ports lower than 1000)
+# then you can downgrade the user once all services are up and running
+#user: mailtrain
+#group: mailtrain
+
+# If Mailtrain is started as root, Reports feature drops the privileges of script generating the report to disallow
+# any modifications of Mailtrain code and even prohibits reading the production configuration (which contains the MySQL
+# password for read/write operations). The roUser/roGroup determines the user to be used
+#roUser: nobody
+#roGroup: nogroup
+
+log:
+  # silly|verbose|info|http|warn|error|silent
+  level: info
+  sendStacktracesToClient: false
+
+www:
+  # HTTP port to listen on for trusted requests (logged-in users)
+  trustedPort: 3000
+  # HTTP port to listen on for sandboxed requests (logged-in users)
+  sandboxPort: 3003
+  # HTTP port to listen on for public requests (campaign recipients)
+  publicPort: 3004
+  # HTTP interface to listen on
+  host: 0.0.0.0
+  # URL base for trusted urls (logged-in users). It must be absolute (starting with http:// or https://). If Mailtrain is served on
+  # a non-standard port (e.g. 3000), the URL must also specify the port.
+  trustedUrlBase: http://localhost:3000
+  # URL base for sandbox urls (logged-in users). It must be absolute (starting with http:// or https://) and contain the sandbox port.
+  sandboxUrlBase: http://localhost:3003
+  # URL base for public urls (campaign recipients). It must be absolute (starting with http:// or https://) and contain the sandbox port.
+  publicUrlBase: http://localhost:3004
+
+
+  # Secret for signing the session ID cookie
+  secret: a cat
+  # Session length in seconds when remember me is checked
+  remember: 2592000 # 30 days
+  # logger interface for expressjs morgan
+  log: dev
+  # Is the server behind a proxy? true/false
+  # Set this to true if you are serving Mailtrain as a virtual domain through Nginx or Apache
+  proxy: false
+  # maximum POST body size
+  postSize: 2MB
+
+mysql:
+  host: localhost
+  user: mailtrain
+  password: mailtrain
+  database: mailtrain
+  # Some installations, eg. MAMP can use a different port (8889)
+  # MAMP users should also turn on Allow network access to MySQL otherwise MySQL might not be accessible
+  port: 3306
+  # The timezone configured on the MySQL server. This can be 'local', 'Z', or an offset in the form +HH:MM or -HH:MM
+  # If the MySQL server runs on the same server as Mailtrain, use 'local'
+  timezone: local
+  
+verp:
+  # Enable to start an MX server that detects bounced messages using VERP
+  # In most cases you do not want to use it
+  # Requires root privileges
+  enabled: false
+  port: 25
+  host: 0.0.0.0
+
+ldap:
+  # enable to use ldap user backend
+  enabled: false
+  # method is ldapjs or ldapauth - it chooses the library to be used. If not given, it chooses the one present.
+  # method: ldapjs
+  host: localhost
+  port: 3002
+  # secure enables ldaps protocol if true. Otherwise, ldap protocol is used.
+  secure: false
+  baseDN: ou=users,dc=company
+  filter: (|(username={{username}})(mail={{username}}))
+  # Username field in LDAP (uid/cn/username)
+  uidTag: username
+  # nameTag identifies the attribute to be used for user's full name
+  nameTag: username
+  # mailTag identifies the attribute to be used for user's email address
+  mailTag: mail
+  passwordresetlink:
+  newUserRole: master
+  # Global namespace id
+  newUserNamespaceId: 1
+  # Use a different user to bind LDAP (final bind DN will be: {{uidTag}}: {{bindUser}},{{baseDN}})
+  bindUser: name@company.net
+  bindPassword: mySecretPassword
+
+postfixBounce:
+  # Enable to allow writing Postfix bounce log to Mailtrain listener
+  # If enabled, tail mail.log to Mailtrain with the following command:
+  #     tail -f -n +0 /var/log/mail.log | nc localhost 5699 -
+  enabled: false
+  port: 5699
+  # allow connections from localhost only
+  host: 127.0.0.1
+
+cas:
+  # enable to use CAS user backend
+  enabled: false
+  url: https://example.cas-server.com
+  # nameTag identifies the attribute to be used for user's full name
+  nameTag: username
+  # mailTag identifies the attribute to be used for user's email address
+  mailTag: mail
+  newUserRole: nobody
+  # Global namespace id
+  newUserNamespaceId: 1
+
+# extra options for nodemailer
+nodemailer:
+  #textEncoding: base64
+
+queue:
+  # How many parallel sender processes to spawn
+  processes: 2
+
+  # For how long (in seconds) to try to send an email before Mailtrain stops to trying. An email can normally
+  # be sent out almost immediately. However if the send configuration is not correct or the mail server is not reachable,
+  # Mailtrain will keep retrying until the email expires.
+  # Due to Mailtrain's internal timeouts, the values should be at least 60 seconds.
+  retention:
+    # Regular and RSS campaign. Once this expires, the campaign is considered finished. The remaining recipients
+    # are included in the set of those recipients to whom the message would be delivered if the campaign is again started.
+    campaign: 86400    # 1 day
+    # Triggered campaign. Once this expires, the message gets discarded.
+    triggered: 86400   # 1 day
+    # Test send (in campaign or template)
+    test: 300          # 5 minutes
+    # Subscription and password reset related emails
+    subscription: 300  # 5 minutes
+    # Transactional emails sent via API (i.e. /templates/:templateId/send)
+    apiTransactional: 3600  # 60 minutes
+
+cors:
+  # Allow subscription widgets to be embedded
+  # origins: ['https://www.example.com']
+
+mosaico:
+  # Installed templates
+  fsTemplates:
+  - key: versafix-1
+    label: Versafix One
+  # Inject custom scripts
+  # customscripts:
+  # - /mosaico/custom/my-mosaico-plugin.js
+  fileCache:
+    blockThumbnails:
+      maxSize: 100 # megabytes
+      pruneInterval: 60 # seconds
+    images:
+      maxSize: 1024 # megabytes
+      pruneInterval: 60 # seconds
+
+
+grapesjs:
+# Installed templates
+  templates:
+    - key: demo
+      label: HTML Template
+    - key: aves
+      label: MJML Template
+
+reports:
+  # The whole reporting functionality can be disabled below if the they are not needed and the DB cannot be
+  # properly protected.
+  # Reports rely on custom user defined Javascript snippets defined in the report template. The snippets are run on the
+  # server when generating a report. As these snippets are stored in the DB, they pose a security risk because they can
+  # help gaining access to the server if the DB cannot
+  # be properly protected (e.g. if it is shared with another application with security weaknesses).
+  # Mailtrain mitigates this problem by running the custom Javascript snippets in a chrooted environment and under a
+  # DB user that cannot modify the database (see userRO in [mysql] above). However the chrooted environment is available
+  # only if Mailtrain is started as root. The chrooted environment still does not prevent the custom JS script in
+  # performing network operations and in generating XSS attacks as part of the report.
+  # The bottom line is that if people who are creating report templates or have write access to the DB cannot be trusted,
+  # then it's safer to switch off the reporting functionality below.
+  enabled: true
+
+testServer:
+  # Starts a vanity server that redirects all mail to /dev/null
+  # Mostly needed for local development
+  enabled: false
+  port: 5587
+  mailboxServerPort: 3001
+  host: 127.0.0.1
+  username: testuser
+  password: testpass
+  logger: false
+
+builtinZoneMTA:
+  enabled: true
+  host: localhost
+  port: 2525
+  mongo: mongodb://127.0.0.1:27017/zone-mta
+  redis: redis://localhost:6379/2
+  log:
+    level: warn
+  processes: 2
+  connections: 5
+  # poolName: 'mail.example.com' # defaults to os.hostname()
+
+seleniumWebDriver:
+  browser: phantomjs
+
+
+# The section below defines the definition of roles (permissions) to be used when no "roles" section is provided
+# in custom config (typically production.yaml). If you want to extend rules provided below, add corresponding rules
+# in "defaultRoles" section in custom config. If you want to define roles from scratch, create "roles" section in
+# the custom config.
+defaultRoles:
+  global:
+    master:
+      name: Global Master
+      admin: true
+      description: All permissions
+      permissions: [rebuildPermissions, createJavascriptWithROAccess, displayManageUsers, manageBlacklist, manageSettings, setupAutomation]
+      rootNamespaceRole: master
+    campaignsAdmin:
+      name: Campaigns Admin
+      description: Under the namespace in which the user is located, the user has all permissions for managing lists, templates and campaigns and the permission to send to send configurations.
+      permissions: [setupAutomation]
+      ownNamespaceRole: campaignsAdmin
+    campaignsAdminWithoutNamespace:
+      name: Campaigns Admin (multiple namespaces)
+      description: Has basic set of rights to setup campaigns, edit lists and templates. The particular namespaces to which it has access have to be shared individually
+      permissions: [setupAutomation]
+    nobody:
+      name: None
+      description: No permissions
+      permissions: []
+
+  namespace:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, createNamespace, createList, createCustomForm, createReport, createReportTemplate, createTemplate, createMosaicoTemplate, createSendConfiguration, createChannel, createCampaign, manageUsers]
+      children:
+        sendConfiguration: [viewPublic, viewPrivate, edit, delete, share, sendWithoutOverrides, sendWithAllowedOverrides, sendWithAnyOverrides]
+        list: [view, edit, delete, share, viewFields, manageFields, viewSubscriptions, viewTestSubscriptions, manageSubscriptions, viewSegments, manageSegments, viewImports, manageImports, send, sendToTestUsers]
+        customForm: [view, edit, delete, share]
+        channel: [view, edit, delete, createCampaign, share]
+        campaign: [view, edit, delete, share, viewFiles, manageFiles, viewAttachments, manageAttachments, viewTriggers, manageTriggers, send, sendToTestUsers, viewStats, fetchRss]
+        template: [view, edit, delete, share, viewFiles, manageFiles, sendToTestUsers]
+        report: [view, edit, delete, share, execute, viewContent, viewOutput]
+        reportTemplate: [view, edit, delete, share, execute]
+        mosaicoTemplate: [view, edit, delete, share, viewFiles, manageFiles]
+        namespace: [view, edit, delete, share, createNamespace, createList, createCustomForm, createReport, createReportTemplate, createTemplate, createMosaicoTemplate, createSendConfiguration, createChannel, createCampaign, manageUsers]
+
+    campaignsAdmin:
+      name: Campaigns Admin
+      description: In the respective namespace, the user has all permissions for managing lists, channels, templates and campaigns and the permission to send to send configurations.
+      permissions: [view, edit, delete, share, createNamespace, createList, createCustomForm, createReport, createTemplate, createMosaicoTemplate, createChannel, createCampaign]
+      children:
+        sendConfiguration: [viewPublic, sendWithoutOverrides, sendWithAllowedOverrides]
+        list: [view, edit, delete, share, viewFields, manageFields, viewSubscriptions, viewTestSubscriptions, manageSubscriptions, viewSegments, manageSegments, viewImports, manageImports, send, sendToTestUsers]
+        customForm: [view, edit, delete, share]
+        channel: [view, edit, delete, createCampaign, share]
+        campaign: [view, edit, delete, share, viewFiles, manageFiles, viewAttachments, manageAttachments, viewTriggers, manageTriggers, send, sendToTestUsers, viewStats, fetchRss]
+        template: [view, edit, delete, share, viewFiles, manageFiles, sendToTestUsers]
+        report: [view, edit, delete, share, execute, viewContent, viewOutput]
+        reportTemplate: [view, share, execute]
+        mosaicoTemplate: [view, edit, delete, share, viewFiles, manageFiles]
+        namespace: [view, edit, delete, share, createNamespace, createList, createCustomForm, createReport, createTemplate, createMosaicoTemplate, createChannel, createCampaign]
+
+    campaignsCreator:
+      name: Campaigns Creator
+      description: In the respective namespace, the user has all permissions to create and manage templates and campaigns. The user can also read public data about send configurations and use Mosaico templates in the namespace.
+      permissions: [view, createTemplate, createCampaign]
+      children:
+        sendConfiguration: [viewPublic]
+        channel: [view]
+        campaign: [view, edit, delete, viewFiles, manageFiles, viewAttachments, manageAttachments, viewTriggers, manageTriggers, sendToTestUsers, viewStats, fetchRss]
+        template: [view, edit, delete, viewFiles, manageFiles, sendToTestUsers]
+        mosaicoTemplate: [view, viewFiles]
+        namespace: [view, createTemplate, createChannel, createCampaign]
+
+    campaignsViewer:
+      name: Campaigns Viewer
+      description: In the respective namespace, the user has permissions to view campaigns and templates in order to be able to replicate them.
+      permissions: [view, createTemplate, createCampaign]
+      children:
+        channel: [view]
+        campaign: [view, viewFiles, viewAttachments, viewTriggers]
+        template: [view, viewFiles]
+        mosaicoTemplate: [view, viewFiles]
+        namespace: [view]
+
+  sendConfiguration:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [viewPublic, viewPrivate, edit, delete, share, sendWithoutOverrides, sendWithAllowedOverrides, sendWithAnyOverrides]
+    campaignsCreator:
+      name: Campaigns Creator
+      description: The user can only use the send configuration in setting up a campaign. However, this gives no permission to send.
+      permissions: [viewPublic, sendWithoutOverrides]
+
+  list:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, viewFields, manageFields, viewSubscriptions, viewTestSubscriptions, manageSubscriptions, viewSegments, manageSegments, viewImports, manageImports, send, sendToTestUsers]
+    sender:
+      name: Sender
+      description: The user can use the list in setting up a campaign, view the subscriptions, and send an email to test users and to the whole list.
+      permissions: [view, viewFields, viewSegments, viewTestSubscriptions, viewSubscriptions, send, sendToTestUsers]
+    campaignsCreator:
+      name: Campaigns Creator
+      description: The user can only use the list in setting up a campaign and to send email to test users. This gives no permission to view subscriptions or to send to the whole list.
+      permissions: [view, viewFields, viewSegments, viewTestSubscriptions, sendToTestUsers]
+
+  customForm:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share]
+
+  channel:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, createCampaign, share]
+    viewer:
+      name: Viewer
+      description: The user can view the channel but cannot edit it or delete it.
+      permissions: [view]
+
+  campaign:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, viewFiles, manageFiles, viewAttachments, manageAttachments, viewTriggers, manageTriggers, send, sendToTestUsers, viewStats, manageMessages, fetchRss]
+    creator:
+      name: Creator
+      description: The user can setup the campaign but cannot send it.
+      permissions: [view, edit, delete, viewFiles, manageFiles, viewAttachments, manageAttachments, viewTriggers, manageTriggers, sendToTestUsers, viewStats, fetchRss]
+    viewer:
+      name: Viewer
+      description: The user can view the campaign but cannot edit it or send it.
+      permissions: [view, viewFiles, viewAttachments, viewTriggers]
+    rssTrigger:
+      name: RSS Campaign Trigger
+      description: Allows triggering a fetch of an RSS campaign
+      permissions: [fetchRss]
+
+  template:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, viewFiles, manageFiles, sendToTestUsers]
+    viewer:
+      name: Viewer
+      description: The user can view the template but cannot edit it.
+      permissions: [view, viewFiles]
+
+  report:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, execute, viewContent, viewOutput]
+
+  reportTemplate:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, execute]
+
+  mosaicoTemplate:
+    master:
+      name: Master
+      description: All permissions
+      permissions: [view, edit, delete, share, viewFiles, manageFiles]
+    viewer:
+      name: Viewer
+      description: The user can use the Mosaico template, but cannot edit it or delete it.
+      permissions: [view, viewFiles]
+
