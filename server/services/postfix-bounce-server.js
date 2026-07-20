@@ -88,7 +88,7 @@ function start(callback) {
         return setImmediate(callback);
     }
 
-    let started = false; // Not sure why all this magic around "started". But it was there this way in Mailtrain v1, so we kept it.
+    let started = false; // Not sure why all this magic around "started". But it was there this way in ClikNews v1, so we kept it.
 
     const server = net.createServer(socket => {
         socket.on('readable', () => readNextChunks(socket));

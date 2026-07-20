@@ -4,7 +4,7 @@ case "$hostType" in
     centos7)
         hostTypeLabel="CentOS 7"
         redisService=redis
-        apacheConf="/etc/httpd/conf.d/mailtrain.conf"
+        apacheConf="/etc/httpd/conf.d/cliknews.conf"
         apacheLogsPath="logs"
 
         if hash firewall-cmd 2>/dev/null; then
@@ -15,7 +15,7 @@ case "$hostType" in
     centos8)
         hostTypeLabel="CentOS 8"
         redisService=redis
-        apacheConf="/etc/httpd/conf.d/mailtrain.conf"
+        apacheConf="/etc/httpd/conf.d/cliknews.conf"
         apacheLogsPath="logs"
 
         if hash firewall-cmd 2>/dev/null; then
@@ -26,7 +26,7 @@ case "$hostType" in
     ubuntu1804)
         hostTypeLabel="Ubuntu 18.04 LTS"
         redisService=redis-server
-        apacheConf="/etc/apache2/conf-available/mailtrain.conf"
+        apacheConf="/etc/apache2/conf-available/cliknews.conf"
         apacheLogsPath="/var/log/apache2"
 
         if hash ufw 2>/dev/null; then
@@ -37,7 +37,7 @@ case "$hostType" in
     debian10)
         hostTypeLabel="Debian 10"
         redisService=redis-server
-        apacheConf="/etc/apache2/conf-available/mailtrain.conf"
+        apacheConf="/etc/apache2/conf-available/cliknews.conf"
         apacheLogsPath="/var/log/apache2"
 
         if hash ufw 2>/dev/null; then
@@ -59,7 +59,7 @@ function performInstallLocal {
 
 Basic usage: install-${hostType}-local.sh
 
-Installs Mailtrain 2 on ${hostTypeLabel}. This performs installation for local use on HTTP ports 3000, 3003, 3004. If you want
+Installs ClikNews 2 on ${hostTypeLabel}. This performs installation for local use on HTTP ports 3000, 3003, 3004. If you want
 to make these ports available from outside, setup an HTTPS proxy yourself or use install-${hostType}-https.sh instead.
 
 Example: install-${hostType}-local.sh
@@ -69,7 +69,7 @@ EOF
     fi
 
     installPrerequisities
-    installMailtrain http://localhost:3000 http://localhost:3003 http://localhost:3004 0.0.0.0 false
+    installClikNews http://localhost:3000 http://localhost:3003 http://localhost:3004 0.0.0.0 false
     installService
 
     echo
@@ -92,16 +92,16 @@ function performInstallHttps {
 
 Basic usage: install-${hostType}-https.sh <trusted host> <sandbox host> <public host> <email>
 
-Installs Mailtrain 2 on ${hostTypeLabel}. This performs installation for external use. It installs Mailtrain, sets up
+Installs ClikNews 2 on ${hostTypeLabel}. This performs installation for external use. It installs ClikNews, sets up
 a reverse HTTPS proxy using Apache HTTPD, sets up firewall rules, and obtains a certificate from Letsencrypt.
 
-You have to allocate three endpoints for Mailtrain - trusted (admin UI), sandbox (editors for templates), public (subscription forms and archive).
+You have to allocate three endpoints for ClikNews - trusted (admin UI), sandbox (editors for templates), public (subscription forms and archive).
 These endpoints have to differ in hostname. It's fine to host them all from one IP address. The email parameters is needed by certbot.
 
 Note, that this will automatically accept the Let's Encrypt's Terms of Service.
 Thus, by running this script below, you agree with the Let's Encrypt's Terms of Service (https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf).
 
-Example: install-${hostType}-https.sh mailtrain.example.com sbox.mailtrain.example.com lists.example.com admin@example.com
+Example: install-${hostType}-https.sh cliknews.example.com sbox.cliknews.example.com lists.example.com admin@example.com
 EOF
 
       exit 1
@@ -111,7 +111,7 @@ EOF
     installHttpd 443 443 443
     createCertificates "${hostTrusted}" "${hostSandbox}" "${hostPublic}" "${email}"
     installHttpsProxy "${hostTrusted}" 443 "${hostSandbox}" 443 "${hostPublic}" 443 "/etc/letsencrypt/live/${hostPublic}/cert.pem" "/etc/letsencrypt/live/${hostPublic}/privkey.pem" "/etc/letsencrypt/live/${hostPublic}/chain.pem"
-    installMailtrain "https://${hostTrusted}" "https://${hostSandbox}" "https://${hostPublic}" 127.0.0.1 true
+    installClikNews "https://${hostTrusted}" "https://${hostSandbox}" "https://${hostPublic}" 127.0.0.1 true
     installService
 
     echo
@@ -210,7 +210,7 @@ innodb_file_format_max = Barracuda
 EOT
 }
 
-function installMailtrain {
+function installClikNews {
     local urlBaseTrusted="$1"
     local urlBaseSandbox="$2"
     local urlBasePublic="$3"
@@ -220,20 +220,20 @@ function installMailtrain {
     mysqlPassword=`pwgen 12 -1`
     mysqlRoPassword=`pwgen 12 -1`
     
-    # Setup MySQL user for Mailtrain
-    mysql -u root -e "CREATE USER 'mailtrain'@'localhost' IDENTIFIED BY '$mysqlPassword';"
-    mysql -u root -e "GRANT ALL PRIVILEGES ON mailtrain.* TO 'mailtrain'@'localhost';"
-    mysql -u root -e "CREATE USER 'mailtrain_ro'@'localhost' IDENTIFIED BY '$mysqlRoPassword';"
-    mysql -u root -e "GRANT SELECT ON mailtrain.* TO 'mailtrain_ro'@'localhost';"
-    mysql -u mailtrain --password="$mysqlPassword" -e "CREATE DATABASE mailtrain CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+    # Setup MySQL user for ClikNews
+    mysql -u root -e "CREATE USER 'cliknews'@'localhost' IDENTIFIED BY '$mysqlPassword';"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON cliknews.* TO 'cliknews'@'localhost';"
+    mysql -u root -e "CREATE USER 'cliknews_ro'@'localhost' IDENTIFIED BY '$mysqlRoPassword';"
+    mysql -u root -e "GRANT SELECT ON cliknews.* TO 'cliknews_ro'@'localhost';"
+    mysql -u cliknews --password="$mysqlPassword" -e "CREATE DATABASE cliknews CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
     
-    # Add new user for the mailtrain daemon to run as
-    useradd mailtrain || true
+    # Add new user for the cliknews daemon to run as
+    useradd cliknews || true
     
     # Setup installation configuration
     cat > server/config/production.yaml <<EOT
-user: mailtrain
-group: mailtrain
+user: cliknews
+group: cliknews
 roUser: nobody
 roGroup: nobody
 
@@ -268,7 +268,7 @@ log:
   level: warn
 
 mysql:
-  user: mailtrain_ro
+  user: cliknews_ro
   password: "$mysqlRoPassword"
 EOT
 
@@ -276,7 +276,7 @@ EOT
 
     (cd client && npm run build)
     
-    chown -R mailtrain:mailtrain .
+    chown -R cliknews:cliknews .
     chmod o-rwx server/config
 }
 
@@ -471,7 +471,7 @@ EOT
             a2enmod rewrite
             a2enmod proxy
             a2enmod proxy_http
-            a2enconf mailtrain
+            a2enconf cliknews
             systemctl restart apache2
             ;;
     esac
@@ -512,14 +512,14 @@ function createCertificates {
 
 
 function installService {
-    cat > /etc/systemd/system/mailtrain.service <<EOT
+    cat > /etc/systemd/system/cliknews.service <<EOT
 [Unit]
-Description=Mailtrain server
+Description=ClikNews server
 After=syslog.target network.target mariadb.service ${redisService}.service mongod.service
 
 [Service]
 Environment="NODE_ENV=production"
-WorkingDirectory=/opt/mailtrain/server
+WorkingDirectory=/opt/cliknews/server
 ExecStart=/usr/bin/node index.js
 Type=simple
 Restart=always
@@ -548,17 +548,17 @@ function deleteAllModules {
 function setupTest {
     mysqlPassword=`pwgen 12 -1`
 
-    # Setup MySQL user for Mailtrain
-    mysql -u root -e "CREATE USER 'mailtrain_test'@'localhost' IDENTIFIED BY '$mysqlPassword';"
-    mysql -u root -e "GRANT ALL PRIVILEGES ON mailtrain_test.* TO 'mailtrain_test'@'localhost';"
-    mysql -u mailtrain_test --password="$mysqlPassword" -e "CREATE database mailtrain_test;"
+    # Setup MySQL user for ClikNews
+    mysql -u root -e "CREATE USER 'cliknews_test'@'localhost' IDENTIFIED BY '$mysqlPassword';"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON cliknews_test.* TO 'cliknews_test'@'localhost';"
+    mysql -u cliknews_test --password="$mysqlPassword" -e "CREATE database cliknews_test;"
 
     # Setup installation configuration
     cat > server/config/test.yaml <<EOT
 mysql:
-  user: mailtrain_test
+  user: cliknews_test
   password: "$mysqlPassword"
-  database: mailtrain_test
+  database: cliknews_test
 
 redis:
   enabled: true
@@ -582,8 +582,8 @@ log:
   level: warn
 
 mysql:
-  user: mailtrain_test
+  user: cliknews_test
   password: "$mysqlPassword"
-  database: mailtrain_test
+  database: cliknews_test
 EOT
 }

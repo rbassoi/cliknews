@@ -10,14 +10,14 @@
     <link rel="shortcut icon" href="{{publicPath}}static/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="{{publicPath}}static/favicon.ico">
 
-    <title>Mailtrain</title>
+    <title>ClikNews</title>
 
     <script src="{{publicPath}}static-npm/jquery.min.js"></script>
 
-    {{#if mailtrainConfig}}
+    {{#if cliknewsConfig}}
         <script>
             {{#if reactCsrfToken}}window.csrfToken = '{{reactCsrfToken}}';{{/if}}
-            window.mailtrainConfig = {{{mailtrainConfig}}};
+            window.cliknewsConfig = {{{cliknewsConfig}}};
         </script>
 
         {{#each scriptFiles}}

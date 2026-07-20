@@ -261,7 +261,7 @@ router.postAsync('/:cid/subscribe', passport.parseForm, corsOrCsrfProtection, as
     }
 
     // Check if the subscriber seems legit. This is a really simple check, the only requirement is that
-    // the subscriber has JavaScript turned on and thats it. If Mailtrain gets more targeted then this
+    // the subscriber has JavaScript turned on and thats it. If ClikNews gets more targeted then this
     // simple check should be replaced with an actual captcha
     let subTime = Number(req.body.sub) || 0;
     // allow clock skew 24h in the past and 24h to the future

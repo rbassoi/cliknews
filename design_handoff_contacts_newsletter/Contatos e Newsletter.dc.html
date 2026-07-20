@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; background: oklch(0.985 0.004 90); font-family: 'Inter', Helvetica, Arial, sans-serif; }
+    a { color: oklch(0.55 0.18 250); }
+    a:hover { color: oklch(0.45 0.18 250); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: oklch(0.85 0.005 90); border-radius: 4px; }
+  </style>
+</helmet>
+
+<div style="display:flex; width:100%; min-height:100vh; color:oklch(0.22 0.01 90);">
+
+  <!-- SIDEBAR -->
+  <div style="width:240px; flex-shrink:0; background:oklch(0.975 0.004 90); border-right:1px solid oklch(0.9 0.005 90); display:flex; flex-direction:column; padding:24px 16px; gap:24px;">
+    <div style="display:flex; align-items:center; gap:10px; padding:0 8px;">
+      <div style="width:28px; height:28px; border-radius:8px; background:oklch(0.55 0.18 250);"></div>
+      <div style="font-weight:800; font-size:17px; letter-spacing:-0.01em;">Correio</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:2px;">
+      <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="5">
+        <div onClick="{{ item.onClick }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:{{ item.weight }}; background:{{ item.bg }}; color:{{ item.color }};" style-hover="background:oklch(0.94 0.006 90);">
+          <div style="width:6px; height:6px; border-radius:2px; flex-shrink:0; background:{{ item.dot }};"></div>
+          <div>{{ item.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="margin-top:auto; padding:12px; border-radius:10px; background:oklch(0.94 0.006 90); display:flex; flex-direction:column; gap:6px;">
+      <div style="font-size:12px; font-weight:600; color:oklch(0.4 0.01 90);">Plano Equipe</div>
+      <div style="font-size:12px; color:oklch(0.5 0.01 90);">12.480 / 25.000 contatos</div>
+      <div style="height:5px; border-radius:3px; background:oklch(0.85 0.005 90); overflow:hidden;">
+        <div style="width:50%; height:100%; background:oklch(0.55 0.18 250);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div style="flex:1; min-width:0; padding:32px 40px; display:flex; flex-direction:column; gap:28px;">
+
+    <!-- DASHBOARD -->
+    <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex; flex-direction:column; gap:28px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-size:26px; font-weight:800; letter-spacing:-0.02em;">Dashboard</div>
+            <div style="font-size:14px; color:oklch(0.5 0.01 90); margin-top:4px;">Visão geral das suas listas e campanhas</div>
+          </div>
+          <div onClick="{{ goToNewsletter }}" style="background:oklch(0.55 0.18 250); color:white; font-size:14px; font-weight:600; padding:10px 18px; border-radius:8px; cursor:pointer;" style-hover="background:oklch(0.48 0.18 250);">+ Nova campanha</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+          <sc-for list="{{ statCards }}" as="card" hint-placeholder-count="4">
+            <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:13px; color:oklch(0.5 0.01 90); font-weight:500;">{{ card.label }}</div>
+              <div style="font-size:24px; font-weight:800; letter-spacing:-0.02em;">{{ card.value }}</div>
+              <div style="font-size:12px; font-weight:600; color:{{ card.deltaColor }};">{{ card.delta }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div style="font-size:16px; font-weight:700;">Suas listas</div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+            <sc-for list="{{ dashLists }}" as="l" hint-placeholder-count="4">
+              <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:16px 18px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div style="width:8px; height:8px; border-radius:50%; background:{{ l.color }};"></div>
+                  <div style="font-size:14px; font-weight:600;">{{ l.name }}</div>
+                </div>
+                <div style="font-size:20px; font-weight:800;">{{ l.count }}</div>
+                <div style="font-size:12px; color:oklch(0.5 0.01 90);">{{ l.growth }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div style="font-size:16px; font-weight:700;">Campanhas recentes</div>
+          <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; overflow:hidden;">
+            <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; padding:12px 20px; background:oklch(0.97 0.004 90); font-size:12px; font-weight:600; color:oklch(0.5 0.01 90);">
+              <div>Campanha</div><div>Lista</div><div>Data</div><div>Status</div><div>Abertura</div>
+            </div>
+            <sc-for list="{{ campaigns }}" as="c" hint-placeholder-count="4">
+              <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; padding:14px 20px; border-top:1px solid oklch(0.94 0.004 90); font-size:13px; align-items:center;">
+                <div style="font-weight:600;">{{ c.name }}</div>
+                <div style="color:oklch(0.5 0.01 90);">{{ c.list }}</div>
+                <div style="color:oklch(0.5 0.01 90);">{{ c.date }}</div>
+                <div><span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; background:{{ c.statusBg }}; color:{{ c.statusColor }};">{{ c.status }}</span></div>
+                <div style="font-weight:600;">{{ c.open }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- CONTACTS -->
+    <sc-if value="{{ isContacts }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:22px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-size:26px; font-weight:800; letter-spacing:-0.02em;">Contatos</div>
+            <div style="font-size:14px; color:oklch(0.5 0.01 90); margin-top:4px;">12.480 contatos em 8 listas</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <div onClick="{{ goToImport }}" style="border:1px solid oklch(0.85 0.005 90); background:white; font-size:14px; font-weight:600; padding:10px 16px; border-radius:8px; cursor:pointer;" style-hover="background:oklch(0.96 0.004 90);">Importar</div>
+            <div style="background:oklch(0.55 0.18 250); color:white; font-size:14px; font-weight:600; padding:10px 16px; border-radius:8px; cursor:pointer;" style-hover="background:oklch(0.48 0.18 250);">+ Adicionar contato</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <input placeholder="Buscar por nome ou e-mail" style="flex:1; padding:10px 14px; border-radius:8px; border:1px solid oklch(0.88 0.005 90); font-size:14px; font-family:inherit;"></input>
+          <div style="padding:10px 16px; border-radius:8px; border:1px solid oklch(0.88 0.005 90); background:white; font-size:14px; font-weight:500; color:oklch(0.4 0.01 90); cursor:pointer;">Todas as listas ▾</div>
+          <div style="padding:10px 16px; border-radius:8px; border:1px solid oklch(0.88 0.005 90); background:white; font-size:14px; font-weight:500; color:oklch(0.4 0.01 90); cursor:pointer;">Status ▾</div>
+        </div>
+
+        <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; overflow:hidden;">
+          <div style="display:grid; grid-template-columns:28px 2fr 2fr 1.6fr 1fr 1fr; padding:12px 20px; background:oklch(0.97 0.004 90); font-size:12px; font-weight:600; color:oklch(0.5 0.01 90); align-items:center;">
+            <input type="checkbox"></input><div>Nome</div><div>E-mail</div><div>Listas</div><div>Status</div><div>Adicionado</div>
+          </div>
+          <sc-for list="{{ contacts }}" as="p" hint-placeholder-count="8">
+            <div style="display:grid; grid-template-columns:28px 2fr 2fr 1.6fr 1fr 1fr; padding:13px 20px; border-top:1px solid oklch(0.94 0.004 90); font-size:13px; align-items:center;">
+              <input type="checkbox"></input>
+              <div style="font-weight:600;">{{ p.name }}</div>
+              <div style="color:oklch(0.5 0.01 90);">{{ p.email }}</div>
+              <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                <sc-for list="{{ p.tags }}" as="t" hint-placeholder-count="1">
+                  <span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; background:oklch(0.95 0.02 250); color:oklch(0.45 0.15 250);">{{ t }}</span>
+                </sc-for>
+              </div>
+              <div><span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; background:{{ p.statusBg }}; color:{{ p.statusColor }};">{{ p.status }}</span></div>
+              <div style="color:oklch(0.5 0.01 90);">{{ p.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; color:oklch(0.5 0.01 90);">
+          <div>Mostrando 8 de 12.480 contatos</div>
+          <div style="display:flex; gap:6px;">
+            <div style="padding:6px 12px; border:1px solid oklch(0.88 0.005 90); border-radius:6px; cursor:pointer;">Anterior</div>
+            <div style="padding:6px 12px; border:1px solid oklch(0.88 0.005 90); border-radius:6px; cursor:pointer;">Próxima</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- NEWSLETTER EDITOR -->
+    <sc-if value="{{ isNewsletter }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:22px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div style="font-size:13px; color:oklch(0.5 0.01 90); font-weight:600;">Newsletters / Nova campanha</div>
+            <div style="font-size:26px; font-weight:800; letter-spacing:-0.02em; margin-top:4px;">Lançamento de verão</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <div style="border:1px solid oklch(0.85 0.005 90); background:white; font-size:14px; font-weight:600; padding:10px 16px; border-radius:8px; cursor:pointer;">Salvar rascunho</div>
+            <div style="background:oklch(0.55 0.18 250); color:white; font-size:14px; font-weight:600; padding:10px 18px; border-radius:8px; cursor:pointer;">Enviar teste</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:320px 1fr; gap:20px; align-items:start;">
+          <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <div style="font-size:14px; font-weight:700;">Configurações</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:12px; font-weight:600; color:oklch(0.5 0.01 90);">Assunto</div>
+              <input value="Novidades de verão chegaram ☀️" style="padding:9px 12px; border-radius:7px; border:1px solid oklch(0.88 0.005 90); font-size:13px; font-family:inherit;"></input>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:12px; font-weight:600; color:oklch(0.5 0.01 90);">Texto de pré-visualização</div>
+              <input value="Confira as novidades antes de todo mundo" style="padding:9px 12px; border-radius:7px; border:1px solid oklch(0.88 0.005 90); font-size:13px; font-family:inherit;"></input>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:12px; font-weight:600; color:oklch(0.5 0.01 90);">Remetente</div>
+              <div style="padding:9px 12px; border-radius:7px; border:1px solid oklch(0.88 0.005 90); font-size:13px; background:oklch(0.97 0.004 90);">Equipe Correio &lt;ola@correio.app&gt;</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:12px; font-weight:600; color:oklch(0.5 0.01 90);">Lista de destino</div>
+              <div style="padding:9px 12px; border-radius:7px; border:1px solid oklch(0.88 0.005 90); font-size:13px; display:flex; justify-content:space-between; cursor:pointer;"><span>Clientes ativos · 6.240</span><span>▾</span></div>
+            </div>
+          </div>
+
+          <div style="background:oklch(0.97 0.004 90); border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:28px; display:flex; justify-content:center;">
+            <div style="width:480px; background:white; border-radius:10px; box-shadow:0 1px 3px oklch(0.2 0.01 90 / 0.08); overflow:hidden;">
+              <div style="height:180px; background:repeating-linear-gradient(45deg, oklch(0.93 0.005 90), oklch(0.93 0.005 90) 10px, oklch(0.9 0.005 90) 10px, oklch(0.9 0.005 90) 20px); display:flex; align-items:center; justify-content:center; font-size:11px; font-family:monospace; color:oklch(0.5 0.01 90);">imagem de cabeçalho 480×180</div>
+              <div style="padding:24px; display:flex; flex-direction:column; gap:14px;">
+                <div style="font-size:20px; font-weight:800; letter-spacing:-0.01em;">As novidades de verão chegaram</div>
+                <div style="font-size:14px; line-height:1.6; color:oklch(0.4 0.01 90);">Selecionamos os lançamentos da temporada para você conferir em primeira mão, com condições especiais só para assinantes.</div>
+                <div style="align-self:flex-start; background:oklch(0.55 0.18 250); color:white; font-size:13px; font-weight:700; padding:10px 20px; border-radius:7px;">Ver coleção</div>
+                <div style="height:1px; background:oklch(0.93 0.005 90); margin:6px 0;"></div>
+                <div style="font-size:11px; color:oklch(0.6 0.01 90);">Você recebeu este e-mail porque assina a newsletter Correio. Cancelar inscrição.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- STATS -->
+    <sc-if value="{{ isStats }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:24px;">
+        <div>
+          <div style="font-size:26px; font-weight:800; letter-spacing:-0.02em;">Estatísticas</div>
+          <div style="font-size:14px; color:oklch(0.5 0.01 90); margin-top:4px;">Desempenho das campanhas enviadas</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+          <sc-for list="{{ statOverview }}" as="s" hint-placeholder-count="4">
+            <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:13px; color:oklch(0.5 0.01 90); font-weight:500;">{{ s.label }}</div>
+              <div style="font-size:24px; font-weight:800;">{{ s.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:16px;">
+          <div style="font-size:14px; font-weight:700;">Aberturas por dia</div>
+          <div style="display:flex; align-items:flex-end; gap:14px; height:160px;">
+            <sc-for list="{{ chartBars }}" as="b" hint-placeholder-count="7">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end;">
+                <div style="width:100%; max-width:36px; height:{{ b.height }}; background:oklch(0.55 0.18 250 / {{ b.opacity }}); border-radius:6px 6px 0 0;"></div>
+                <div style="font-size:11px; color:oklch(0.5 0.01 90);">{{ b.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; overflow:hidden;">
+          <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; padding:12px 20px; background:oklch(0.97 0.004 90); font-size:12px; font-weight:600; color:oklch(0.5 0.01 90);">
+            <div>Campanha</div><div>Enviados</div><div>Abertura</div><div>Cliques</div><div>Descadastros</div>
+          </div>
+          <sc-for list="{{ campaignStats }}" as="c" hint-placeholder-count="5">
+            <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; padding:14px 20px; border-top:1px solid oklch(0.94 0.004 90); font-size:13px; align-items:center;">
+              <div style="font-weight:600;">{{ c.name }}</div>
+              <div style="color:oklch(0.5 0.01 90);">{{ c.sent }}</div>
+              <div style="font-weight:600;">{{ c.open }}</div>
+              <div style="color:oklch(0.5 0.01 90);">{{ c.click }}</div>
+              <div style="color:oklch(0.5 0.01 90);">{{ c.unsub }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- IMPORT -->
+    <sc-if value="{{ isImport }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex; flex-direction:column; gap:24px; max-width:820px;">
+        <div>
+          <div style="font-size:26px; font-weight:800; letter-spacing:-0.02em;">Importar contatos</div>
+          <div style="font-size:14px; color:oklch(0.5 0.01 90); margin-top:4px;">Envie um arquivo CSV e mapeie as colunas</div>
+        </div>
+
+        <div style="border:2px dashed oklch(0.85 0.005 90); border-radius:14px; padding:48px; display:flex; flex-direction:column; align-items:center; gap:10px; background:white; cursor:pointer;" style-hover="border-color:oklch(0.55 0.18 250);">
+          <div style="width:44px; height:44px; border-radius:10px; background:oklch(0.95 0.02 250);"></div>
+          <div style="font-size:14px; font-weight:600;">Arraste um arquivo CSV aqui</div>
+          <div style="font-size:13px; color:oklch(0.5 0.01 90);">ou clique para selecionar · até 50.000 contatos</div>
+        </div>
+
+        <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+          <div style="font-size:14px; font-weight:700;">contatos_clientes.csv · 1.240 linhas detectadas</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <sc-for list="{{ mappings }}" as="m" hint-placeholder-count="4">
+              <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px;">
+                <div style="padding:9px 12px; border-radius:7px; background:oklch(0.97 0.004 90); font-size:13px;">{{ m.csv }}</div>
+                <div style="color:oklch(0.6 0.01 90);">→</div>
+                <div style="padding:9px 12px; border-radius:7px; border:1px solid oklch(0.88 0.005 90); font-size:13px; display:flex; justify-content:space-between; background:white;"><span>{{ m.field }}</span><span>▾</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:white; border:1px solid oklch(0.91 0.005 90); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:10px;">
+          <div style="font-size:14px; font-weight:700;">Adicionar contatos à lista</div>
+          <div style="padding:9px 12px; border-radius:7px; border:1px solid oklch(0.88 0.005 90); font-size:13px; display:flex; justify-content:space-between; width:280px; cursor:pointer;"><span>Clientes ativos</span><span>▾</span></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end;">
+          <div style="background:oklch(0.55 0.18 250); color:white; font-size:14px; font-weight:700; padding:12px 24px; border-radius:8px; cursor:pointer;">Importar 1.240 contatos</div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { screen: 'dashboard' };
+
+  go(screen) { this.setState({ screen }); }
+
+  renderVals() {
+    const s = this.state.screen;
+    const navDefs = [
+      ['dashboard', 'Dashboard'],
+      ['contacts', 'Contatos'],
+      ['newsletter', 'Newsletters'],
+      ['stats', 'Estatísticas'],
+      ['import', 'Importar'],
+    ];
+    const navItems = navDefs.map(([key, label]) => {
+      const active = s === key;
+      return {
+        label, active, onClick: () => this.go(key),
+        bg: active ? 'oklch(0.94 0.03 250)' : 'transparent',
+        color: active ? 'oklch(0.4 0.15 250)' : 'oklch(0.3 0.01 90)',
+        weight: active ? '700' : '500',
+        dot: active ? 'oklch(0.55 0.18 250)' : 'transparent',
+      };
+    });
+
+    return {
+      navItems,
+      isDashboard: s === 'dashboard',
+      isContacts: s === 'contacts',
+      isNewsletter: s === 'newsletter',
+      isStats: s === 'stats',
+      isImport: s === 'import',
+      goToNewsletter: () => this.go('newsletter'),
+      goToImport: () => this.go('import'),
+
+      statCards: [
+        { label: 'Total de contatos', value: '12.480', delta: '+320 este mês', deltaColor: 'oklch(0.5 0.15 150)' },
+        { label: 'Listas ativas', value: '8', delta: '+1 este mês', deltaColor: 'oklch(0.5 0.15 150)' },
+        { label: 'Newsletters enviadas', value: '34', delta: '4 este mês', deltaColor: 'oklch(0.5 0.01 90)' },
+        { label: 'Taxa média de abertura', value: '42%', delta: '+3.2 pts', deltaColor: 'oklch(0.5 0.15 150)' },
+      ],
+
+      dashLists: [
+        { name: 'Clientes ativos', count: '6.240', growth: '+180 na semana', color: 'oklch(0.55 0.18 250)' },
+        { name: 'Newsletter geral', count: '3.920', growth: '+92 na semana', color: 'oklch(0.55 0.18 150)' },
+        { name: 'Leads eventos', count: '1.510', growth: '+40 na semana', color: 'oklch(0.55 0.18 40)' },
+        { name: 'VIP', count: '810', growth: '+8 na semana', color: 'oklch(0.55 0.18 320)' },
+      ],
+
+      campaigns: [
+        { name: 'Lançamento de verão', list: 'Clientes ativos', date: '18 jul', status: 'Enviada', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', open: '46%' },
+        { name: 'Newsletter semanal #34', list: 'Newsletter geral', date: '15 jul', status: 'Enviada', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', open: '38%' },
+        { name: 'Convite webinar', list: 'Leads eventos', date: '22 jul', status: 'Agendada', statusBg: 'oklch(0.95 0.03 250)', statusColor: 'oklch(0.45 0.15 250)', open: '—' },
+        { name: 'Oferta exclusiva VIP', list: 'VIP', date: '10 jul', status: 'Enviada', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', open: '58%' },
+      ],
+
+      contacts: [
+        { name: 'Mariana Souza', email: 'mariana.souza@email.com', tags: ['Clientes ativos'], status: 'Ativo', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', date: '02 jul' },
+        { name: 'Rafael Lima', email: 'rafael.lima@email.com', tags: ['Newsletter geral', 'VIP'], status: 'Ativo', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', date: '28 jun' },
+        { name: 'Carla Nogueira', email: 'carla.nog@email.com', tags: ['Leads eventos'], status: 'Ativo', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', date: '25 jun' },
+        { name: 'Bruno Alves', email: 'bruno.alves@email.com', tags: ['Clientes ativos'], status: 'Inativo', statusBg: 'oklch(0.95 0.01 90)', statusColor: 'oklch(0.5 0.01 90)', date: '19 jun' },
+        { name: 'Fernanda Costa', email: 'fernanda.costa@email.com', tags: ['Newsletter geral'], status: 'Ativo', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', date: '14 jun' },
+        { name: 'Diego Martins', email: 'diego.martins@email.com', tags: ['VIP'], status: 'Ativo', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', date: '10 jun' },
+        { name: 'Juliana Ramos', email: 'juliana.ramos@email.com', tags: ['Clientes ativos'], status: 'Pendente', statusBg: 'oklch(0.95 0.05 80)', statusColor: 'oklch(0.5 0.13 80)', date: '05 jun' },
+        { name: 'Thiago Rocha', email: 'thiago.rocha@email.com', tags: ['Leads eventos'], status: 'Ativo', statusBg: 'oklch(0.94 0.05 150)', statusColor: 'oklch(0.4 0.12 150)', date: '01 jun' },
+      ],
+
+      statOverview: [
+        { label: 'Enviados (30d)', value: '18.420' },
+        { label: 'Taxa de abertura', value: '42.3%' },
+        { label: 'Taxa de clique', value: '11.8%' },
+        { label: 'Descadastros', value: '0.6%' },
+      ],
+
+      chartBars: [
+        { label: 'Seg', height: '55%', opacity: '0.6' },
+        { label: 'Ter', height: '72%', opacity: '0.7' },
+        { label: 'Qua', height: '48%', opacity: '0.6' },
+        { label: 'Qui', height: '90%', opacity: '1' },
+        { label: 'Sex', height: '65%', opacity: '0.7' },
+        { label: 'Sáb', height: '30%', opacity: '0.5' },
+        { label: 'Dom', height: '22%', opacity: '0.4' },
+      ],
+
+      campaignStats: [
+        { name: 'Lançamento de verão', sent: '6.240', open: '46%', click: '14%', unsub: '0.4%' },
+        { name: 'Newsletter semanal #34', sent: '3.920', open: '38%', click: '9%', unsub: '0.5%' },
+        { name: 'Oferta exclusiva VIP', sent: '810', open: '58%', click: '22%', unsub: '0.2%' },
+        { name: 'Convite webinar #12', sent: '1.510', open: '51%', click: '18%', unsub: '0.3%' },
+        { name: 'Newsletter semanal #33', sent: '3.880', open: '36%', click: '8%', unsub: '0.6%' },
+      ],
+
+      mappings: [
+        { csv: 'full_name', field: 'Nome' },
+        { csv: 'email_address', field: 'E-mail' },
+        { csv: 'company', field: 'Empresa' },
+        { csv: 'signup_date', field: 'Data de cadastro' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

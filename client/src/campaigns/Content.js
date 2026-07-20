@@ -16,7 +16,7 @@ import {
     withFormErrorHandlers
 } from '../lib/form';
 import {withErrorHandling} from '../lib/error-handling';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {
     getEditForm,
     getModals,
@@ -51,12 +51,12 @@ export default class CustomContent extends Component {
         this.tagLanguages = getTagLanguages(props.t);
 
         this.customTemplateTypeOptions = [];
-        for (const key of mailtrainConfig.editors) {
+        for (const key of cliknewsConfig.editors) {
             this.customTemplateTypeOptions.push({key, label: this.templateTypes[key].typeName});
         }
 
         this.customTemplateTagLanguageOptions = [];
-        for (const key of mailtrainConfig.tagLanguages) {
+        for (const key of cliknewsConfig.tagLanguages) {
             this.customTemplateTagLanguageOptions.push({key, label: this.tagLanguages[key].name});
         }
 

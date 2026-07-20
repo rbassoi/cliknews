@@ -1,26 +1,26 @@
 ## Access Control
 
 This document describes the key features and concepts of the current state of 
-access control in Mailtrain. 
+access control in ClikNews. 
  
 The current state provides user management and granular access control to reports
 and report templates. The user management supports both local authentication and
 LDAP-based authentication.
 
 The access control has two abstractions levels: a high-level intended to be used through web UI,
-and low-level, intended to be configured once through the Mailtrain config file. The high-level
+and low-level, intended to be configured once through the ClikNews config file. The high-level
 layer serves for providing access to variuous resources, while the low-level layer is meant
-to define the access roles in Mailtrain to reflect an organisational or process hierarchy.
+to define the access roles in ClikNews to reflect an organisational or process hierarchy.
 
 ### High-level access management (through web UI)
 
-On the high abstraction level, which is accessible to users via the web-based UI, Mailtrain
+On the high abstraction level, which is accessible to users via the web-based UI, ClikNews
 recognizes different entities (reports, report templates, etc.) and user roles that regulate
 access to these entities (e.g. role "reporter" that allows viewing a report but prevents editing
 or deleting it). Access to entities is provided through so called "shares". A share is essentially
 a triple: entity - role - user. 
 
-Mailtrain further features hierarchical namespaces. Every entity has to reside in a namespace 
+ClikNews further features hierarchical namespaces. Every entity has to reside in a namespace 
 (in reality, the namespace itself is an entity to which access can be given).
 
 While sharing an entity with a user gives the user access to the particular entity (in the
@@ -37,7 +37,7 @@ root namespace and the namespace of the user. For example, an administrator's gl
 specify that a user get administrator's role in the root namespace, which effectively gives
 him/her access to everything.
 
-Mailtrain resets these default shares at start and also whenever permission cache is rebuilt
+ClikNews resets these default shares at start and also whenever permission cache is rebuilt
 (essentially every time user, namespace or some entity is created or when share or user's
  role is assigned). This effectively prevents deleting or overriding the default shares that
  the user has through the global role.
@@ -45,12 +45,12 @@ Mailtrain resets these default shares at start and also whenever permission cach
 
 ### Low-level access management (through config file)
 
-Internally, Mailtrain relies on fine-grained permissions, which are triplets: 
+Internally, ClikNews relies on fine-grained permissions, which are triplets: 
 user - operation - entity (e.g. user id 1 - view - report id 2). These permissions are stored
 in a permission cache (in DB) and automatically generated at startup and whenever the permissions
  could have changed.
  
-Mailtrain's config file defines the roles (available in the high-level access management) and 
+ClikNews's config file defines the roles (available in the high-level access management) and 
 specifies the mapping of roles to operations.
 
 The roles are potentially different for each entity type/scope (currently global, namespace, report, 
@@ -68,7 +68,7 @@ namespace role "master" (specified by ```rootNamespaceRole="master"```). This ac
 in which the user is created. This highlight the dual purpose of namespaces: a) they group
 entities w.r.t. access management, b) they allow categorizing entities and users in a hierarchy
 to potentially reflect the organisational or process hierarchy. The latter is especially useful for
-more enterprise applications where a single installation of Mailtrain serves a number of rather
+more enterprise applications where a single installation of ClikNews serves a number of rather
 independent groups.
 
 The global role defined below is also an admin role (denoted by the ```admin=true```), which means that user id 1 will always be reset to this role.

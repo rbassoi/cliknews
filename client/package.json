@@ -1,5 +1,5 @@
 {
-  "name": "mailtrain-client",
+  "name": "cliknews-client",
   "version": "2.0.0",
   "description": "Self hosted email newsletter app - client components",
   "main": "index.js",
@@ -7,18 +7,18 @@
     "js": "webpack",
     "watch-js": "webpack --watch",
     "css": "npm-run-all --sequential css-compile css-minify",
-    "css-compile": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 src/scss/mailtrain.scss dist/mailtrain.css",
-    "css-minify": "cleancss --level 1 --source-map --source-map-inline-sources --output dist/mailtrain.min.css dist/mailtrain.css",
+    "css-compile": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 src/scss/cliknews.scss dist/cliknews.css",
+    "css-minify": "cleancss --level 1 --source-map --source-map-inline-sources --output dist/cliknews.min.css dist/cliknews.css",
     "watch-css": "nodemon --watch src/scss -e scss -x \"npm run css\"",
     "watch": "npm-run-all --parallel watch-css watch-js",
     "build": "npm-run-all --parallel css js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/Mailtrain-org/mailtrain.git"
+    "url": "git://github.com/rbassoi/cliknews.git"
   },
   "license": "GPL-3.0",
-  "homepage": "https://mailtrain.org/",
+  "homepage": "https://github.com/rbassoi/cliknews",
   "dependencies": {
     "@coreui/coreui": "^2.1.16",
     "@fortawesome/fontawesome-free": "^5.15.3",

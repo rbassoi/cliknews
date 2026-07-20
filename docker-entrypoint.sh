@@ -38,9 +38,9 @@ REDIS_HOST=${REDIS_HOST:-'redis'}
 REDIS_PORT=${REDIS_PORT:-'6379'}
 MYSQL_HOST=${MYSQL_HOST:-'mysql'}
 MYSQL_PORT=${MYSQL_PORT:-'3306'}
-MYSQL_DATABASE=${MYSQL_DATABASE:-'mailtrain'}
-MYSQL_USER=${MYSQL_USER:-'mailtrain'}
-MYSQL_PASSWORD=${MYSQL_PASSWORD:-'mailtrain'}
+MYSQL_DATABASE=${MYSQL_DATABASE:-'cliknews'}
+MYSQL_USER=${MYSQL_USER:-'cliknews'}
+MYSQL_PASSWORD=${MYSQL_PASSWORD:-'cliknews'}
 WITH_ZONE_MTA=${WITH_ZONE_MTA:-'true'}
 POOL_NAME=${POOL_NAME:-$(hostname)}
 LOG_LEVEL=${LOG_LEVEL:-'info'}
@@ -51,11 +51,11 @@ WITH_POSTFIXBOUNCE=${WITH_POSTFIXBOUNCE:-'false'}
 POSTFIXBOUNCE_PORT=${POSTFIXBOUNCE_PORT:-'5699'}
 POSTFIXBOUNCE_HOST=${POSTFIXBOUNCE_HOST:-'127.0.0.1'}
 
-# Warning for users that already rely on the MAILTRAIN_SETTING variable
+# Warning for users that already rely on the CLIKNEWS_SETTING variable
 # Can probably be removed in the future.
-MAILTRAIN_SETTING=${MAILTRAIN_SETTINGS:-}
-if [ ! -z "$MAILTRAIN_SETTING" ]; then
-    echo 'Error: MAILTRAIN_SETTINGS is no longer supported. See README.md'
+CLIKNEWS_SETTING=${CLIKNEWS_SETTINGS:-}
+if [ ! -z "$CLIKNEWS_SETTING" ]; then
+    echo 'Error: CLIKNEWS_SETTINGS is no longer supported. See README.md'
     exit 1
 fi
 
@@ -160,8 +160,8 @@ EOT
     cat >> server/config/production.yaml <<EOT
 
 postfixBounce:
-  # Enable to allow writing Postfix bounce log to Mailtrain listener
-  # If enabled, tail mail.log to Mailtrain with the following command:
+  # Enable to allow writing Postfix bounce log to ClikNews listener
+  # If enabled, tail mail.log to ClikNews with the following command:
   #     tail -f -n +0 /var/log/mail.log | nc POSTFIXBOUNCE_HOST POSTFIXBOUNCE_PORT -
   enabled: true
   port: $POSTFIXBOUNCE_PORT

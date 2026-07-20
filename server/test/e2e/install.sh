@@ -14,19 +14,19 @@ export DEBIAN_FRONTEND=noninteractive
 
 MYSQL_PASSWORD=`pwgen 12 -1`
 
-# Setup MySQL user for Mailtrain Tests
-mysql -u root -e "CREATE USER 'mailtrain_test'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
-mysql -u root -e "GRANT ALL PRIVILEGES ON mailtrain_test.* TO 'mailtrain_test'@'localhost';"
-mysql -u mailtrain_test --password="$MYSQL_PASSWORD" -e "CREATE database mailtrain_test;"
+# Setup MySQL user for ClikNews Tests
+mysql -u root -e "CREATE USER 'cliknews_test'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+mysql -u root -e "GRANT ALL PRIVILEGES ON cliknews_test.* TO 'cliknews_test'@'localhost';"
+mysql -u cliknews_test --password="$MYSQL_PASSWORD" -e "CREATE database cliknews_test;"
 
 # Setup installation configuration
 cat >> config/test.toml <<EOT
 [www]
 port=3000
 [mysql]
-user="mailtrain_test"
+user="cliknews_test"
 password="$MYSQL_PASSWORD"
-database="mailtrain_test"
+database="cliknews_test"
 [testServer]
 enabled=true
 [seleniumWebDriver]

@@ -1,13 +1,13 @@
 {
-  "name": "mailtrain-shared",
+  "name": "cliknews-shared",
   "version": "2.0.0",
   "description": "Self hosted email newsletter app - shared lib",
   "repository": {
     "type": "git",
-    "url": "git://github.com/Mailtrain-org/mailtrain.git"
+    "url": "git://github.com/rbassoi/cliknews.git"
   },
   "license": "GPL-3.0",
-  "homepage": "https://mailtrain.org/",
+  "homepage": "https://github.com/rbassoi/cliknews",
   "engines": {
     "node": ">=10.0.0"
   },

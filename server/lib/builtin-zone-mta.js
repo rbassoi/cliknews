@@ -31,7 +31,7 @@ setInterval(() => {
 }, 300000 /* 5 mins */);
 
 function getUsername() {
-    return 'mailtrain';
+    return 'cliknews';
 }
 
 function getPassword() {
@@ -110,10 +110,10 @@ async function createConfig() {
                 futureDate: false,
                 xOriginatingIP: false
             },
-            'mailtrain-main': {
+            'cliknews-main': {
                 enabled: ['main']
             },
-            'mailtrain-receiver': {
+            'cliknews-receiver': {
                 enabled: ['receiver'],
                 username: getUsername(),
                 password: getPassword()

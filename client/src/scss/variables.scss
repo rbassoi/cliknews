@@ -1,7 +1,25 @@
-$table-cell-padding: .5rem;
-$input-border-color: #adb5bd;
+@import "./tokens";
 
-$breadcrumb-bg: #f6f7f8;
+// NOTE: oklch() tokens from _tokens.scss must NOT be assigned to Bootstrap/CoreUI
+// variables below — LibSass's darken()/lighten()/mix() (used internally all over
+// Bootstrap, e.g. $link-hover-color: darken($link-color, 15%)) cannot parse oklch()
+// and the build fails. Bootstrap-consumed variables here use plain hex approximations
+// of the token palette instead; the real oklch design language is applied directly as
+// plain CSS in cliknews.scss's .cn-* classes, which never run through Sass color math.
+$table-cell-padding: .5rem;
+$input-border-color: #d8d5cf; // ~= $cn-border-strong
+$input-border-radius: $cn-radius-sm;
+
+$breadcrumb-bg: #f6f6f4; // ~= $cn-bg-subtle
+$breadcrumb-border-radius: $cn-radius-md;
+
+$body-bg: #fbfbfa; // ~= $cn-bg-page
+$border-radius: $cn-radius-md;
+$border-radius-sm: $cn-radius-sm;
+$border-radius-lg: $cn-radius-lg;
+
+$primary: #3d63d9; // ~= $cn-accent
+$link-color: #3d63d9; // ~= $cn-accent
 
 $navbar-dark-color: rgba(#fff, .75) !default;
 $navbar-dark-hover-color: #fff !default;

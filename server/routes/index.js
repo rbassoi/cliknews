@@ -12,14 +12,14 @@ async function getRouter(appType) {
 
     if (appType === AppType.TRUSTED) {
         router.getAsync('/*', passport.csrfProtection, async (req, res) => {
-            const mailtrainConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
+            const cliknewsConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
             if (req.user) {
-                Object.assign(mailtrainConfig, await clientHelpers.getAuthenticatedConfig(req.context));
+                Object.assign(cliknewsConfig, await clientHelpers.getAuthenticatedConfig(req.context));
             }
 
             res.render('root', {
                 reactCsrfToken: req.csrfToken(),
-                mailtrainConfig: JSON.stringify(mailtrainConfig),
+                cliknewsConfig: JSON.stringify(cliknewsConfig),
                 scriptFiles: [
                     getTrustedUrl('client/root.js')
                 ],

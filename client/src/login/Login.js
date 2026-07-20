@@ -17,7 +17,7 @@ import {
 import {withErrorHandling} from '../lib/error-handling';
 import qs from 'querystringify';
 import interoperableErrors from '../../../shared/interoperable-errors';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {getUrl} from "../lib/urls";
 import {withComponentMixins} from "../lib/decorator-helpers";
 
@@ -108,12 +108,12 @@ export default class Login extends Component {
         const t = this.props.t;
 
         let passwordResetLink;
-        if (mailtrainConfig.isAuthMethodLocal) {
+        if (cliknewsConfig.isAuthMethodLocal) {
             passwordResetLink = <Link to={`/login/forgot/${this.getFormValue('username')}`}>{t('forgotYourPassword?')}</Link>;
-        } else if (mailtrainConfig.externalPasswordResetLink) {
-            passwordResetLink = <a href={mailtrainConfig.externalPasswordResetLink}>{t('forgotYourPassword?')}</a>;
+        } else if (cliknewsConfig.externalPasswordResetLink) {
+            passwordResetLink = <a href={cliknewsConfig.externalPasswordResetLink}>{t('forgotYourPassword?')}</a>;
         }
-        if (mailtrainConfig.authMethod != 'cas') {
+        if (cliknewsConfig.authMethod != 'cas') {
           return (
             <div>
                 <Title>{t('signIn')}</Title>

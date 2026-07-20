@@ -190,7 +190,7 @@ export default class CUD extends Component {
         const formsOptions = [
             {
                 key: 'default',
-                label: t('defaultMailtrainForms')
+                label: t('defaultClikNewsForms')
             },
             {
                 key: 'custom',

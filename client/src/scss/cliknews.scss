@@ -1,6 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400i,700,700i|Ubuntu:300,300i,400,400i,700,700i&subset=latin-ext');
 
-$font-family-sans-serif: 'Ubuntu', sans-serif;
+$font-family-sans-serif: 'Inter', Helvetica, Arial, sans-serif;
 $font-family-monospace: 'Ubuntu Mono', monospace;
 
 $fa-font-path: "../static-npm/fontawesome";
@@ -16,8 +17,9 @@ $enable-print-styles: false;
   -webkit-appearance: none; // This is a fix for Chrome
 }
 
-body.mailtrain {
-  background-color: white;
+body.cliknews {
+  background-color: $cn-bg-page;
+  color: $cn-text-primary;
 
   &.sandbox {
     overflow-x: hidden;
@@ -42,9 +44,11 @@ body.mailtrain {
     @include border-radius($breadcrumb-border-radius);
     @include borders($breadcrumb-borders);
     background-color: $breadcrumb-bg;
+    border: 1px solid $cn-border;
 
     .breadcrumb {
       border: 0px none;
+      background: transparent;
       margin-bottom: 0px;
       padding-top: 11px;
       padding-bottom: 12px;
@@ -53,111 +57,386 @@ body.mailtrain {
     margin-bottom: 1.5rem;
   }
 
-  @include media-breakpoint-down(md) {
-    .app-header {
-      position: relative;
-    }
+  // ---------------------------------------------------------------------
+  // App shell: persistent left sidebar (replaces the old top navbar)
+  // ---------------------------------------------------------------------
 
-    .app-body {
-      margin-top: 0px;
+  .cn-app {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  .cn-sidebar {
+    width: $cn-sidebar-width;
+    flex-shrink: 0;
+    background: $cn-bg-sidebar;
+    border-right: 1px solid $cn-sidebar-border;
+    display: flex;
+    flex-direction: column;
+    padding: $cn-space-9 $cn-space-6;
+    gap: $cn-space-9;
+  }
+
+  .cn-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: $cn-space-3;
+    padding: 0 $cn-space-2;
+    color: $cn-text-primary;
+
+    &:hover, &:focus {
+      color: $cn-text-primary;
+      text-decoration: none;
     }
   }
 
-  .app-header {
+  .cn-sidebar-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: $cn-radius-md;
+    background: $cn-accent;
+    flex-shrink: 0;
+  }
 
-    .navbar {
-      padding: 0 15px;
+  .cn-sidebar-wordmark {
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
 
-      .navbar-brand {
-        // width: $sidebar-width - 30px;
-        width: 130px; // We don't use sidebar yet, so no need to align with it.
+  .cn-sidebar-nav {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: $cn-space-9;
+  }
 
-        justify-content: left;
-
-        @include media-breakpoint-down(md) {
-          // This is to keep the title and the menu buttons in order. Normally the brand is position: absolute which distorts the order
-          position: relative;
-          top: auto;
-          left: auto;
-          margin: 0px;
-        }
-      }
-    }
-
-    @include media-breakpoint-down(md) {
-      .navbar-toggler {
-        color: #fff;
-        height: 35px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-      }
-    }
-
-    .navbar-toggler {
-      .navbar-toggler-icon, &:hover .navbar-toggler-icon {
-        background-image: $navbar-dark-toggler-icon-bg;
-      }
-    }
-
-    .navbar-nav {
-      margin-top: 8px;
-      margin-bottom: 8px;
-    }
-
-    .mt-navbar-nav-right {
-      @include media-breakpoint-up(lg) {
-        flex-grow: 1;
-        justify-content: flex-end;
-      }
-
-      .nav-item {
-        .nav-link {
-          padding: 0px;
-        }
-
-        @include media-breakpoint-up(lg) {
-          margin-left: 15px;
-        }
-
-        @include media-breakpoint-down(md) {
-          margin-right: 15px;
-
-          .dropdown-menu-right {
-            right: auto;
-            left: 0;
-          }
-        }
-      }
-    }
-
-    .mt-navbar-nav-left {
-      @include media-breakpoint-up(lg) {
-        margin-left: 15px;
-      }
-
-      .nav-item {
-        margin-right: 15px;
-      }
-    }
+  .cn-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 
     .nav-item {
-      min-width: 0px;
+      list-style: none;
     }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: $cn-space-3;
+      padding: 9px $cn-space-4;
+      border-radius: $cn-radius-md;
+      font-size: 14px;
+      font-weight: 500;
+      color: $cn-nav-inactive;
+
+      &:hover {
+        background: $cn-bg-hover;
+        color: $cn-nav-inactive;
+        text-decoration: none;
+      }
+    }
+
+    .nav-item.active .nav-link {
+      background: $cn-accent-tint;
+      color: $cn-accent-text;
+      font-weight: 700;
+
+      &:hover {
+        background: $cn-accent-tint;
+      }
+
+      &::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 2px;
+        background: $cn-accent;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .cn-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .cn-nav-group-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $cn-space-3;
+      padding: 9px $cn-space-4;
+      border-radius: $cn-radius-md;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: $cn-text-muted;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        background: $cn-bg-hover;
+      }
+
+      .cn-nav-group-chevron {
+        transition: transform 0.15s ease;
+        font-size: 10px;
+      }
+
+      &.cn-nav-group-open .cn-nav-group-chevron {
+        transform: rotate(90deg);
+      }
+    }
+
+    .cn-nav-group-items {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+
+  .cn-sidebar-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: $cn-space-3;
+    padding-top: $cn-space-6;
+    border-top: 1px solid $cn-sidebar-border;
+  }
+
+  .cn-sidebar-user {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $cn-space-3;
+    padding: $cn-space-2;
+    border-radius: $cn-radius-md;
+
+    .nav-item.dropdown {
+      list-style: none;
+    }
+
+    .nav-link {
+      padding: 4px 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: $cn-text-secondary;
+      border-radius: $cn-radius-sm;
+
+      &:hover {
+        background: $cn-bg-hover;
+        text-decoration: none;
+      }
+    }
+  }
+
+  .cn-sidebar-copyright {
+    font-size: 11px;
+    color: $cn-text-muted;
+    padding: 0 $cn-space-2;
+
+    a {
+      color: $cn-text-muted;
+      text-decoration: underline;
+
+      &:hover {
+        color: $cn-text-secondary;
+      }
+    }
+  }
+
+  .cn-app-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cn-main {
+    flex: 1;
+    min-width: 0;
   }
 
   .main .container-fluid {
-    padding: 0 15px;
+    padding: $cn-space-11 $cn-space-12;
 
     @include media-breakpoint-down(md) {
-      padding: 0 3px;
+      padding: $cn-space-6 $cn-space-6;
     }
   }
 
-  .navbar-dark {
-    .navbar-nav {
-      .active > .nav-link:hover {
-        color: $navbar-dark-active-color;
-      }
+  @include media-breakpoint-down(md) {
+    .cn-app {
+      flex-direction: column;
+    }
+
+    .cn-sidebar {
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      padding: $cn-space-4 $cn-space-6;
+      gap: $cn-space-6;
+      overflow-x: auto;
+    }
+
+    .cn-sidebar-nav {
+      flex-direction: row;
+      overflow-x: auto;
+      gap: $cn-space-6;
+    }
+
+    .cn-nav-list {
+      flex-direction: row;
+    }
+
+    .cn-nav-group {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .cn-sidebar-footer {
+      margin-top: 0;
+      margin-left: auto;
+      border-top: 0;
+      padding-top: 0;
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Cards, pills, stat cards — shared flat design-system primitives
+  // ---------------------------------------------------------------------
+
+  .cn-card {
+    background: $cn-bg-card;
+    border: 1px solid $cn-border;
+    border-radius: $cn-radius-lg;
+  }
+
+  .cn-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $cn-space-9;
+    gap: $cn-space-6;
+  }
+
+  .cn-page-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .cn-page-subtitle {
+    font-size: 14px;
+    color: $cn-text-muted;
+    margin-top: 4px;
+  }
+
+  .cn-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: $cn-space-2;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px $cn-space-8;
+    border-radius: $cn-radius-md;
+    border: 1px solid transparent;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  .cn-btn-primary {
+    background: $cn-accent;
+    color: white;
+
+    &:hover, &:focus {
+      background: $cn-accent-hover;
+      color: white;
+    }
+  }
+
+  .cn-btn-outline {
+    background: $cn-bg-card;
+    border-color: $cn-border-strong;
+    color: $cn-text-primary;
+
+    &:hover, &:focus {
+      background: $cn-bg-subtle;
+      color: $cn-text-primary;
+    }
+  }
+
+  .cn-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px $cn-space-4;
+    border-radius: $cn-radius-pill;
+    white-space: nowrap;
+  }
+
+  .cn-pill-green { background: $cn-status-green-bg; color: $cn-status-green-text; }
+  .cn-pill-gray { background: $cn-status-gray-bg; color: $cn-status-gray-text; }
+  .cn-pill-amber { background: $cn-status-amber-bg; color: $cn-status-amber-text; }
+  .cn-pill-blue { background: $cn-status-blue-bg; color: $cn-status-blue-text; }
+
+  .cn-stat-card {
+    background: $cn-bg-card;
+    border: 1px solid $cn-border;
+    border-radius: $cn-radius-lg;
+    padding: $cn-space-7 $cn-space-8;
+    display: flex;
+    flex-direction: column;
+    gap: $cn-space-1;
+  }
+
+  .cn-stat-label {
+    font-size: 13px;
+    color: $cn-text-muted;
+    font-weight: 500;
+  }
+
+  .cn-stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $cn-text-primary;
+  }
+
+  .cn-stat-delta {
+    font-size: 12px;
+    font-weight: 600;
+    color: $cn-text-muted;
+
+    &.cn-stat-delta-positive {
+      color: $cn-positive;
+    }
+  }
+
+  .cn-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: $cn-space-6;
+
+    @include media-breakpoint-down(md) {
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 }
@@ -165,4 +444,3 @@ body.mailtrain {
 .gpg-text {
   font-family: monospace;
 }
-

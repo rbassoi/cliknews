@@ -25,7 +25,7 @@ import {
 import {withErrorHandling} from '../../lib/error-handling';
 import {getDefaultNamespace, NamespaceSelect, validateNamespace} from '../../lib/namespace';
 import {DeleteModalDialog} from "../../lib/modals";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {getTrustedUrl, getUrl} from "../../lib/urls";
 import {ActionLink, Icon} from "../../lib/bootstrap-components";
 import styles from "../../lib/styles.scss";
@@ -286,9 +286,9 @@ export default class CUD extends Component {
 
 
     supplyDefaults(data) {
-        for (const key in mailtrainConfig.defaultCustomFormValues) {
+        for (const key in cliknewsConfig.defaultCustomFormValues) {
             if (!data[key]) {
-                data[key] = mailtrainConfig.defaultCustomFormValues[key];
+                data[key] = cliknewsConfig.defaultCustomFormValues[key];
             }
         }
     }

@@ -1,7 +1,7 @@
 'use strict';
 
 // Set module title
-module.exports.title = 'Mailtrain integration (receiver)';
+module.exports.title = 'ClikNews integration (receiver)';
 
 // Initialize the module
 module.exports.init = (app, done) => {
@@ -13,14 +13,14 @@ module.exports.init = (app, done) => {
             envelope.dkim.keys = [];
         }
 
-        const dkimHeaderValue = require('libmime').decodeWords(headers.getFirst('x-mailtrain-dkim'));
+        const dkimHeaderValue = require('libmime').decodeWords(headers.getFirst('x-cliknews-dkim'));
 
         if (dkimHeaderValue) {
             const dkimKey = JSON.parse(dkimHeaderValue);
 
             envelope.dkim.keys.push(dkimKey);
 
-            headers.remove('x-mailtrain-dkim');
+            headers.remove('x-cliknews-dkim');
         }
 
         return next();

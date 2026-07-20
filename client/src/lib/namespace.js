@@ -4,7 +4,7 @@ import React, {Component} from 'react';
 import {withTranslation} from './i18n';
 import {TreeTableSelect} from './form';
 import {withComponentMixins} from "./decorator-helpers";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 
 
 @withComponentMixins([
@@ -29,20 +29,20 @@ export function validateNamespace(t, state) {
 }
 
 export function getDefaultNamespace(permissions) {
-    return permissions.viewUsersNamespace && permissions.createEntityInUsersNamespace ? mailtrainConfig.user.namespace : null;
+    return permissions.viewUsersNamespace && permissions.createEntityInUsersNamespace ? cliknewsConfig.user.namespace : null;
 }
 
 export function namespaceCheckPermissions(createOperation) {
-    if (mailtrainConfig.user) {
+    if (cliknewsConfig.user) {
         return {
             createEntityInUsersNamespace: {
                 entityTypeId: 'namespace',
-                entityId: mailtrainConfig.user.namespace,
+                entityId: cliknewsConfig.user.namespace,
                 requiredOperations: [createOperation]
             },
             viewUsersNamespace: {
                 entityTypeId: 'namespace',
-                entityId: mailtrainConfig.user.namespace,
+                entityId: cliknewsConfig.user.namespace,
                 requiredOperations: ['view']
             }
         };

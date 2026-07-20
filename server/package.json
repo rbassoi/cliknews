@@ -1,5 +1,5 @@
 {
-  "name": "mailtrain",
+  "name": "cliknews",
   "private": true,
   "version": "2.0.0",
   "description": "Self hosted email newsletter app - server",
@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "sqlinit": "node setup/sql/init.js",
-    "sqldump": "node setup/sql/dump.js | sed -e '/^\\/\\*.*\\*\\/;$/d' -e 's/.[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]./NOW()/g' > setup/sql/mailtrain${DUMP_NAME_SUFFIX}.sql",
+    "sqldump": "node setup/sql/dump.js | sed -e '/^\\/\\*.*\\*\\/;$/d' -e 's/.[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]./NOW()/g' > setup/sql/cliknews${DUMP_NAME_SUFFIX}.sql",
     "sqldrop": "node setup/sql/drop.js",
     "sqlgen": "npm run sqldrop && DB_FROM_START=Y npm run sqlinit && npm run sqldump",
     "sqldumptest": "NODE_ENV=test DUMP_NAME_SUFFIX=-test npm run sqldump",
@@ -18,10 +18,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/Mailtrain-org/mailtrain.git"
+    "url": "git://github.com/rbassoi/cliknews.git"
   },
   "license": "GPL-3.0",
-  "homepage": "https://mailtrain.org/",
+  "homepage": "https://github.com/rbassoi/cliknews",
   "engines": {
     "node": ">=10.0.0"
   },

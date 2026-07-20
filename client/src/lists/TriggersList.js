@@ -8,7 +8,7 @@ import {withErrorHandling} from '../lib/error-handling';
 import {Table} from '../lib/table';
 import {getTriggerTypes} from '../campaigns/triggers/helpers';
 import {Icon} from "../lib/bootstrap-components";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../lib/modals";
 import {withComponentMixins} from "../lib/decorator-helpers";
 
@@ -54,7 +54,7 @@ export default class List extends Component {
                     const perms = data[9];
                     const campaignId = data[8];
 
-                    if (mailtrainConfig.globalPermissions.setupAutomation && perms.includes('manageTriggers')) {
+                    if (cliknewsConfig.globalPermissions.setupAutomation && perms.includes('manageTriggers')) {
                         actions.push({
                             label: <Icon icon="edit" title={t('edit')}/>,
                             link: `/campaigns/${campaignId}/triggers/${data[0]}/edit`

@@ -8,7 +8,7 @@ import {withErrorHandling} from '../../lib/error-handling';
 import {Table} from '../../lib/table';
 import {getTriggerTypes} from './helpers';
 import {Icon} from "../../lib/bootstrap-components";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../../lib/modals";
 import {withComponentMixins} from "../../lib/decorator-helpers";
 
@@ -51,7 +51,7 @@ export default class List extends Component {
                 actions: data => {
                     const actions = [];
 
-                    if (mailtrainConfig.globalPermissions.setupAutomation && this.props.campaign.permissions.includes('manageTriggers')) {
+                    if (cliknewsConfig.globalPermissions.setupAutomation && this.props.campaign.permissions.includes('manageTriggers')) {
                         actions.push({
                             label: <Icon icon="edit" title={t('edit')}/>,
                             link: `/campaigns/${this.props.campaign.id}/triggers/${data[0]}/edit`
@@ -70,7 +70,7 @@ export default class List extends Component {
         return (
             <div>
                 {tableRestActionDialogRender(this)}
-                {mailtrainConfig.globalPermissions.setupAutomation && this.props.campaign.permissions.includes('manageTriggers') &&
+                {cliknewsConfig.globalPermissions.setupAutomation && this.props.campaign.permissions.includes('manageTriggers') &&
                     <Toolbar>
                         <LinkButton to={`/campaigns/${this.props.campaign.id}/triggers/create`} className="btn-primary" icon="plus" label={t('createTrigger')}/>
                     </Toolbar>

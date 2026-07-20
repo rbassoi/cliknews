@@ -18,7 +18,7 @@ import {
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import passwordValidator from '../../../shared/password-validator';
 import interoperableErrors from '../../../shared/interoperable-errors';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {withComponentMixins} from "../lib/decorator-helpers";
 
 @withComponentMixins([
@@ -185,7 +185,7 @@ export default class Account extends Component {
     render() {
         const t = this.props.t;
 
-        if (mailtrainConfig.isAuthMethodLocal) {
+        if (cliknewsConfig.isAuthMethodLocal) {
             return (
                 <div>
                     <Title>{t('account')}</Title>
@@ -216,7 +216,7 @@ export default class Account extends Component {
 
                     <p>{t('accountManagementIsNotPossibleBecause')}</p>
 
-                    {mailtrainConfig.externalPasswordResetLink && <p><Trans i18nKey="ifYouWantToChangeThePasswordUseThisLink">If you want to change the password, use <a href={mailtrainConfig.externalPasswordResetLink}>this link</a>.</Trans></p>}
+                    {cliknewsConfig.externalPasswordResetLink && <p><Trans i18nKey="ifYouWantToChangeThePasswordUseThisLink">If you want to change the password, use <a href={cliknewsConfig.externalPasswordResetLink}>this link</a>.</Trans></p>}
                 </div>
             );
         }

@@ -35,6 +35,48 @@ export class DismissibleAlert extends Component {
     }
 }
 
+export class Pill extends Component {
+    static propTypes = {
+        color: PropTypes.oneOf(['green', 'gray', 'amber', 'blue']),
+        className: PropTypes.string
+    }
+
+    static defaultProps = {
+        color: 'gray'
+    }
+
+    render() {
+        const props = this.props;
+        const className = `cn-pill cn-pill-${props.color}` + (props.className ? ' ' + props.className : '');
+
+        return <span className={className}>{props.children}</span>;
+    }
+}
+
+export class StatCard extends Component {
+    static propTypes = {
+        label: PropTypes.node.isRequired,
+        value: PropTypes.node.isRequired,
+        delta: PropTypes.node,
+        deltaPositive: PropTypes.bool,
+        className: PropTypes.string
+    }
+
+    render() {
+        const props = this.props;
+        const className = 'cn-stat-card' + (props.className ? ' ' + props.className : '');
+        const deltaClassName = 'cn-stat-delta' + (props.deltaPositive ? ' cn-stat-delta-positive' : '');
+
+        return (
+            <div className={className}>
+                <div className="cn-stat-label">{props.label}</div>
+                <div className="cn-stat-value">{props.value}</div>
+                {props.delta != null && <div className={deltaClassName}>{props.delta}</div>}
+            </div>
+        );
+    }
+}
+
 export class Icon extends Component {
     static propTypes = {
         icon: PropTypes.string.isRequired,

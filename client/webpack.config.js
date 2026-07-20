@@ -14,7 +14,7 @@ module.exports = {
         "codeeditor-root": ['./src/lib/sandboxed-codeeditor-root.js'],
     },
     output: {
-        library: 'MailtrainReactBody',
+        library: 'ClikNewsReactBody',
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist')
     },
@@ -95,7 +95,7 @@ module.exports = {
     externals: {
         jquery: 'jQuery',
         csrfToken: 'csrfToken',
-        mailtrainConfig: 'mailtrainConfig'
+        cliknewsConfig: 'cliknewsConfig'
     },
     plugins: [
       new CopyPlugin([

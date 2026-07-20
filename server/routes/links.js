@@ -12,7 +12,7 @@ router.getAsync('/:campaign/:list/:subscription/:link', async (req, res) => {
     const link = await links.resolve(req.params.link);
 
     if (link) {
-        // In Mailtrain v1 we would do the URL expansion here based on merge tags. We don't do it here anymore. Instead, the URLs are expanded when message is sent out (in links.updateLinks)
+        // In ClikNews v1 we would do the URL expansion here based on merge tags. We don't do it here anymore. Instead, the URLs are expanded when message is sent out (in links.updateLinks)
         res.redirect(302, link.url);
 
         await links.countLink(req.ip, req.headers['user-agent'], req.params.campaign, req.params.list, req.params.subscription, link.id);

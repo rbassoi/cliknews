@@ -1,0 +1,77 @@
+// Design tokens for the ClikNews UI, matching design_handoff_contacts_newsletter.
+// LibSass passes unrecognised functions like oklch() straight through to the
+// compiled CSS, so these can be used directly as SCSS variable values.
+
+// Backgrounds
+$cn-bg-page: oklch(0.985 0.004 90);
+$cn-bg-card: white;
+$cn-bg-sidebar: oklch(0.975 0.004 90);
+$cn-bg-subtle: oklch(0.97 0.004 90);
+$cn-bg-hover: oklch(0.94 0.006 90);
+
+// Borders
+$cn-border: oklch(0.91 0.005 90);
+$cn-border-strong: oklch(0.85 0.005 90);
+$cn-border-subtle: oklch(0.94 0.004 90);
+$cn-sidebar-border: oklch(0.9 0.005 90);
+
+// Text
+$cn-text-primary: oklch(0.22 0.01 90);
+$cn-text-secondary: oklch(0.4 0.01 90);
+$cn-text-muted: oklch(0.5 0.01 90);
+$cn-text-faint: oklch(0.6 0.01 90);
+$cn-nav-inactive: oklch(0.3 0.01 90);
+
+// Accent (primary blue)
+$cn-accent: oklch(0.55 0.18 250);
+$cn-accent-hover: oklch(0.48 0.18 250);
+$cn-accent-tint: oklch(0.94 0.03 250);
+$cn-accent-tint-light: oklch(0.95 0.02 250);
+$cn-accent-text: oklch(0.4 0.15 250);
+$cn-accent-text-light: oklch(0.45 0.15 250);
+
+// List category colors
+$cn-list-blue: oklch(0.55 0.18 250);
+$cn-list-green: oklch(0.55 0.18 150);
+$cn-list-orange: oklch(0.55 0.18 40);
+$cn-list-pink: oklch(0.55 0.18 320);
+
+// Status pills
+$cn-status-green-bg: oklch(0.94 0.05 150);
+$cn-status-green-text: oklch(0.4 0.12 150);
+$cn-status-gray-bg: oklch(0.95 0.01 90);
+$cn-status-gray-text: oklch(0.5 0.01 90);
+$cn-status-amber-bg: oklch(0.95 0.05 80);
+$cn-status-amber-text: oklch(0.5 0.13 80);
+$cn-status-blue-bg: oklch(0.95 0.03 250);
+$cn-status-blue-text: oklch(0.45 0.15 250);
+
+// Deltas
+$cn-positive: oklch(0.5 0.15 150);
+
+// Radius
+$cn-radius-sm: 6px;
+$cn-radius-md: 8px;
+$cn-radius-lg: 10px;
+$cn-radius-xl: 14px;
+$cn-radius-pill: 20px;
+
+// Spacing scale
+$cn-space-1: 6px;
+$cn-space-2: 8px;
+$cn-space-3: 10px;
+$cn-space-4: 12px;
+$cn-space-5: 14px;
+$cn-space-6: 16px;
+$cn-space-7: 18px;
+$cn-space-8: 20px;
+$cn-space-9: 24px;
+$cn-space-10: 28px;
+$cn-space-11: 32px;
+$cn-space-12: 40px;
+
+// Sidebar
+$cn-sidebar-width: 240px;
+
+// Shadow
+$cn-shadow-card: 0 1px 3px oklch(0.2 0.01 90 / 0.08);

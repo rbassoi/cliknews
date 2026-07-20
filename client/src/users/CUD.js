@@ -18,7 +18,7 @@ import {
 import {withErrorHandling} from '../lib/error-handling';
 import interoperableErrors from '../../../shared/interoperable-errors';
 import passwordValidator from '../../../shared/password-validator';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {getDefaultNamespace, NamespaceSelect, validateNamespace} from '../lib/namespace';
 import {DeleteModalDialog} from "../lib/modals";
 import {withComponentMixins} from "../lib/decorator-helpers";
@@ -41,7 +41,7 @@ export default class CUD extends Component {
         this.initForm({
             serverValidation: {
                 url: 'rest/users-validate',
-                changed: mailtrainConfig.isAuthMethodLocal ? ['username', 'email'] : ['username'],
+                changed: cliknewsConfig.isAuthMethodLocal ? ['username', 'email'] : ['username'],
                 extra: ['id']
             }
         });
@@ -102,7 +102,7 @@ export default class CUD extends Component {
         }
 
 
-        if (mailtrainConfig.isAuthMethodLocal) {
+        if (cliknewsConfig.isAuthMethodLocal) {
             const email = state.getIn(['email', 'value']);
             const emailServerValidation = state.getIn(['email', 'serverValidation']);
 
@@ -222,7 +222,7 @@ export default class CUD extends Component {
         const t = this.props.t;
         const isEdit = !!this.props.entity;
         const userId = this.getFormValue('id');
-        const canDelete = isEdit && userId !== 1 && mailtrainConfig.user.id !== userId;
+        const canDelete = isEdit && userId !== 1 && cliknewsConfig.user.id !== userId;
 
         const rolesColumns = [
             { data: 1, title: t("name") },
@@ -247,7 +247,7 @@ export default class CUD extends Component {
 
                 <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
                     <InputField id="username" label={t('userName')}/>
-                    {mailtrainConfig.isAuthMethodLocal &&
+                    {cliknewsConfig.isAuthMethodLocal &&
                         <div>
                             <InputField id="name" label={t('fullName')}/>
                             <InputField id="email" label={t('email')}/>

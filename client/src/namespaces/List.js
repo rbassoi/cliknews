@@ -9,7 +9,7 @@ import {Icon} from "../lib/bootstrap-components";
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../lib/modals";
 import {getGlobalNamespaceId} from "../../../shared/namespaces";
 import {withComponentMixins} from "../lib/decorator-helpers";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import PropTypes from 'prop-types';
 
 @withComponentMixins([
@@ -54,7 +54,7 @@ export default class List extends Component {
             }
 
             const namespaceId = Number.parseInt(node.key);
-            if (namespaceId !== getGlobalNamespaceId() && mailtrainConfig.user.namespace !== namespaceId) {
+            if (namespaceId !== getGlobalNamespaceId() && cliknewsConfig.user.namespace !== namespaceId) {
                 tableAddDeleteButton(actions, this, node.data.permissions, `rest/namespaces/${node.key}`, node.data.unsanitizedTitle, t('deletingNamespace'), t('namespaceDeleted'));
             }
 

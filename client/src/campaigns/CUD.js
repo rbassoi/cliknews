@@ -24,7 +24,7 @@ import {
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import {getDefaultNamespace, NamespaceSelect, validateNamespace} from '../lib/namespace';
 import {DeleteModalDialog} from "../lib/modals";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {getModals, getTagLanguages, getTemplateTypes, getTypeForm, ResourceType} from '../templates/helpers';
 import axios from '../lib/axios';
 import styles from "../lib/styles.scss";
@@ -91,12 +91,12 @@ export default class CUD extends Component {
         }
 
         this.customTemplateTypeOptions = [];
-        for (const key of mailtrainConfig.editors) {
+        for (const key of cliknewsConfig.editors) {
             this.customTemplateTypeOptions.push({key, label: this.templateTypes[key].typeName});
         }
 
         this.customTemplateTagLanguageOptions = [];
-        for (const key of mailtrainConfig.tagLanguages) {
+        for (const key of cliknewsConfig.tagLanguages) {
             this.customTemplateTagLanguageOptions.push({key, label: this.tagLanguages[key].name});
         }
 
@@ -272,13 +272,13 @@ export default class CUD extends Component {
             data.data_sourceCampaign = null;
 
             // This is for CampaignSource.CUSTOM
-            data.data_sourceCustom_type = mailtrainConfig.editors[0];
-            data.data_sourceCustom_tag_language = mailtrainConfig.tagLanguages[0];
+            data.data_sourceCustom_type = cliknewsConfig.editors[0];
+            data.data_sourceCustom_tag_language = cliknewsConfig.tagLanguages[0];
             data.data_sourceCustom_data = {};
             data.data_sourceCustom_html = '';
             data.data_sourceCustom_text = '';
 
-            Object.assign(data, this.templateTypes[mailtrainConfig.editors[0]].initData());
+            Object.assign(data, this.templateTypes[cliknewsConfig.editors[0]].initData());
 
             // This is for CampaignSource.URL
             data.data_sourceUrl = '';

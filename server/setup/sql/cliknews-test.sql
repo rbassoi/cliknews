@@ -331,16 +331,16 @@ INSERT INTO `settings` (`id`, `key`, `value`) VALUES (3,'smtp_encryption','NONE'
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (4,'smtp_user','testuser');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (5,'smtp_pass','testpass');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (6,'service_url','http://localhost:3000/');
-INSERT INTO `settings` (`id`, `key`, `value`) VALUES (7,'admin_email','keep.admin@mailtrain.org');
+INSERT INTO `settings` (`id`, `key`, `value`) VALUES (7,'admin_email','keep.admin@cliknews.org');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (8,'smtp_max_connections','5');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (9,'smtp_max_messages','100');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (10,'smtp_log','');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (11,'default_sender','My Awesome Company');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (12,'default_postaddress','1234 Main Street');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (13,'default_from','My Awesome Company');
-INSERT INTO `settings` (`id`, `key`, `value`) VALUES (14,'default_address','keep.admin@mailtrain.org');
+INSERT INTO `settings` (`id`, `key`, `value`) VALUES (14,'default_address','keep.admin@cliknews.org');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (15,'default_subject','Test message');
-INSERT INTO `settings` (`id`, `key`, `value`) VALUES (16,'default_homepage','https://mailtrain.org');
+INSERT INTO `settings` (`id`, `key`, `value`) VALUES (16,'default_homepage','https://cliknews.org');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (17,'db_schema_version','29');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (46,'ua_code','');
 INSERT INTO `settings` (`id`, `key`, `value`) VALUES (47,'shoutout','');
@@ -432,7 +432,7 @@ CREATE TABLE `subscription__1` (
   KEY `latest_click` (`latest_click`),
   KEY `created` (`created`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
-INSERT INTO `subscription__1` (`id`, `cid`, `email`, `opt_in_ip`, `opt_in_country`, `tz`, `imported`, `status`, `is_test`, `status_change`, `latest_open`, `latest_click`, `created`, `first_name`, `last_name`, `custom_text_field_byiiqjrw`, `custom_number_field_r1dd91awb`, `custom_website_field_rkq991cw`, `custom_gpg_public_key_ryvj51cz`, `custom_multiline_text_bjbfojawb`, `custom_json_skqjkcb`, `custom_date_mmddyy_rjkeojrzz`, `custom_date_ddmmyy_ryedsk0wz`, `custom_birthday_mmdd_h18coj0zz`, `custom_birthday_ddmm_r1g3s1czz`, `custom_dd_option_1_b1wwn1rzw`, `custom_drop_down_opt_2_hkzd2jcww`, `custom_drop_down_opt_3_rjghnyrz`, `custom_checkbox_option_1_by_l0jcwz`, `custom_checkbox_option_2_sjdprj0zz`, `custom_checkbox_option_3_bk2drjabz`) VALUES (1,'SJDW9J0Wb','keep.john.doe@mailtrain.org',NULL,NULL,'europe/zurich',NULL,1,1,NOW(),NOW(),NULL,NOW(),'John','Doe','Lorem Ipsum',42,'https://mailtrain.org','','Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.','',NOW(),NOW(),NOW(),NOW(),1,0,0,0,1,0);
+INSERT INTO `subscription__1` (`id`, `cid`, `email`, `opt_in_ip`, `opt_in_country`, `tz`, `imported`, `status`, `is_test`, `status_change`, `latest_open`, `latest_click`, `created`, `first_name`, `last_name`, `custom_text_field_byiiqjrw`, `custom_number_field_r1dd91awb`, `custom_website_field_rkq991cw`, `custom_gpg_public_key_ryvj51cz`, `custom_multiline_text_bjbfojawb`, `custom_json_skqjkcb`, `custom_date_mmddyy_rjkeojrzz`, `custom_date_ddmmyy_ryedsk0wz`, `custom_birthday_mmdd_h18coj0zz`, `custom_birthday_ddmm_r1g3s1czz`, `custom_dd_option_1_b1wwn1rzw`, `custom_drop_down_opt_2_hkzd2jcww`, `custom_drop_down_opt_3_rjghnyrz`, `custom_checkbox_option_1_by_l0jcwz`, `custom_checkbox_option_2_sjdprj0zz`, `custom_checkbox_option_3_bk2drjabz`) VALUES (1,'SJDW9J0Wb','keep.john.doe@cliknews.org',NULL,NULL,'europe/zurich',NULL,1,1,NOW(),NOW(),NULL,NOW(),'John','Doe','Lorem Ipsum',42,'https://cliknews.org','','Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.','',NOW(),NOW(),NOW(),NOW(),1,0,0,0,1,0);
 CREATE TABLE `subscription__2` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `cid` varchar(255) CHARACTER SET ascii NOT NULL,
@@ -1229,7 +1229,7 @@ CREATE TABLE `users` (
   KEY `check_reset` (`username`(191),`reset_token`,`reset_expire`),
   KEY `token_index` (`access_token`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `access_token`, `reset_token`, `reset_expire`, `created`) VALUES (1,'admin','$2a$10$mzKU71G62evnGB2PvQA4k..Wf9jASk.c7a8zRMHh6qQVjYJ2r/g/K','keep.admin@mailtrain.org','7833d148e22c85474c314f43ae4591a7c9adec26',NULL,NULL,NOW());
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `access_token`, `reset_token`, `reset_expire`, `created`) VALUES (1,'admin','$2a$10$mzKU71G62evnGB2PvQA4k..Wf9jASk.c7a8zRMHh6qQVjYJ2r/g/K','keep.admin@cliknews.org','7833d148e22c85474c314f43ae4591a7c9adec26',NULL,NULL,NOW());
 
 SET UNIQUE_CHECKS=1;
 SET FOREIGN_KEY_CHECKS=1;

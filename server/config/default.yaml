@@ -1,4 +1,4 @@
-# This file is the default config file for Mailtrain. To use a environment specific
+# This file is the default config file for ClikNews. To use a environment specific
 # configuration add new file {ENV}.{ext} (eg. production.yaml) to the same folder.
 # {ENV} is defined by NODE_ENV environment variable.
 #
@@ -12,7 +12,7 @@
 #     port: 80
 
 # Process title visible in monitoring logs and process listing
-title: mailtrain
+title: cliknews
 
 # GDPR related settings (https://en.wikipedia.org/wiki/General_Data_Protection_Regulation)
 gdpr:
@@ -38,7 +38,7 @@ editors:
 
 # Enabled tag languages
 tagLanguages:
-- simple  # e.g. [FIRST_NAME] - this the style of merge tags found in Mailtrain v1
+- simple  # e.g. [FIRST_NAME] - this the style of merge tags found in ClikNews v1
 - hbs     # e.g. {{#if FIRST_NAME}}Hello {{firstName}}!{{else}}Hello!{{/if}} - this syntax uses Handlebars templating language (http://handlebarsjs.com)
 
 # Default language to use
@@ -73,11 +73,11 @@ redis:
 
 # If you start out as a root user (eg. if you want to use ports lower than 1000)
 # then you can downgrade the user once all services are up and running
-#user: mailtrain
-#group: mailtrain
+#user: cliknews
+#group: cliknews
 
-# If Mailtrain is started as root, Reports feature drops the privileges of script generating the report to disallow
-# any modifications of Mailtrain code and even prohibits reading the production configuration (which contains the MySQL
+# If ClikNews is started as root, Reports feature drops the privileges of script generating the report to disallow
+# any modifications of ClikNews code and even prohibits reading the production configuration (which contains the MySQL
 # password for read/write operations). The roUser/roGroup determines the user to be used
 #roUser: nobody
 #roGroup: nogroup
@@ -96,7 +96,7 @@ www:
   publicPort: 3004
   # HTTP interface to listen on
   host: 0.0.0.0
-  # URL base for trusted urls (logged-in users). It must be absolute (starting with http:// or https://). If Mailtrain is served on
+  # URL base for trusted urls (logged-in users). It must be absolute (starting with http:// or https://). If ClikNews is served on
   # a non-standard port (e.g. 3000), the URL must also specify the port.
   trustedUrlBase: http://localhost:3000
   # URL base for sandbox urls (logged-in users). It must be absolute (starting with http:// or https://) and contain the sandbox port.
@@ -112,21 +112,21 @@ www:
   # logger interface for expressjs morgan
   log: dev
   # Is the server behind a proxy? true/false
-  # Set this to true if you are serving Mailtrain as a virtual domain through Nginx or Apache
+  # Set this to true if you are serving ClikNews as a virtual domain through Nginx or Apache
   proxy: false
   # maximum POST body size
   postSize: 2MB
 
 mysql:
   host: localhost
-  user: mailtrain
-  password: mailtrain
-  database: mailtrain
+  user: cliknews
+  password: cliknews
+  database: cliknews
   # Some installations, eg. MAMP can use a different port (8889)
   # MAMP users should also turn on Allow network access to MySQL otherwise MySQL might not be accessible
   port: 3306
   # The timezone configured on the MySQL server. This can be 'local', 'Z', or an offset in the form +HH:MM or -HH:MM
-  # If the MySQL server runs on the same server as Mailtrain, use 'local'
+  # If the MySQL server runs on the same server as ClikNews, use 'local'
   timezone: local
   
 verp:
@@ -163,8 +163,8 @@ ldap:
   bindPassword: mySecretPassword
 
 postfixBounce:
-  # Enable to allow writing Postfix bounce log to Mailtrain listener
-  # If enabled, tail mail.log to Mailtrain with the following command:
+  # Enable to allow writing Postfix bounce log to ClikNews listener
+  # If enabled, tail mail.log to ClikNews with the following command:
   #     tail -f -n +0 /var/log/mail.log | nc localhost 5699 -
   enabled: false
   port: 5699
@@ -191,10 +191,10 @@ queue:
   # How many parallel sender processes to spawn
   processes: 2
 
-  # For how long (in seconds) to try to send an email before Mailtrain stops to trying. An email can normally
+  # For how long (in seconds) to try to send an email before ClikNews stops to trying. An email can normally
   # be sent out almost immediately. However if the send configuration is not correct or the mail server is not reachable,
-  # Mailtrain will keep retrying until the email expires.
-  # Due to Mailtrain's internal timeouts, the values should be at least 60 seconds.
+  # ClikNews will keep retrying until the email expires.
+  # Due to ClikNews's internal timeouts, the values should be at least 60 seconds.
   retention:
     # Regular and RSS campaign. Once this expires, the campaign is considered finished. The remaining recipients
     # are included in the set of those recipients to whom the message would be delivered if the campaign is again started.
@@ -244,9 +244,9 @@ reports:
   # server when generating a report. As these snippets are stored in the DB, they pose a security risk because they can
   # help gaining access to the server if the DB cannot
   # be properly protected (e.g. if it is shared with another application with security weaknesses).
-  # Mailtrain mitigates this problem by running the custom Javascript snippets in a chrooted environment and under a
+  # ClikNews mitigates this problem by running the custom Javascript snippets in a chrooted environment and under a
   # DB user that cannot modify the database (see userRO in [mysql] above). However the chrooted environment is available
-  # only if Mailtrain is started as root. The chrooted environment still does not prevent the custom JS script in
+  # only if ClikNews is started as root. The chrooted environment still does not prevent the custom JS script in
   # performing network operations and in generating XSS attacks as part of the report.
   # The bottom line is that if people who are creating report templates or have write access to the DB cannot be trusted,
   # then it's safer to switch off the reporting functionality below.

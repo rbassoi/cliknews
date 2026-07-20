@@ -11,7 +11,7 @@ module.exports = {
         admin: {
             username: 'admin',
             password: 'test',
-            email: 'keep.admin@mailtrain.org',
+            email: 'keep.admin@cliknews.org',
             accessToken: '7833d148e22c85474c314f43ae4591a7c9adec26'
         }
     },
@@ -73,8 +73,8 @@ module.exports = {
     },
     settings: {
         'service-url': 'http://localhost:' + config.www.publicPort + '/',
-        'admin-email': 'keep.admin@mailtrain.org',
-        'default-homepage': 'https://mailtrain.org',
+        'admin-email': 'keep.admin@cliknews.org',
+        'default-homepage': 'https://cliknews.org',
         'smtp-hostname': config.testServer.host,
         'smtp-port': config.testServer.port,
         'smtp-encryption': 'NONE',

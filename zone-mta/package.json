@@ -1,15 +1,15 @@
 {
-    "name": "mailtrain-zone-mta",
+    "name": "cliknews-zone-mta",
     "private": true,
     "version": "1.0.0",
-    "description": "Mailtrain builtin ZoneMTA instance",
+    "description": "ClikNews builtin ZoneMTA instance",
     "main": "index.js",
     "scripts": {
         "start": "node index.js --config=config/zonemta.js"
     },
     "keywords": [],
     "license": "GPL-3.0",
-    "homepage": "https://mailtrain.org/",
+    "homepage": "https://github.com/rbassoi/cliknews",
     "engines": {
         "node": ">=10.0.0"
     },

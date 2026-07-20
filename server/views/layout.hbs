@@ -10,11 +10,11 @@
     <link rel="shortcut icon" href="{{publicPath}}static/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="{{publicPath}}static/favicon.ico">
 
-    <title>Mailtrain
+    <title>ClikNews
         {{#if title}} | {{title}}{{/if}}
     </title>
 
-    <link rel="stylesheet" href="{{publicPath}}client/mailtrain.css">
+    <link rel="stylesheet" href="{{publicPath}}client/cliknews.css">
 
     <script src="{{publicPath}}static-npm/jquery.min.js"></script>
     <script src="{{publicPath}}static-npm/popper.min.js"></script>
@@ -27,10 +27,10 @@
         }
     </script>
 
-    {{#if mailtrainConfig}}
+    {{#if cliknewsConfig}}
     <script>
         {{#if reactCsrfToken}}window.csrfToken = '{{reactCsrfToken}}';{{/if}}
-        window.mailtrainConfig = {{{mailtrainConfig}}};
+        window.cliknewsConfig = {{{cliknewsConfig}}};
     </script>
 
     {{#each scriptFiles}}
@@ -39,7 +39,7 @@
     {{/if}}
 </head>
 
-<body class="mailtrain {{bodyClass}}">
+<body class="cliknews {{bodyClass}}">
     {{{body}}}
 
     {{> tracking_scripts}}

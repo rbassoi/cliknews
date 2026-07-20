@@ -2,7 +2,7 @@
 
 import {anonymousRestrictedAccessToken} from '../../../shared/urls';
 import {AppType} from '../../../shared/app';
-import mailtrainConfig from "mailtrainConfig";
+import cliknewsConfig from "cliknewsConfig";
 import i18n from './i18n';
 
 let restrictedAccessToken = anonymousRestrictedAccessToken;
@@ -12,12 +12,12 @@ export function setRestrictedAccessToken(token) {
 }
 
 export function getTrustedUrl(path) {
-    return mailtrainConfig.trustedUrlBase + (path || '');
+    return cliknewsConfig.trustedUrlBase + (path || '');
 }
 
 export function getSandboxUrl(path, customRestrictedAccessToken, opts) {
     const localRestrictedAccessToken = customRestrictedAccessToken || restrictedAccessToken;
-     const url = new URL(localRestrictedAccessToken + '/' + (path || ''), mailtrainConfig.sandboxUrlBase);
+     const url = new URL(localRestrictedAccessToken + '/' + (path || ''), cliknewsConfig.sandboxUrlBase);
 
     if (opts && opts.withLocale) {
         url.searchParams.append('locale', i18n.language);
@@ -27,7 +27,7 @@ export function getSandboxUrl(path, customRestrictedAccessToken, opts) {
 }
 
 export function getPublicUrl(path, opts) {
-    const url = new URL(path || '', mailtrainConfig.publicUrlBase);
+    const url = new URL(path || '', cliknewsConfig.publicUrlBase);
 
     if (opts && opts.withLocale) {
         url.searchParams.append('locale', i18n.language);
@@ -37,21 +37,21 @@ export function getPublicUrl(path, opts) {
 }
 
 export function getUrl(path) {
-    if (mailtrainConfig.appType === AppType.TRUSTED) {
+    if (cliknewsConfig.appType === AppType.TRUSTED) {
         return getTrustedUrl(path);
-    } else if (mailtrainConfig.appType === AppType.SANDBOXED) {
+    } else if (cliknewsConfig.appType === AppType.SANDBOXED) {
         return getSandboxUrl(path);
-    } else if (mailtrainConfig.appType === AppType.PUBLIC) {
+    } else if (cliknewsConfig.appType === AppType.PUBLIC) {
         return getPublicUrl(path);
     }
 }
 
 export function getBaseDir() {
-    if (mailtrainConfig.appType === AppType.TRUSTED) {
-        return mailtrainConfig.trustedUrlBaseDir;
-    } else if (mailtrainConfig.appType === AppType.SANDBOXED) {
-        return mailtrainConfig.sandboxUrlBaseDir + restrictedAccessToken;
-    } else if (mailtrainConfig.appType === AppType.PUBLIC) {
-        return mailtrainConfig.publicUrlBaseDir;
+    if (cliknewsConfig.appType === AppType.TRUSTED) {
+        return cliknewsConfig.trustedUrlBaseDir;
+    } else if (cliknewsConfig.appType === AppType.SANDBOXED) {
+        return cliknewsConfig.sandboxUrlBaseDir + restrictedAccessToken;
+    } else if (cliknewsConfig.appType === AppType.PUBLIC) {
+        return cliknewsConfig.publicUrlBaseDir;
     }
 }

@@ -16,7 +16,7 @@ import {CodeEditorSourceType, getCodeEditorSourceTypeOptions} from "../lib/sandb
 
 import {getTemplateTypes as getMosaicoTemplateTypes} from './mosaico/helpers';
 import {getSandboxUrl} from "../lib/urls";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {ActionLink, Button, ModalDialog} from "../lib/bootstrap-components";
 import {Trans} from "react-i18next";
 import {renderTag, TagLanguages} from "../../../shared/templates";
@@ -327,8 +327,8 @@ export function getTemplateTypes(t, prefix = '', entityTypeId = ResourceType.TEM
         }
     };
 
-    const mosaicoFsTemplatesOptions = mailtrainConfig.mosaico.fsTemplates;
-    const mosaicoFsTemplatesLabels = new Map(mailtrainConfig.mosaico.fsTemplates.map(({key, label}) => ([key, label])));
+    const mosaicoFsTemplatesOptions = cliknewsConfig.mosaico.fsTemplates;
+    const mosaicoFsTemplatesLabels = new Map(cliknewsConfig.mosaico.fsTemplates.map(({key, label}) => ([key, label])));
 
     templateTypes.mosaicoWithFsTemplate = {
         typeName: t('mosaicoWithPredefinedTemplates'),
@@ -385,7 +385,7 @@ export function getTemplateTypes(t, prefix = '', entityTypeId = ResourceType.TEM
             return null;
         },
         initData: () => ({
-            [prefix + 'mosaicoFsTemplate']: mailtrainConfig.mosaico.fsTemplates[0].key,
+            [prefix + 'mosaicoFsTemplate']: cliknewsConfig.mosaico.fsTemplates[0].key,
             [prefix + 'mosaicoData']: {}
         }),
         afterLoad: data => {
@@ -863,7 +863,7 @@ export function getEditForm(owner, typeKey, prefix = '') {
                                 {tg('RSS_ENTRY_CUSTOM_TAGS')}
                             </th>
                             <td>
-                                <Trans i18nKey="mailtrainCustomTagsTheCustomTagsCanBe">Mailtrain custom tags. The custom tags can be passed in via <code>mt:entries-json</code> element in RSS entry. The text contents of the elements is interpreted as JSON-formatted object..</Trans>
+                                <Trans i18nKey="cliknewsCustomTagsTheCustomTagsCanBe">ClikNews custom tags. The custom tags can be passed in via <code>mt:entries-json</code> element in RSS entry. The text contents of the elements is interpreted as JSON-formatted object..</Trans>
                             </td>
                         </tr>
                         </tbody>

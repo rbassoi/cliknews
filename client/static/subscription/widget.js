@@ -1,8 +1,8 @@
 /* eslint-env browser */
 /* eslint prefer-arrow-callback: 0, object-shorthand: 0, new-cap: 0, no-invalid-this: 0, no-var: 0*/
 
-if (typeof window.mailtrain !== 'object') {
-    window.mailtrain = {};
+if (typeof window.cliknews !== 'object') {
+    window.cliknews = {};
     (function(mt) {
         'use strict';
 
@@ -151,7 +151,7 @@ if (typeof window.mailtrain !== 'object') {
             });
         };
 
-        forEach(document.body.querySelectorAll('div[data-mailtrain-subscription-widget]'), function(i, container) {
+        forEach(document.body.querySelectorAll('div[data-cliknews-subscription-widget]'), function(i, container) {
             var url = container.getAttribute('data-url');
             getJSON(url, function(j) {
                 renderWidget(container, j.data);
@@ -164,7 +164,7 @@ if (typeof window.mailtrain !== 'object') {
             loadScript('window.moment', 'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js', function(existed) {
                 loadScript('window.moment.tz', 'https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.3/moment-timezone-with-data.min.js', function(existed) {
                     if (window.moment && window.moment.tz) {
-                        forEach(document.body.querySelectorAll('div[data-mailtrain-subscription-widget] .tz-detect'), function(i, el) {
+                        forEach(document.body.querySelectorAll('div[data-cliknews-subscription-widget] .tz-detect'), function(i, el) {
                             el.value = window.moment.tz.guess() || '';
                         });
                     }
@@ -172,5 +172,5 @@ if (typeof window.mailtrain !== 'object') {
             });
         });
 
-    })(window.mailtrain);
+    })(window.cliknews);
 }

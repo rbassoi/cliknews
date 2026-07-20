@@ -30,7 +30,7 @@ to guarantee security and avoid XSS attacks in the multi-user settings. The func
 - *sandbox* - This is an endpoint not directly visible to a user. It is used to host WYSIWYG template editors.
 - *public* - This is an endpoint for subscribers. It is used to host subscription management forms, files and archive.
 
-The recommended deployment of Mailtrain would use 3 DNS entries that all points to the **same** IP address. For example as follows:
+The recommended deployment of ClikNews would use 3 DNS entries that all points to the **same** IP address. For example as follows:
 - *lists.example.com* - public endpoint (A record `lists` under `example.com` domain)
 - *cliknews.example.com* - trusted endpoint (CNAME record `cliknews` under `example.com` domain that points to `lists`)
 - *sbox-cliknews.example.com* - sandbox endpoint (CNAME record `sbox-cliknews` under `example.com` domain that points to `lists`)
@@ -38,11 +38,11 @@ The recommended deployment of Mailtrain would use 3 DNS entries that all points 
 
 ### Installation on fresh CentOS 7 or Ubuntu 18.04 LTS (public website secured by SSL)
 
-This will setup a publicly accessible Mailtrain instance. All endpoints (trusted, sandbox, public) will provide both HTTP (on port 80)
+This will setup a publicly accessible ClikNews instance. All endpoints (trusted, sandbox, public) will provide both HTTP (on port 80)
 and HTTPS (on port 443). The HTTP ports just issue HTTP redirect to their HTTPS counterparts.
 
 The script below will also acquire a valid certificate from [Let's Encrypt](https://letsencrypt.org/).
-If you are hosting Mailtrain on AWS or some other cloud provider, make sure that **before** running the installation
+If you are hosting ClikNews on AWS or some other cloud provider, make sure that **before** running the installation
 script you allow inbound connection to ports 80 (HTTP) and 443 (HTTPS).
 
 **Note,** that this will automatically accept the Let's Encrypt's Terms of Service.
@@ -67,11 +67,11 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
     apt-get install -y git
     ```
 
-3. Download Mailtrain using git to the `/opt/mailtrain` directory
+3. Download ClikNews using git to the `/opt/cliknews` directory
     ```
     cd /opt
-    git clone https://github.com/Mailtrain-org/mailtrain.git
-    cd mailtrain
+    git clone https://github.com/rbassoi/cliknews.git
+    cd cliknews
     git checkout v2
     ```
 
@@ -80,18 +80,18 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
 
    For Centos 7 type:
     ```
-    bash setup/install-centos7-https.sh mailtrain.example.com sbox-mailtrain.example.com lists.example.com admin@example.com
+    bash setup/install-centos7-https.sh cliknews.example.com sbox-cliknews.example.com lists.example.com admin@example.com
     ```
 
    For Ubuntu 18.04 LTS type:
     ```
-    bash setup/install-ubuntu1804-https.sh mailtrain.example.com sbox-mailtrain.example.com lists.example.com admin@example.com
+    bash setup/install-ubuntu1804-https.sh cliknews.example.com sbox-cliknews.example.com lists.example.com admin@example.com
     ```
 
-5. Start Mailtrain and enable to be started by default when your server starts.
+5. Start ClikNews and enable to be started by default when your server starts.
     ```
-    systemctl start mailtrain
-    systemctl enable mailtrain
+    systemctl start cliknews
+    systemctl enable cliknews
     ```
 
 6. Open the trusted endpoint (like `https://cliknews.example.com`)
@@ -107,7 +107,7 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
 
 ### Installation on fresh CentOS 7 or Ubuntu 18.04 LTS (local installation)
 
-This will setup a locally accessible Mailtrain instance (primarily for development and testing).
+This will setup a locally accessible ClikNews instance (primarily for development and testing).
 All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
 - http://localhost:3000 - trusted endpoint
 - http://localhost:3003 - sandbox endpoint
@@ -130,11 +130,11 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
     apt-get install -y git
     ```
 
-3. Download Mailtrain using git to the `/opt/cliknews` directory
+3. Download ClikNews using git to the `/opt/cliknews` directory
     ```
     cd /opt
     git clone https://github.com/rbassoi/cliknews.git
-    cd mailtrain
+    cd cliknews
     git checkout v2
     ```
 
@@ -165,7 +165,7 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
 
 ### Deployment with Docker and Docker compose
 
-This setup starts a stack composed of Mailtrain, MongoDB, Redis, and MariaDB. It will setup a locally accessible Mailtrain instance with HTTP endpoints as follows.
+This setup starts a stack composed of ClikNews, MongoDB, Redis, and MariaDB. It will setup a locally accessible ClikNews instance with HTTP endpoints as follows.
 - http://localhost:3000 - trusted endpoint
 - http://localhost:3003 - sandbox endpoint
 - http://localhost:3004 - public endpoint
@@ -176,19 +176,19 @@ An example of such proxy would be:
 - http://localhost:3003 -> https://sbox-cliknews.example.com
 - http://localhost:3004 -> https://lists.example.com
 
-To deploy Mailtrain with Docker, you need the following two dependencies installed:
+To deploy ClikNews with Docker, you need the following two dependencies installed:
 
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
 
-These are the steps to start Mailtrain via docker-compose:
+These are the steps to start ClikNews via docker-compose:
 
-1. Download Mailtrain's docker-compose build file
+1. Download ClikNews's docker-compose build file
     ```
     curl -O https://raw.githubusercontent.com/rbassoi/cliknews/v1/docker-compose.yml
     ```
 
-2. Deploy Mailtrain via docker-compose (in the directory to which you downloaded the `docker-compose.yml` file). This will take quite some time when run for the first time. Subsequent executions will be fast.
+2. Deploy ClikNews via docker-compose (in the directory to which you downloaded the `docker-compose.yml` file). This will take quite some time when run for the first time. Subsequent executions will be fast.
     ```
     docker-compose up
     ```
@@ -197,7 +197,7 @@ These are the steps to start Mailtrain via docker-compose:
 
 4. Authenticate as `admin`:`test`
 
-The instructions above use an automatically built Docker image on DockerHub (https://hub.docker.com/r/mailtrain/mailtrain). If you want to build the Docker image yourself (e.g. when doing development), use the `docker-compose-local.yml` located in the project's root directory.
+The instructions above assume a published Docker image (build and publish your own, e.g. via `docker-compose-local.yml`, and update this section with where you host it). If you want to build the Docker image yourself (e.g. when doing development), use the `docker-compose-local.yml` located in the project's root directory.
 
 
 ### Deployment with Docker and Docker compose (for development)
@@ -211,7 +211,7 @@ This setup starts a stack like above, but is tweaked to be used for local develo
     ```
 3. Connect to a shell inside the container
     ```
-    docker-compose exec mailtrain bash
+    docker-compose exec cliknews bash
     ```
 4. Run these commands once to install all the node modules and build the client webapp
     ```
@@ -226,13 +226,13 @@ This setup starts a stack like above, but is tweaked to be used for local develo
 
 
 ### Docker Environment Variables
-When using Docker, you can override the default Mailtrain settings via the following environment variables. These variables have to be defined in the docker-compose config
+When using Docker, you can override the default ClikNews settings via the following environment variables. These variables have to be defined in the docker-compose config
 file. You can give them a value directly in the `docker-compose.yml` config file. 
 
 Alternatively, you can just declare them there leaving their value empty 
 (see https://docs.docker.com/compose/environment-variables/#pass-environment-variables-to-containers). In that case, the 
 value can be provided via a file called `.env` or via environment 
-variables (e.g. `URL_BASE_TRUSTED=https://mailtrain.domain.com (and more env-vars..) docker-compose -f docker-compose.yml build (or up)`)  
+variables (e.g. `URL_BASE_TRUSTED=https://cliknews.domain.com (and more env-vars..) docker-compose -f docker-compose.yml build (or up)`)  
 
 #### !!!WARNING!!! Always set ADMIN_PASSWORD, as it will leave your instance otherwise vurnerable with the default password being `test`!
 
@@ -243,11 +243,11 @@ variables (e.g. `URL_BASE_TRUSTED=https://mailtrain.domain.com (and more env-var
 | PORT_TRUSTED     | sets the trusted port of the instance (default: 3000)                 |
 | PORT_SANDBOX     | sets the sandbox port of the instance (default: 3003)                 |
 | PORT_PUBLIC      | sets the public port of the instance (default: 3004)                  |
-| URL_BASE_TRUSTED | sets the external trusted url of the instance (default: http://localhost:3000), e.g. https://mailtrain.example.com |
-| URL_BASE_SANDBOX | sets the external sandbox url of the instance (default: http://localhost:3003), e.g. https://sbox-mailtrain.example.com |
+| URL_BASE_TRUSTED | sets the external trusted url of the instance (default: http://localhost:3000), e.g. https://cliknews.example.com |
+| URL_BASE_SANDBOX | sets the external sandbox url of the instance (default: http://localhost:3003), e.g. https://sbox-cliknews.example.com |
 | URL_BASE_PUBLIC  | sets the external public url of the instance (default: http://localhost:3004), e.g. https://lists.example.com |
 | WWW_HOST         | sets the address that the server binds to (default: 0.0.0.0)          |
-| WWW_PROXY        | use if Mailtrain is behind an http reverse proxy (default: false)     |
+| WWW_PROXY        | use if ClikNews is behind an http reverse proxy (default: false)     |
 | WWW_SECRET       | sets the secret for the express session (default: `$(pwgen -1)`)      |
 | MONGO_HOST       | sets mongo host (default: mongo)                                      |
 | WITH_REDIS       | enables or disables redis (default: true)                             |
@@ -255,9 +255,9 @@ variables (e.g. `URL_BASE_TRUSTED=https://mailtrain.domain.com (and more env-var
 | REDIS_PORT       | sets redis host (default: 6379)                                       |
 | MYSQL_HOST       | sets mysql host (default: mysql)                                      |
 | MYSQL_PORT       | sets mysql port (default: 3306)                                       |
-| MYSQL_DATABASE   | sets mysql database (default: mailtrain)                              |
-| MYSQL_USER       | sets mysql user (default: mailtrain)                                  |
-| MYSQL_PASSWORD   | sets mysql password (default: mailtrain)                              |
+| MYSQL_DATABASE   | sets mysql database (default: cliknews)                              |
+| MYSQL_USER       | sets mysql user (default: cliknews)                                  |
+| MYSQL_PASSWORD   | sets mysql password (default: cliknews)                              |
 | WITH_LDAP        | use if you want to enable LDAP authentication                         |
 | LDAP_HOST        | LDAP Host for authentication (default: ldap)                          |
 | LDAP_PORT        | LDAP port (default: 389)                                              |
@@ -286,7 +286,7 @@ If you don't want to modify the original `docker-compose.yml`, you can put your 
 ```
 version: '3'
 services:
-  mailtrain:
+  cliknews:
     environment:
     - URL_BASE_TRUSTED
     - URL_BASE_SANDBOX

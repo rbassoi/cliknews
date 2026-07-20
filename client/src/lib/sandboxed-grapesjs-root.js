@@ -26,7 +26,7 @@ import {GrapesJSSourceType} from "./sandboxed-grapesjs-shared";
 import {withComponentMixins} from "./decorator-helpers";
 
 
-grapesjs.plugins.add('mailtrain-remove-buttons', (editor, opts = {}) => {
+grapesjs.plugins.add('cliknews-remove-buttons', (editor, opts = {}) => {
     // This needs to be done in on-load and after gjs plugin because grapesjs-preset-newsletter tries to set titles to all buttons (including those we remove)
     // see https://github.com/artf/grapesjs-preset-newsletter/blob/e0a91636973a5a1481e9d7929e57a8869b1db72e/src/index.js#L248
     editor.on('load', () => {
@@ -607,7 +607,7 @@ export class GrapesJSSandbox extends Component {
         config.components = props.initialSource ? base(props.initialSource, this.props.tagLanguage, trustedUrlBase, sandboxUrlBase, publicUrlBase) : defaultSource;
         config.style = props.initialStyle ? base(props.initialStyle, this.props.tagLanguage, trustedUrlBase, sandboxUrlBase, publicUrlBase) : defaultStyle;
 
-        config.plugins.push('mailtrain-remove-buttons');
+        config.plugins.push('cliknews-remove-buttons');
 
         this.editor = grapesjs.init(config);
     }

@@ -31,7 +31,7 @@ import styles from "../lib/styles.scss";
 
 import sendConfigurationsStyles from "./styles.scss";
 
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {withComponentMixins} from "../lib/decorator-helpers";
 
 
@@ -239,10 +239,10 @@ export default class CUD extends Component {
                     {/* TODO - add "Check mail config" button */}
 
                     <Fieldset label={t('verpBounceHandling')}>
-                        <Trans i18nKey="mailtrainIsAbleToUseVerpBasedRoutingTo"><p>Mailtrain is able to use VERP based routing to detect bounces. In this case the message is sent to the recipient using a custom VERP address as the return path of the message. If the message is not accepted a bounce email is sent to this special VERP address and thus a bounce is detected.</p></Trans>
-                        <Trans i18nKey="toGetVerpWorkingYouNeedToSetUpADnsMx"><p>To get VERP working you need to set up a DNS MX record that points to your Mailtrain hostname. You must also ensure that Mailtrain VERP interface is available from port 25 of your server (port 25 usually requires root user privileges). This way if anyone tries to send email to someuser@verp-hostname then the email should end up to this server.</p></Trans>
+                        <Trans i18nKey="cliknewsIsAbleToUseVerpBasedRoutingTo"><p>ClikNews is able to use VERP based routing to detect bounces. In this case the message is sent to the recipient using a custom VERP address as the return path of the message. If the message is not accepted a bounce email is sent to this special VERP address and thus a bounce is detected.</p></Trans>
+                        <Trans i18nKey="toGetVerpWorkingYouNeedToSetUpADnsMx"><p>To get VERP working you need to set up a DNS MX record that points to your ClikNews hostname. You must also ensure that ClikNews VERP interface is available from port 25 of your server (port 25 usually requires root user privileges). This way if anyone tries to send email to someuser@verp-hostname then the email should end up to this server.</p></Trans>
                         <Trans i18nKey="verpUsuallyOnlyWorksIfYouAreUsingYourOwn"><p className="text-warning">VERP usually only works if you are using your own SMTP server. Regular relay services (SES, SparkPost, Gmail etc.) tend to remove the VERP address from the message.</p></Trans>
-                        {mailtrainConfig.verpEnabled ?
+                        {cliknewsConfig.verpEnabled ?
                             <div>
                                 <CheckBox id="verpEnabled" label={t('verpStatus')} text={t('enabled')}/>
                                 {verpEnabled && <InputField id="verp_hostname" label={t('serverHostname')} placeholder={t('theVerpServerHostnameEgBouncesexamplecom')} help={t('verpBounceHandlingServerHostnameThis')}/>}

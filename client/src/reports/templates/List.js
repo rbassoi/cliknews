@@ -7,7 +7,7 @@ import {DropdownLink, requiresAuthenticatedUser, Title, Toolbar, withPageHelpers
 import {withErrorHandling} from '../../lib/error-handling';
 import {Table} from '../../lib/table';
 import moment from 'moment';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../../lib/modals";
 import {withComponentMixins} from "../../lib/decorator-helpers";
 import PropTypes from 'prop-types';
@@ -34,7 +34,7 @@ export default class List extends Component {
         const t = this.props.t;
 
         const permissions = this.props.permissions;
-        const createPermitted = permissions.createReportTemplate && mailtrainConfig.globalPermissions.createJavascriptWithROAccess;
+        const createPermitted = permissions.createReportTemplate && cliknewsConfig.globalPermissions.createJavascriptWithROAccess;
 
         const columns = [
             { data: 1, title: t('name') },
@@ -46,7 +46,7 @@ export default class List extends Component {
                     const actions = [];
                     const perms = data[5];
 
-                    if (mailtrainConfig.globalPermissions.createJavascriptWithROAccess && perms.includes('edit')) {
+                    if (cliknewsConfig.globalPermissions.createJavascriptWithROAccess && perms.includes('edit')) {
                         actions.push({
                             label: <Icon icon="edit" title={t('edit')}/>,
                             link: `/reports/templates/${data[0]}/edit`

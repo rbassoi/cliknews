@@ -59,7 +59,7 @@ First you have to build it using grunt, then you MUST read [Serving Mosaico](htt
 
 ### OpenSource projects including/using Mosaico
 
-[MailTrain](https://github.com/Mailtrain-org/mailtrain) is a full featured newsletter web application written in Node and support email editing via Mosaico since their 1.23.0 release.
+[ClikNews](https://github.com/rbassoi/cliknews) is a full featured newsletter web application written in Node and support email editing via Mosaico since their 1.23.0 release.
 
 [GoodEnough's Mosaico](https://github.com/goodenough/mosaico-backend) born as a Mosaico fork, now have become a full web application product built around Mosaico editing targeting agencies.
 

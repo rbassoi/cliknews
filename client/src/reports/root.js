@@ -8,7 +8,7 @@ import ReportTemplatesCUD from './templates/CUD';
 import ReportTemplatesList from './templates/List';
 import Share from '../shares/Share';
 import {ReportState} from '../../../shared/reports';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {ellipsizeBreadcrumbLabel} from "../lib/helpers";
 import {namespaceCheckPermissions} from "../lib/namespace";
 
@@ -99,7 +99,7 @@ function getMenus(t) {
                                 ':action(edit|delete)': {
                                     title: t('edit'),
                                     link: params => `/reports/templates/${params.templateId}/edit`,
-                                    visible: resolved => mailtrainConfig.globalPermissions.createJavascriptWithROAccess && resolved.template.permissions.includes('edit'),
+                                    visible: resolved => cliknewsConfig.globalPermissions.createJavascriptWithROAccess && resolved.template.permissions.includes('edit'),
                                     panelRender: props => <ReportTemplatesCUD action={props.match.params.action} entity={props.resolved.template} permissions={props.permissions} />
                                 },
                                 share: {

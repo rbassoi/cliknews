@@ -8,7 +8,7 @@ import {BrowserRouter as Router, Link, Route, Switch} from "react-router-dom";
 import {withErrorHandling} from "./error-handling";
 import interoperableErrors from "../../../shared/interoperable-errors";
 import {ActionLink, Button, DismissibleAlert, DropdownActionLink, Icon} from "./bootstrap-components";
-import mailtrainConfig from "mailtrainConfig";
+import cliknewsConfig from "cliknewsConfig";
 import styles from "./styles.scss";
 import {getRoutes, renderRoute, Resolver, SectionContentContext, withPageHelpers} from "./page-common";
 import {getBaseDir, getUrl} from "./urls";
@@ -178,41 +178,28 @@ function renderFrameWithContent(t, panelInFullScreen, showSidebar, primaryMenu, 
 
     } else {
         return (
-            <div key="app" className={"app " + (showSidebar ? 'sidebar-lg-show' : '')}>
-                <header key="appHeader" className="app-header">
-                    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-                        {showSidebar &&
-                        <button className="navbar-toggler sidebar-toggler" data-toggle="sidebar-show" type="button">
-                            <span className="navbar-toggler-icon"/>
-                        </button>
-                        }
+            <div key="app" className="app cn-app">
+                <div key="cnSidebar" className="cn-sidebar">
+                    <Link className="cn-sidebar-brand" to="/">
+                        <div className="cn-sidebar-logo"/>
+                        <div className="cn-sidebar-wordmark">ClikNews</div>
+                    </Link>
 
-                        <Link className="navbar-brand" to="/"><div><Icon icon="envelope"/> Mailtrain</div></Link>
-
-                        <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#mtMainNavbar" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-                            <span className="navbar-toggler-icon"/>
-                        </button>
-
-                        <div className="collapse navbar-collapse" id="mtMainNavbar">
-                            {primaryMenu}
-                        </div>
+                    <nav className="cn-sidebar-nav">
+                        {primaryMenu}
                     </nav>
-                </header>
+                </div>
 
-                <div key="appBody" className="app-body">
+                <div key="appBody" className="app-body cn-app-body">
                     {showSidebar &&
                     <div key="sidebar" className="sidebar">
                         {secondaryMenu}
                     </div>
                     }
-                    <main key="main" className="main">
+                    <main key="main" className="main cn-main">
                         {content}
                     </main>
                 </div>
-
-                <footer key="appFooter" className="app-footer">
-                    <div className="text-muted">&copy; 2020 <a href="https://mailtrain.org">Mailtrain.org</a>, <a href="mailto:info@mailtrain.org">info@mailtrain.org</a>. <a href="https://github.com/Mailtrain-org/mailtrain">{t('sourceOnGitHub')}</a></div>
-                </footer>
             </div>
         );
     }
@@ -450,8 +437,8 @@ export class SectionContent extends Component {
     }
 
     ensureAuthenticated() {
-        if (!mailtrainConfig.isAuthenticated) {
-           if (mailtrainConfig.authMethod == 'cas') {
+        if (!cliknewsConfig.isAuthenticated) {
+           if (cliknewsConfig.authMethod == 'cas') {
               window.location.href=getUrl('cas/login?next=' + encodeURIComponent(window.location.pathname));
            } else {
               this.navigateTo('/login?next=' + encodeURIComponent(window.location.pathname));
@@ -705,6 +692,49 @@ export class NavDropdown extends Component {
     }
 }
 
+/** Collapsible group of NavLinks used in the sidebar (e.g. "Administration"). Starts open if one of its children is active. */
+export class NavGroup extends Component {
+    static propTypes = {
+        label: PropTypes.string,
+        className: PropTypes.string,
+        startOpen: PropTypes.bool,
+        children: PropTypes.node
+    }
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            open: !!props.startOpen
+        };
+    }
+
+    toggle() {
+        this.setState({ open: !this.state.open });
+    }
+
+    render() {
+        const props = this.props;
+        const open = this.state.open;
+
+        const className = 'cn-nav-group' + (props.className ? ' ' + props.className : '');
+        const toggleClassName = 'cn-nav-group-toggle' + (open ? ' cn-nav-group-open' : '');
+
+        return (
+            <div className={className}>
+                <div className={toggleClassName} onClick={::this.toggle}>
+                    <span>{props.label}</span>
+                    <Icon icon="chevron-right" className="cn-nav-group-chevron"/>
+                </div>
+                {open &&
+                    <ul className="cn-nav-group-items cn-nav-list">
+                        {props.children}
+                    </ul>
+                }
+            </div>
+        );
+    }
+}
+
 
 export const requiresAuthenticatedUser = createComponentMixin({
     deps: [withPageHelpers],
@@ -728,7 +758,7 @@ export const requiresAuthenticatedUser = createComponentMixin({
 
 export function getLanguageChooser(t) {
     const languageOptions = [];
-    for (const lng of mailtrainConfig.enabledLanguages) {
+    for (const lng of cliknewsConfig.enabledLanguages) {
         const langDesc = getLang(lng);
         const label = langDesc.getLabel(t);
 

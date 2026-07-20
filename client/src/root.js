@@ -8,6 +8,7 @@ import {TranslationRoot, withTranslation} from './lib/i18n';
 import account from './account/root';
 import login from './login/root';
 import blacklist from './blacklist/root';
+import contacts from './contacts/root';
 import lists from './lists/root';
 import namespaces from './namespaces/root';
 import reports from './reports/root';
@@ -18,9 +19,9 @@ import users from './users/root';
 import sendConfigurations from './send-configurations/root';
 import settings from './settings/root';
 
-import {DropdownLink, getLanguageChooser, NavDropdown, NavLink, Section} from "./lib/page";
+import {DropdownLink, getLanguageChooser, NavDropdown, NavGroup, NavLink, Section} from "./lib/page";
 
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import Home from "./Home";
 import {DropdownActionLink, Icon} from "./lib/bootstrap-components";
 import axios from './lib/axios';
@@ -28,9 +29,9 @@ import {getUrl} from "./lib/urls";
 import {withComponentMixins} from "./lib/decorator-helpers";
 import Update from "./settings/Update";
 
-const topLevelMenuKeys = ['lists', 'channels', 'templates', 'campaigns'];
+const topLevelMenuKeys = ['contacts', 'lists', 'channels', 'templates', 'campaigns'];
 
-if (mailtrainConfig.reportsEnabled) {
+if (cliknewsConfig.reportsEnabled) {
     topLevelMenuKeys.push('reports');
 }
 
@@ -64,51 +65,54 @@ class Root extends Component {
                 const path = this.props.location.pathname;
 
                 const topLevelItems = structure.children;
+                const activeClass = link => (link && path.startsWith(link) && (link !== '/' || path === '/')) ? 'active' : '';
 
                 const topLevelMenu = [];
 
                 for (const entryKey of topLevelMenuKeys) {
                     const entry = topLevelItems[entryKey];
                     const link = entry.link || entry.externalLink;
-
-                    if (link && path.startsWith(link)) {
-                        topLevelMenu.push(<NavLink key={entryKey} className="active" to={link}>{entry.title} <span className="sr-only">{t('current')}</span></NavLink>);
-                    } else {
-                        topLevelMenu.push(<NavLink key={entryKey} to={link}>{entry.title}</NavLink>);
-                    }
+                    topLevelMenu.push(<NavLink key={entryKey} className={activeClass(link)} to={link}>{entry.title}</NavLink>);
                 }
 
-                if (mailtrainConfig.isAuthenticated) {
+                const adminLinks = ['/users', '/namespaces', '/settings', '/send-configurations', '/blacklist', '/account/api'];
+                const isAdminActive = adminLinks.some(link => path.startsWith(link));
+
+                if (cliknewsConfig.isAuthenticated) {
                     return (
                         <>
-                            <ul className="navbar-nav mt-navbar-nav-left">
+                            <ul className="cn-nav-list">
+                                <NavLink className={activeClass('/')} to="/">{t('dashboard')}</NavLink>
                                 {topLevelMenu}
-                                <NavDropdown label={t('administration')}>
-                                    {mailtrainConfig.globalPermissions.displayManageUsers && <DropdownLink to="/users">{t('users')}</DropdownLink>}
-                                    <DropdownLink to="/namespaces">{t('namespaces')}</DropdownLink>
-                                    {mailtrainConfig.globalPermissions.manageSettings && <DropdownLink to="/settings">{t('globalSettings')}</DropdownLink>}
-                                    <DropdownLink to="/send-configurations">{t('sendConfigurations')}</DropdownLink>
-                                    {mailtrainConfig.globalPermissions.manageBlacklist && <DropdownLink to="/blacklist">{t('blacklist')}</DropdownLink>}
-                                    <DropdownLink to="/account/api">{t('api')}</DropdownLink>
-                                </NavDropdown>
                             </ul>
-                            <ul className="navbar-nav mt-navbar-nav-right">
-                                {getLanguageChooser(t)}
-                                <NavDropdown menuClassName="dropdown-menu-right" label={mailtrainConfig.user.username} icon="user">
-                                    <DropdownLink to="/account"><Icon icon='user'/> {t('account')}</DropdownLink>
-                                    {mailtrainConfig.authMethod == 'cas' && <DropdownLink to="/cas/logout" forceReload><Icon icon="sign-out-alt"/> {t('logOut')}</DropdownLink>}
-                                    {mailtrainConfig.authMethod != 'cas' && <DropdownActionLink onClickAsync={::this.logout}><Icon icon='sign-out-alt'/> {t('logOut')}</DropdownActionLink>}
-                                </NavDropdown>
-                            </ul>
+                            <NavGroup label={t('administration')} startOpen={isAdminActive}>
+                                {cliknewsConfig.globalPermissions.displayManageUsers && <NavLink className={activeClass('/users')} to="/users">{t('users')}</NavLink>}
+                                <NavLink className={activeClass('/namespaces')} to="/namespaces">{t('namespaces')}</NavLink>
+                                {cliknewsConfig.globalPermissions.manageSettings && <NavLink className={activeClass('/settings')} to="/settings">{t('globalSettings')}</NavLink>}
+                                <NavLink className={activeClass('/send-configurations')} to="/send-configurations">{t('sendConfigurations')}</NavLink>
+                                {cliknewsConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
+                                <NavLink className={activeClass('/account/api')} to="/account/api">{t('api')}</NavLink>
+                            </NavGroup>
+                            <div className="cn-sidebar-footer">
+                                <ul className="cn-sidebar-user navbar-nav">
+                                    {getLanguageChooser(t)}
+                                    <NavDropdown menuClassName="dropdown-menu-right" label={cliknewsConfig.user.username} icon="user">
+                                        <DropdownLink to="/account"><Icon icon='user'/> {t('account')}</DropdownLink>
+                                        {cliknewsConfig.authMethod == 'cas' && <DropdownLink to="/cas/logout" forceReload><Icon icon="sign-out-alt"/> {t('logOut')}</DropdownLink>}
+                                        {cliknewsConfig.authMethod != 'cas' && <DropdownActionLink onClickAsync={::this.logout}><Icon icon='sign-out-alt'/> {t('logOut')}</DropdownActionLink>}
+                                    </NavDropdown>
+                                </ul>
+                                <div className="cn-sidebar-copyright">&copy; 2026 ClikNews. <a href="https://github.com/rbassoi/cliknews">{t('sourceOnGitHub')}</a></div>
+                            </div>
                         </>
                     );
                 } else {
                     return (
-                        <>
-                            <ul className="navbar-nav mt-navbar-nav-right">
+                        <div className="cn-sidebar-footer">
+                            <ul className="cn-sidebar-user navbar-nav">
                                 {getLanguageChooser(t)}
                             </ul>
-                        </>
+                        </div>
                     );
                 }
             }
@@ -121,6 +125,7 @@ class Root extends Component {
             primaryMenuComponent: MainMenu,
             children: {
                 ...login.getMenus(t),
+                ...contacts.getMenus(t),
                 ...lists.getMenus(t),
                 ...reports.getMenus(t),
                 ...templates.getMenus(t),

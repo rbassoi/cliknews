@@ -4,13 +4,13 @@ import React from 'react';
 import Login from './Login';
 import Reset from './Forgot';
 import ResetLink from './Reset';
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 
 
 function getMenus(t) {
     const subPaths = {}
 
-    if (mailtrainConfig.isAuthMethodLocal) {
+    if (cliknewsConfig.isAuthMethodLocal) {
         subPaths.forgot = {
             title: t('passwordReset-1'),
             extraParams: [':username?'],

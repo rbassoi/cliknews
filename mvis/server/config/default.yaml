@@ -4,10 +4,10 @@ mysql:
   password: mvis
   database: mvis
 
-mailtrain:
+cliknews:
   url: http://localhost:3000/
   namespace: 1
-  userRole: mailtrainUser
+  userRole: cliknewsUser
 
 www:
   # HTTP interface to listen on
@@ -26,15 +26,15 @@ www:
 
 roles:
   global:
-    mailtrainUser:
-      name: "Mailtrain User"
+    cliknewsUser:
+      name: "ClikNews User"
       admin: true
       description: "Limited permissions that allow only read-only access"
       permissions:
 
   namespace:
-    mailtrainUser:
-      name: "Mailtrain User"
+    cliknewsUser:
+      name: "ClikNews User"
       description: "Limited permissions that allow only read-only access"
       permissions: ["view"]
       children:
@@ -46,31 +46,31 @@ roles:
         signalSet: ["view", "query"]
 
 #  template:
-#    mailtrainUser:
-#      name: "Mailtrain User"
+#    cliknewsUser:
+#      name: "ClikNews User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view", "viewFiles", "execute"]
 #
 #  workspace:
-#    mailtrainUser:
-#      name: "Mailtrain User"
+#    cliknewsUser:
+#      name: "ClikNews User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view"]
 #
 #  panel:
-#    mailtrainUser:
-#      name: "Mailtrain User"
+#    cliknewsUser:
+#      name: "ClikNews User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view"]
 #
 #  signal:
-#    mailtrainUser:
-#      name: "Mailtrain User"
+#    cliknewsUser:
+#      name: "ClikNews User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view", "query"]
 #
 #  signalSet:
-#    mailtrainUser:
-#      name: "Mailtrain User"
+#    cliknewsUser:
+#      name: "ClikNews User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view", "query"]

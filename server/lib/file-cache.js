@@ -22,7 +22,7 @@ async function _fileCache(typeId, cacheConfig, keyGen) {
     }
 
     const localFilesDir = path.join(fileCacheFilesDir, typeId);
-    await privilegeHelpers.ensureMailtrainDir(localFilesDir);
+    await privilegeHelpers.ensureClikNewsDir(localFilesDir);
 
     let mayNeedPruning = true;
 

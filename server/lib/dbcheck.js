@@ -1,7 +1,7 @@
 'use strict';
 
 /*
-This module handles Mailtrain database initialization and upgrades
+This module handles ClikNews database initialization and upgrades
 */
 
 const config = require('./config');
@@ -128,7 +128,7 @@ function getSql(path, data, callback) {
 }
 
 function runInitial(callback) {
-    let dump = process.env.NODE_ENV === 'test' ? 'mailtrain-test.sql' : 'mailtrain.sql';
+    let dump = process.env.NODE_ENV === 'test' ? 'cliknews-test.sql' : 'cliknews.sql';
     let fname = process.env.DB_FROM_START ? 'base.sql' : dump;
     let path = pathlib.join(__dirname, '..', 'setup', 'sql', fname);
     log.info('sql', 'Loading tables from %s', fname);

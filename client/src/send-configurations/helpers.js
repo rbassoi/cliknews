@@ -6,7 +6,7 @@ import {MailerType, ZoneMTAType} from "../../../shared/send-configurations";
 import {CheckBox, Dropdown, Fieldset, InputField, TextArea} from "../lib/form";
 import {Trans} from "react-i18next";
 import styles from "./styles.scss";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 
 export const mailerTypesOrder = [
     MailerType.ZONE_MTA,
@@ -199,10 +199,10 @@ export function getMailerTypes(t) {
 
     const zoneMtaTypeOptions = [];
 
-    if (mailtrainConfig.builtinZoneMTAEnabled) {
+    if (cliknewsConfig.builtinZoneMTAEnabled) {
         zoneMtaTypeOptions.push({ key: ZoneMTAType.BUILTIN, label: t('builtinZoneMta')});
     }
-    zoneMtaTypeOptions.push({ key: ZoneMTAType.WITH_MAILTRAIN_HEADER_CONF, label: t('dynamicConfigurationOfDkimKeysViaZoneMt')});
+    zoneMtaTypeOptions.push({ key: ZoneMTAType.WITH_CLIKNEWS_HEADER_CONF, label: t('dynamicConfigurationOfDkimKeysViaZoneMt')});
     zoneMtaTypeOptions.push({ key: ZoneMTAType.WITH_HTTP_CONF, label: t('dynamicConfigurationOfDkimKeysViaZoneMt-1')});
     zoneMtaTypeOptions.push({ key: ZoneMTAType.REGULAR, label: t('noDynamicConfigurationOfDkimKeys')});
 
@@ -269,7 +269,7 @@ export function getMailerTypes(t) {
                     <Fieldset label={t('mailerSettings')}>
                         <Dropdown id="mailer_type" label={t('mailerType')} options={typeOptions}/>
                         <Dropdown id="zoneMtaType" label={t('dynamicConfiguration')} options={zoneMtaTypeOptions}/>
-                        {(zoneMtaType === ZoneMTAType.REGULAR || zoneMtaType === ZoneMTAType.WITH_MAILTRAIN_HEADER_CONF || zoneMtaType === ZoneMTAType.WITH_HTTP_CONF) &&
+                        {(zoneMtaType === ZoneMTAType.REGULAR || zoneMtaType === ZoneMTAType.WITH_CLIKNEWS_HEADER_CONF || zoneMtaType === ZoneMTAType.WITH_HTTP_CONF) &&
                             <div>
                                 <InputField id="smtpHostname" label={t('hostname')} placeholder={t('hostnameEgSmtpexamplecom')}/>
                                 <InputField id="smtpPort" label={t('port')} placeholder={t('portEg465AutodetectedIfLeftBlank')}/>
@@ -284,9 +284,9 @@ export function getMailerTypes(t) {
                             </div>
                         }
                     </Fieldset>
-                    {(zoneMtaType === ZoneMTAType.BUILTIN || zoneMtaType === ZoneMTAType.WITH_MAILTRAIN_HEADER_CONF || zoneMtaType === ZoneMTAType.WITH_HTTP_CONF) &&
+                    {(zoneMtaType === ZoneMTAType.BUILTIN || zoneMtaType === ZoneMTAType.WITH_CLIKNEWS_HEADER_CONF || zoneMtaType === ZoneMTAType.WITH_HTTP_CONF) &&
                         <Fieldset label={t('dkimSigning')}>
-                            <Trans i18nKey="ifYouAreUsingZoneMtaThenMailtrainCan"><p>If you are using ZoneMTA then Mailtrain can provide a DKIM key for signing all outgoing messages.</p></Trans>
+                            <Trans i18nKey="ifYouAreUsingZoneMtaThenClikNewsCan"><p>If you are using ZoneMTA then ClikNews can provide a DKIM key for signing all outgoing messages.</p></Trans>
                             <Trans i18nKey="doNotUseSensitiveKeysHereThePrivateKeyIs"><p className="text-warning">Do not use sensitive keys here. The private key is not encrypted in the database.</p></Trans>
                             {zoneMtaType === ZoneMTAType.WITH_HTTP_CONF &&
                                 <InputField id="dkimApiKey" label={t('zoneMtaDkimApiKey')} help={t('secretValueKnownToZoneMtaForRequesting')}/>
@@ -308,7 +308,7 @@ export function getMailerTypes(t) {
         },
         initData: () => ({
             ...getInitGenericSMTP(),
-            zoneMtaType: mailtrainConfig.builtinZoneMTAEnabled ? ZoneMTAType.BUILTIN : ZoneMTAType.REGULAR,
+            zoneMtaType: cliknewsConfig.builtinZoneMTAEnabled ? ZoneMTAType.BUILTIN : ZoneMTAType.REGULAR,
             dkimApiKey: '',
             dkimDomain: '',
             dkimSelector: '',
@@ -328,7 +328,7 @@ export function getMailerTypes(t) {
             beforeSaveGenericSMTP(data, zoneMtaType === ZoneMTAType.BUILTIN);
 
             data.mailer_settings.zoneMtaType = zoneMtaType;
-            if (zoneMtaType === ZoneMTAType.BUILTIN || zoneMtaType === ZoneMTAType.WITH_HTTP_CONF || zoneMtaType === ZoneMTAType.WITH_MAILTRAIN_HEADER_CONF) {
+            if (zoneMtaType === ZoneMTAType.BUILTIN || zoneMtaType === ZoneMTAType.WITH_HTTP_CONF || zoneMtaType === ZoneMTAType.WITH_CLIKNEWS_HEADER_CONF) {
                 data.mailer_settings.dkimDomain = data.dkimDomain;
                 data.mailer_settings.dkimSelector = data.dkimSelector;
                 data.mailer_settings.dkimPrivateKey = data.dkimPrivateKey;

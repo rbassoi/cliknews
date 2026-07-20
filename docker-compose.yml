@@ -4,10 +4,10 @@ services:
   mysql:
     image: mariadb:10.4
     environment:
-    - MYSQL_ROOT_PASSWORD=mailtrain
-    - MYSQL_DATABASE=mailtrain
-    - MYSQL_USER=mailtrain
-    - MYSQL_PASSWORD=mailtrain
+    - MYSQL_ROOT_PASSWORD=cliknews
+    - MYSQL_DATABASE=cliknews
+    - MYSQL_USER=cliknews
+    - MYSQL_PASSWORD=cliknews
     volumes:
     - mysql-data:/var/lib/mysql
 
@@ -21,18 +21,18 @@ services:
     volumes:
     - mongo-data:/data/db
 
-  mailtrain:
-    image: mailtrain/mailtrain:latest
+  cliknews:
+    image: cliknews/cliknews:latest
     ports:
     - "3000:3000"
     - "3003:3003"
     - "3004:3004"
     volumes:
-    - mailtrain-files:/app/server/files
+    - cliknews-files:/app/server/files
 
 volumes:
   mysql-data:
   redis-data:
   mongo-data:
-  mailtrain-files:
+  cliknews-files:
 

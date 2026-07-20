@@ -200,7 +200,7 @@ async function getRouter(appType) {
         });
 
         router.getAsync('/editor', passport.csrfProtection, async (req, res) => {
-            const mailtrainConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
+            const cliknewsConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
 
             let languageStrings = null;
             const lang = req.locale.language;
@@ -217,7 +217,7 @@ async function getRouter(appType) {
                 editorConfig: config.mosaico,
                 languageStrings: languageStrings,
                 reactCsrfToken: req.csrfToken(),
-                mailtrainConfig: JSON.stringify(mailtrainConfig),
+                cliknewsConfig: JSON.stringify(cliknewsConfig),
                 scriptFiles: [
                     getSandboxUrl('client/mosaico-root.js')
                 ],

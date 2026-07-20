@@ -500,7 +500,7 @@ class MessageSender {
 
         } else {
             /*
-                Fallback - Mailtrain v1 behavior
+                Fallback - ClikNews v1 behavior
              */
             response = info.response || info.messageId;
             responseId = response.split(/\s+/).pop();

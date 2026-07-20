@@ -20,7 +20,7 @@ import axios from '../lib/axios';
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import interoperableErrors from '../../../shared/interoperable-errors';
 import {DeleteModalDialog} from "../lib/modals";
-import mailtrainConfig from 'mailtrainConfig';
+import cliknewsConfig from 'cliknewsConfig';
 import {getGlobalNamespaceId} from "../../../shared/namespaces";
 import {getUrl} from "../lib/urls";
 import {withComponentMixins} from "../lib/decorator-helpers";
@@ -195,7 +195,7 @@ export default class CUD extends Component {
     render() {
         const t = this.props.t;
         const isEdit = !!this.props.entity;
-        const canDelete = isEdit && !this.isEditGlobal() && mailtrainConfig.user.namespace !== this.props.entity.id && this.props.entity.permissions.includes('delete');
+        const canDelete = isEdit && !this.isEditGlobal() && cliknewsConfig.user.namespace !== this.props.entity.id && this.props.entity.permissions.includes('delete');
 
         return (
             <div>

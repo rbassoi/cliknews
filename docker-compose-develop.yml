@@ -4,10 +4,10 @@ services:
   mysql:
     image: mariadb:10.4
     environment:
-    - MYSQL_ROOT_PASSWORD=mailtrain
-    - MYSQL_DATABASE=mailtrain
-    - MYSQL_USER=mailtrain
-    - MYSQL_PASSWORD=mailtrain
+    - MYSQL_ROOT_PASSWORD=cliknews
+    - MYSQL_DATABASE=cliknews
+    - MYSQL_USER=cliknews
+    - MYSQL_PASSWORD=cliknews
     volumes:
     - mysql-data:/var/lib/mysql
 
@@ -21,7 +21,7 @@ services:
     volumes:
     - mongo-data:/data/db
 
-  mailtrain:
+  cliknews:
     build:
       context: .
       dockerfile: Dockerfile-Develop

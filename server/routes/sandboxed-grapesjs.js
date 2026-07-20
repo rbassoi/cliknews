@@ -38,12 +38,12 @@ async function getRouter(appType) {
     
     if (appType === AppType.SANDBOXED) {
         router.getAsync('/editor', passport.csrfProtection, async (req, res) => {
-            const mailtrainConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
+            const cliknewsConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
 
             res.render('grapesjs/root', {
                 layout: 'grapesjs/layout',
                 reactCsrfToken: req.csrfToken(),
-                mailtrainConfig: JSON.stringify(mailtrainConfig),
+                cliknewsConfig: JSON.stringify(cliknewsConfig),
                 scriptFiles: [
                     getSandboxUrl('client/grapesjs-root.js')
                 ],
