@@ -63,6 +63,10 @@ body.cliknews {
 
   .cn-app {
     display: flex;
+    // CoreUI's own base .app rule (also present on this element) sets
+    // flex-direction: column; this must win over it on desktop or the
+    // sidebar and content stack vertically instead of sitting side by side.
+    flex-direction: row;
     width: 100%;
     min-height: 100vh;
   }
