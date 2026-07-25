@@ -72,9 +72,9 @@ class MessageSender {
                 if (settings.campaign) {
                     this.campaign = settings.campaign;
                 } else if (settings.campaignCid) {
-                    this.campaign = await campaigns.rawGetByTx(tx, 'cid', settings.campaignCid);
+                    this.campaign = await campaigns.rawGetByTx(tx, contextHelpers.getAdminContext(), 'cid', settings.campaignCid);
                 } else if (settings.campaignId) {
-                    this.campaign = await campaigns.rawGetByTx(tx, 'id', settings.campaignId);
+                    this.campaign = await campaigns.rawGetByTx(tx, contextHelpers.getAdminContext(), 'id', settings.campaignId);
                 }
 
                 if (settings.sendConfigurationId) {

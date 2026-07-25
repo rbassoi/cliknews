@@ -13,6 +13,7 @@ const dependencyHelpers = require('../lib/dependency-helpers');
 const {ListActivityType} = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
 const {SubscriptionStatus} = require('../../shared/lists');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'settings']);
 
@@ -258,7 +259,8 @@ async function listDTAjax(context, listId, params) {
             params,
             builder => builder
                 .from('segments')
-                .where('list', listId),
+                .where('list', listId)
+                .modify(requireAccountScope, context),
             ['id', 'name']
         );
     });
@@ -268,13 +270,13 @@ async function listIdName(context, listId) {
     return await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'list', listId, ['viewSegments']);
 
-        return await tx('segments').select(['id', 'name']).where('list', listId).orderBy('name', 'asc');
+        return await tx('segments').select(['id', 'name']).where('list', listId).modify(requireAccountScope, context).orderBy('name', 'asc');
     });
 }
 
 async function getByIdTx(tx, context, listId, id) {
     await shares.enforceEntityPermissionTx(tx, context, 'list', listId, 'viewSegments');
-    const entity = await tx('segments').where({id, list: listId}).first();
+    const entity = await tx('segments').where({id, list: listId}).modify(requireAccountScope, context).first();
 
     if (!entity) {
         throw new interoperableErrors.NotFoundError();
@@ -334,6 +336,7 @@ async function create(context, listId, entity) {
 
         const filteredEntity = filterObject(entity, allowedKeys);
         filteredEntity.list = listId;
+        filteredEntity.account_id = requireAccountId(context);
 
         const ids = await tx('segments').insert(filteredEntity);
         const id = ids[0];
@@ -348,7 +351,7 @@ async function updateWithConsistencyCheck(context, listId, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'list', listId, 'manageSegments');
 
-        const existing = await tx('segments').where({list: listId, id: entity.id}).first();
+        const existing = await tx('segments').where({list: listId, id: entity.id}).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -362,7 +365,7 @@ async function updateWithConsistencyCheck(context, listId, entity) {
 
         await _validateAndPreprocess(tx, listId, entity, false);
 
-        await tx('segments').where({list: listId, id: entity.id}).update(filterObject(entity, allowedKeys));
+        await tx('segments').where({list: listId, id: entity.id}).modify(requireAccountScope, context).update(filterObject(entity, allowedKeys));
 
         await activityLog.logEntityActivity('list', ListActivityType.UPDATE_SEGMENT, listId, {segmentId: entity.id});
     });
@@ -383,7 +386,7 @@ async function removeTx(tx, context, listId, id) {
     ]);
 
     // The listId "where" is here to prevent deleting segment of a list for which a user does not have permission
-    await tx('segments').where({list: listId, id}).del();
+    await tx('segments').where({list: listId, id}).modify(requireAccountScope, context).del();
 
     await activityLog.logEntityActivity('list', ListActivityType.REMOVE_SEGMENT, listId, {segmentId: id});
 }
@@ -395,7 +398,7 @@ async function remove(context, listId, id) {
 }
 
 async function removeAllByListIdTx(tx, context, listId) {
-    const entities = await tx('segments').where('list', listId).select(['id']);
+    const entities = await tx('segments').where('list', listId).modify(requireAccountScope, context).select(['id']);
     for (const entity of entities) {
         await removeTx(tx, context, listId, entity.id);
     }
@@ -420,13 +423,13 @@ async function removeRulesByColumnTx(tx, context, listId, column) {
         }
     }
 
-    const entities = await tx('segments').where({list: listId});
+    const entities = await tx('segments').where({list: listId}).modify(requireAccountScope, context);
     for (const entity of entities) {
         const settings = JSON.parse(entity.settings);
 
         pruneChildRules(settings.rootRule);
 
-        await tx('segments').where({list: listId, id: entity.id}).update('settings', JSON.stringify(settings));
+        await tx('segments').where({list: listId, id: entity.id}).modify(requireAccountScope, context).update('settings', JSON.stringify(settings));
     }
 }
 

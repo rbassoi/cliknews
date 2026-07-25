@@ -31,15 +31,16 @@ const allowedKeysExternal = new Set(['username', 'namespace', 'role', 'name', 'e
 const hashKeys = new Set(['username', 'name', 'email', 'namespace', 'role']);
 const shares = require('./shares');
 const contextHelpers = require('../lib/context-helpers');
+const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
 
 function hash(entity) {
     return hasher.hash(filterObject(entity, hashKeys));
 }
 
 async function _getByTx(tx, context, key, value, extraColumns = []) {
-    const columns = ['id', 'username', 'name', 'email', 'namespace', 'role', ...extraColumns];
+    const columns = ['id', 'username', 'name', 'email', 'namespace', 'role', 'account_id', ...extraColumns];
 
-    const user = await tx('users').select(columns).where(key, value).first();
+    const user = await tx('users').select(columns).where(key, value).modify(requireAccountScope, context).first();
 
     if (!user) {
         shares.throwPermissionDenied();
@@ -117,7 +118,8 @@ async function listDTAjax(context, params) {
             .from('users')
             .innerJoin('namespaces', 'namespaces.id', 'users.namespace')
             .innerJoin('generated_role_names', 'generated_role_names.role', 'users.role')
-            .where('generated_role_names.entity_type', 'global'),
+            .where('generated_role_names.entity_type', 'global')
+            .modify(requireAccountScopeOn('users'), context),
         [ 'users.id', 'users.username', 'users.name', 'namespaces.name', 'generated_role_names.name' ]
     );
 }
@@ -169,10 +171,15 @@ async function create(context, user) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'namespace', user.namespace, 'manageUsers');
 
+        const accountId = requireAccountId(context);
+
         if (passport.isAuthMethodLocal) {
             await _validateAndPreprocess(tx, user, true);
 
-            const ids = await tx('users').insert(filterObject(user, allowedKeys));
+            const filteredUser = filterObject(user, allowedKeys);
+            filteredUser.account_id = accountId;
+
+            const ids = await tx('users').insert(filteredUser);
             id = ids[0];
 
         } else {
@@ -180,6 +187,8 @@ async function create(context, user) {
             enforce(user.role in config.roles.global, 'Unknown role');
 
             await namespaceHelpers.validateEntity(tx, user);
+
+            filteredUser.account_id = accountId;
 
             const ids = await tx('users').insert(filteredUser);
             id = ids[0];
@@ -193,7 +202,7 @@ async function create(context, user) {
 
 async function updateWithConsistencyCheck(context, user, isOwnAccount) {
     await knex.transaction(async tx => {
-        const existing = await tx('users').where('id', user.id).first();
+        const existing = await tx('users').where('id', user.id).modify(requireAccountScope, context).first();
         if (!existing) {
             shares.throwPermissionDenied();
         }
@@ -217,13 +226,13 @@ async function updateWithConsistencyCheck(context, user, isOwnAccount) {
                 }
             }
 
-            await tx('users').where('id', user.id).update(filterObject(user, isOwnAccount ? ownAccountAllowedKeys : allowedKeys));
+            await tx('users').where('id', user.id).modify(requireAccountScope, context).update(filterObject(user, isOwnAccount ? ownAccountAllowedKeys : allowedKeys));
         } else {
             enforce(!isOwnAccount, 'Local user management is required');
             enforce(user.role in config.roles.global, 'Unknown role');
             await namespaceHelpers.validateEntity(tx, user);
 
-            await tx('users').where('id', user.id).update(filterObject(user, allowedKeysExternal));
+            await tx('users').where('id', user.id).modify(requireAccountScope, context).update(filterObject(user, allowedKeysExternal));
         }
 
         // Removes the default shares based on the user role and rebuilds permissions.
@@ -242,14 +251,14 @@ async function remove(context, userId) {
     enforce(context.user.id !== userId, 'User cannot delete himself/herself');
 
     await knex.transaction(async tx => {
-        const existing = await tx('users').where('id', userId).first();
+        const existing = await tx('users').where('id', userId).modify(requireAccountScope, context).first();
         if (!existing) {
             shares.throwPermissionDenied();
         }
 
         await shares.enforceEntityPermissionTx(tx, context, 'namespace', existing.namespace, 'manageUsers');
 
-        await tx('users').where('id', userId).del();
+        await tx('users').where('id', userId).modify(requireAccountScope, context).del();
     });
 }
 

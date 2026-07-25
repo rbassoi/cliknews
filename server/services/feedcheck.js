@@ -89,7 +89,7 @@ async function run() {
                                 unsubscribe_url: rssCampaign.unsubscribe_url
                             };
 
-                            const ids = await campaigns.createRssTx(tx, contextHelpers.getAdminContext(), campaign);
+                            const ids = await campaigns.createRssTx(tx, contextHelpers.getAdminContext(rssCampaign.account_id), campaign);
                             const campaignId = ids[0];
 
                             await tx('rss').insert({

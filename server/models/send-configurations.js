@@ -13,6 +13,7 @@ const contextHelpers = require('../lib/context-helpers');
 const mailers = require('../lib/mailers');
 const senders = require('../lib/senders');
 const dependencyHelpers = require('../lib/dependency-helpers');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'description', 'from_email', 'from_email_overridable', 'from_name', 'from_name_overridable', 'reply_to', 'reply_to_overridable', 'x_mailer', 'verp_hostname', 'verp_disable_sender_header', 'mailer_type', 'mailer_settings', 'namespace']);
 
@@ -64,7 +65,7 @@ async function _getByTx(tx, context, key, id, withPermissions, withPrivateData) 
     let entity;
 
     if (withPrivateData) {
-        entity = await tx('send_configurations').where(key, id).first();
+        entity = await tx('send_configurations').where(key, id).modify(requireAccountScope, context).first();
 
         if (!entity) {
             shares.throwPermissionDenied();
@@ -74,7 +75,7 @@ async function _getByTx(tx, context, key, id, withPermissions, withPrivateData) 
 
         entity.mailer_settings = JSON.parse(entity.mailer_settings);
     } else {
-        entity = await tx('send_configurations').where(key, id).select(
+        entity = await tx('send_configurations').where(key, id).modify(requireAccountScope, context).select(
             ['id', 'name', 'cid', 'description', 'from_email', 'from_email_overridable', 'from_name', 'from_name_overridable', 'reply_to', 'reply_to_overridable']
         ).first();
 
@@ -127,6 +128,7 @@ async function create(context, entity) {
 
         const filteredEntity = filterObject(entity, allowedKeys);
         filteredEntity.cid = shortid.generate();
+        filteredEntity.account_id = requireAccountId(context);
 
         const ids = await tx('send_configurations').insert(filteredEntity);
         const id = ids[0];
@@ -141,7 +143,7 @@ async function updateWithConsistencyCheck(context, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'sendConfiguration', entity.id, 'edit');
 
-        const existing = await tx('send_configurations').where('id', entity.id).first();
+        const existing = await tx('send_configurations').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -157,7 +159,7 @@ async function updateWithConsistencyCheck(context, entity) {
 
         await namespaceHelpers.validateMoveTx(tx, context, entity, existing, 'sendConfiguration', 'createSendConfiguration', 'delete');
 
-        await tx('send_configurations').where('id', entity.id).update(filterObject(entity, allowedKeys));
+        await tx('send_configurations').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, allowedKeys));
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'sendConfiguration', entityId: entity.id });
     });
@@ -179,7 +181,7 @@ async function remove(context, id) {
             { entityTypeId: 'list', column: 'send_configuration' }
         ]);
 
-        await tx('send_configurations').where('id', id).del();
+        await tx('send_configurations').where('id', id).modify(requireAccountScope, context).del();
     });
 }
 

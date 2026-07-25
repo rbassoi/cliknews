@@ -12,6 +12,7 @@ const dependencyHelpers = require('../lib/dependency-helpers');
 const {convertFileURLs} = require('../lib/campaign-content');
 const { allTagLanguages } = require('../../shared/templates');
 const messageSender = require('../lib/message-sender');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'description', 'type', 'tag_language', 'data', 'html', 'text', 'namespace']);
 
@@ -21,7 +22,7 @@ function hash(entity) {
 
 async function getByIdTx(tx, context, id, withPermissions = true) {
     await shares.enforceEntityPermissionTx(tx, context, 'template', id, 'view');
-    const entity = await tx('templates').where('id', id).first();
+    const entity = await tx('templates').where('id', id).modify(requireAccountScope, context).first();
     entity.data = JSON.parse(entity.data);
 
     if (withPermissions) {
@@ -88,7 +89,8 @@ async function create(context, entity) {
         const filteredEntityWithUnstringifiedData = filterObject(entity, allowedKeys);
         const filteredEntity = {
             ...filteredEntityWithUnstringifiedData,
-            data: JSON.stringify(filteredEntityWithUnstringifiedData.data)
+            data: JSON.stringify(filteredEntityWithUnstringifiedData.data),
+            account_id: requireAccountId(context)
         };
 
         const ids = await tx('templates').insert(filteredEntity);
@@ -117,7 +119,7 @@ async function updateWithConsistencyCheck(context, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'template', entity.id, 'edit');
 
-        const existing = await tx('templates').where('id', entity.id).first();
+        const existing = await tx('templates').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -136,7 +138,7 @@ async function updateWithConsistencyCheck(context, entity) {
 
         const filteredEntity = filterObject(entity, allowedKeys);
 
-        await tx('templates').where('id', entity.id).update(filteredEntity);
+        await tx('templates').where('id', entity.id).modify(requireAccountScope, context).update(filteredEntity);
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'template', entityId: entity.id });
     });
@@ -158,7 +160,7 @@ async function remove(context, id) {
 
         await files.removeAllTx(tx, context, 'template', 'file', id);
 
-        await tx('templates').where('id', id).del();
+        await tx('templates').where('id', id).modify(requireAccountScope, context).del();
     });
 }
 

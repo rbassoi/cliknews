@@ -4,6 +4,7 @@ const knex = require('./knex');
 const entitySettings = require('./entity-settings');
 const { enforce } = require('./helpers');
 const shares = require('../models/shares');
+const { requireAccountScopeOn, ACCOUNT_SCOPED_ENTITY_TYPES } = require('./tenant-scope');
 
 async function ajaxListTx(tx, params, queryFun, columns, options) {
     options = options || {};
@@ -139,6 +140,10 @@ async function ajaxListWithPermissionsTx(tx, context, fetchSpecs, params, queryF
 
             for (const fetchSpec of fetchSpecs) {
                 const entityType = entitySettings.getEntityType(fetchSpec.entityTypeId);
+
+                if (ACCOUNT_SCOPED_ENTITY_TYPES.has(fetchSpec.entityTypeId)) {
+                    query = query.modify(requireAccountScopeOn(entityType.entitiesTable), context);
+                }
 
                 if (fetchSpec.requiredOperations) {
                     const requiredOperations = shares.filterPermissionsByRestrictedAccessHandler(context, fetchSpec.entityTypeId, null, fetchSpec.requiredOperations, 'ajaxListWithPermissionsTx');

@@ -3,6 +3,7 @@
 const knex = require('../lib/knex');
 const dtHelpers = require('../lib/dt-helpers');
 const { getSubscriptionTableName } = require('./subscriptions');
+const { requireAccountScopeOn } = require('../lib/tenant-scope');
 
 /** Lists the current user may view subscribers of. Used to build the cross-list contacts UNION. */
 async function getPermittedListsTx(tx, context) {
@@ -17,6 +18,7 @@ async function getPermittedListsTx(tx, context) {
             },
             'permitted.entity', 'lists.id'
         )
+        .modify(requireAccountScopeOn('lists'), context)
         .select('lists.id', 'lists.name');
 }
 

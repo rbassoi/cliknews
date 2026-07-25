@@ -13,6 +13,7 @@ const segments = require('./segments');
 const imports = require('./imports');
 const entitySettings = require('../lib/entity-settings');
 const dependencyHelpers = require('../lib/dependency-helpers');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const {EntityActivityType} = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
@@ -85,7 +86,7 @@ async function listWithSegmentByCampaignDTAjax(context, campaignId, params) {
 
 async function getByIdTx(tx, context, id) {
     await shares.enforceEntityPermissionTx(tx, context, 'list', id, 'view');
-    const entity = await tx('lists').where('id', id).first();
+    const entity = await tx('lists').where('id', id).modify(requireAccountScope, context).first();
     return entity;
 }
 
@@ -106,7 +107,7 @@ async function getByIdWithListFields(context, id) {
 }
 
 async function getByCidTx(tx, context, cid) {
-    const entity = await tx('lists').where('cid', cid).first();
+    const entity = await tx('lists').where('cid', cid).modify(requireAccountScope, context).first();
     if (!entity) {
         shares.throwPermissionDenied();
     }
@@ -124,7 +125,7 @@ async function getByCid(context, cid) {
 async function getByNamespaceIdTx(tx, context, namespaceId) {
   // FIXME - this methods is rather suboptimal if there are many lists. It quite needs permission caching in shares.js
 
-  const rows = await tx('lists').where('namespace', namespaceId);
+  const rows = await tx('lists').where('namespace', namespaceId).modify(requireAccountScope, context);
   await shares.enforceEntityPermissionTx(tx, context, 'namespace', namespaceId, 'view');
 
   const allowed = [];
@@ -201,6 +202,7 @@ async function create(context, entity) {
 
         const filteredEntity = filterObject(entity, allowedKeys);
         filteredEntity.cid = shortid.generate();
+        filteredEntity.account_id = requireAccountId(context);
 
         const ids = await tx('lists').insert(filteredEntity);
         const id = ids[0];
@@ -251,7 +253,7 @@ async function updateWithConsistencyCheck(context, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'list', entity.id, 'edit');
 
-        const existing = await tx('lists').where('id', entity.id).first();
+        const existing = await tx('lists').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -265,7 +267,7 @@ async function updateWithConsistencyCheck(context, entity) {
 
         await namespaceHelpers.validateMoveTx(tx, context, entity, existing, 'list', 'createList', 'delete');
 
-        await tx('lists').where('id', entity.id).update(filterObject(entity, allowedKeys));
+        await tx('lists').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, allowedKeys));
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'list', entityId: entity.id });
 
@@ -291,7 +293,7 @@ async function remove(context, id) {
         await segments.removeAllByListIdTx(tx, context, id);
         await imports.removeAllByListIdTx(tx, context, id);
 
-        await tx('lists').where('id', id).del();
+        await tx('lists').where('id', id).modify(requireAccountScope, context).del();
         await knex.schema.dropTableIfExists('subscription__' + id);
 
         await activityLog.logEntityActivity('list', EntityActivityType.REMOVE, id);

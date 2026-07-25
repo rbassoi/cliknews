@@ -24,6 +24,9 @@ const contextHelpers = require('../lib/context-helpers');
 const {convertFileURLs} = require('../lib/campaign-content');
 const messageSender = require('../lib/message-sender');
 const lists = require('./lists');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
+const planLimits = require('../lib/plan-limits');
+const accountUsageModel = require('./account-usage');
 
 const {EntityActivityType, CampaignActivityType} = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
@@ -352,12 +355,13 @@ async function lockByIdTx(tx, id) {
     await tx('campaigns').where('id', id).forUpdate();
 }
 
-async function rawGetByTx(tx, key, id) {
+async function rawGetByTx(tx, context, key, id) {
     const entity = await tx('campaigns').where('campaigns.' + key, id)
+        .modify(requireAccountScope, context)
         .leftJoin('campaign_lists', 'campaigns.id', 'campaign_lists.campaign')
         .groupBy('campaigns.id')
         .select([
-            'campaigns.id', 'campaigns.cid', 'campaigns.name', 'campaigns.description', 'campaigns.channel', 'campaigns.namespace', 'campaigns.status', 'campaigns.type', 'campaigns.source',
+            'campaigns.id', 'campaigns.cid', 'campaigns.name', 'campaigns.description', 'campaigns.channel', 'campaigns.namespace', 'campaigns.account_id', 'campaigns.status', 'campaigns.type', 'campaigns.source',
             'campaigns.send_configuration', 'campaigns.from_name_override', 'campaigns.from_email_override', 'campaigns.reply_to_override', 'campaigns.subject',
             'campaigns.data', 'campaigns.click_tracking_disabled', 'campaigns.open_tracking_disabled', 'campaigns.unsubscribe_url', 'campaigns.scheduled',
             'campaigns.delivered', 'campaigns.unsubscribed', 'campaigns.bounced', 'campaigns.complained', 'campaigns.blacklisted', 'campaigns.opened', 'campaigns.clicks',
@@ -388,7 +392,7 @@ async function rawGetByTx(tx, key, id) {
 async function getByIdTx(tx, context, id, withPermissions = true, content = Content.ALL) {
     await shares.enforceEntityPermissionTx(tx, context, 'campaign', id, 'view');
 
-    let entity = await rawGetByTx(tx, 'id', id);
+    let entity = await rawGetByTx(tx, context, 'id', id);
 
     if (content === Content.ALL || content === Content.RSS_ENTRY) {
         // Return everything
@@ -436,7 +440,7 @@ async function getById(context, id, withPermissions = true, content = Content.AL
 
 async function getByCid(context, cid) {
     return await knex.transaction(async tx => {
-        const entity = await rawGetByTx(tx,'cid', cid);
+        const entity = await rawGetByTx(tx, context, 'cid', cid);
 
         await shares.enforceEntityPermissionTx(tx, context, 'campaign', entity.id, 'view');
 
@@ -521,6 +525,7 @@ async function _createTx(tx, context, entity, content) {
 
         const filteredEntity = filterObject(entity, entity.type === CampaignType.RSS_ENTRY ? allowedKeysCreateRssEntry : allowedKeysCreate);
         filteredEntity.cid = shortid.generate();
+        filteredEntity.account_id = requireAccountId(context);
 
         const data = filteredEntity.data;
 
@@ -589,7 +594,7 @@ async function updateWithConsistencyCheck(context, entity, content) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'campaign', entity.id, 'edit');
 
-        const existing = await rawGetByTx(tx, 'id', entity.id);
+        const existing = await rawGetByTx(tx, context, 'id', entity.id);
 
         const existingHash = hash(existing, content);
         if (existingHash !== entity.originalHash) {
@@ -628,7 +633,7 @@ async function updateWithConsistencyCheck(context, entity, content) {
         }
 
         filteredEntity.data = JSON.stringify(filteredEntity.data);
-        await tx('campaigns').where('id', entity.id).update(filteredEntity);
+        await tx('campaigns').where('id', entity.id).modify(requireAccountScope, context).update(filteredEntity);
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'campaign', entityId: entity.id });
 
@@ -640,7 +645,7 @@ async function _removeTx(tx, context, id, existing = null, overrideTypeCheck = f
     await shares.enforceEntityPermissionTx(tx, context, 'campaign', id, 'delete');
 
     if (!existing) {
-        existing = await tx('campaigns').where('id', id).select(['id', 'status', 'type']).first();
+        existing = await tx('campaigns').where('id', id).modify(requireAccountScope, context).select(['id', 'status', 'type']).first();
     }
 
     if (existing.status === CampaignStatus.SENDING) {
@@ -651,7 +656,7 @@ async function _removeTx(tx, context, id, existing = null, overrideTypeCheck = f
         enforce(existing.type === CampaignType.REGULAR || existing.type === CampaignType.RSS || existing.type === CampaignType.TRIGGERED, 'This campaign cannot be removed by user.');
     }
 
-    const childCampaigns = await tx('campaigns').where('parent', id).select(['id', 'status', 'type']);
+    const childCampaigns = await tx('campaigns').where('parent', id).modify(requireAccountScope, context).select(['id', 'status', 'type']);
     for (const childCampaign of childCampaigns) {
         await _removeTx(tx, context, childCampaign.id, childCampaign, true);
     }
@@ -671,7 +676,7 @@ async function _removeTx(tx, context, id, existing = null, overrideTypeCheck = f
         .where('campaign', id)
         .del();
 
-    await tx('campaigns').where('id', id).del();
+    await tx('campaigns').where('id', id).modify(requireAccountScope, context).del();
 
     await activityLog.logEntityActivity('campaign', EntityActivityType.REMOVE, id);
 }
@@ -907,7 +912,7 @@ async function _changeStatus(context, campaignId, permittedCurrentStates, newSta
             }
         }
 
-        await tx('campaigns').where('id', campaignId).update(updateData);
+        await tx('campaigns').where('id', campaignId).modify(requireAccountScope, context).update(updateData);
 
         await activityLog.logEntityActivity('campaign', CampaignActivityType.STATUS_CHANGE, campaignId, {status: newState});
     });
@@ -917,7 +922,16 @@ async function _changeStatus(context, campaignId, permittedCurrentStates, newSta
 
 
 async function start(context, campaignId, extraData) {
+    const campaign = await getById(context, campaignId, false);
+    const listIds = campaign.lists.map(l => l.list);
+    const listRows = listIds.length ? await knex('lists').whereIn('id', listIds).select('subscribers') : [];
+    const estimatedRecipients = listRows.reduce((sum, l) => sum + (l.subscribers || 0), 0);
+
+    await planLimits.checkEmailSendLimit(context, estimatedRecipients);
+
     await _changeStatus(context, campaignId, [CampaignStatus.IDLE, CampaignStatus.SCHEDULED, CampaignStatus.PAUSED, CampaignStatus.FINISHED], CampaignStatus.SCHEDULED, 'Cannot start campaign until it is in IDLE, PAUSED, or FINISHED state', extraData);
+
+    await accountUsageModel.recordEmailsSent(context.account.id, estimatedRecipients);
 }
 
 async function stop(context, campaignId) {

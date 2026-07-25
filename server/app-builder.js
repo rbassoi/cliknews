@@ -16,6 +16,7 @@ const hbs = require('hbs');
 const compression = require('compression');
 const passport = require('./lib/passport');
 const contextHelpers = require('./lib/context-helpers');
+const resolveAccount = require('./lib/middleware/resolve-account');
 
 const api = require('./routes/api');
 
@@ -33,6 +34,7 @@ const files = require('./routes/files');
 const links = require('./routes/links');
 const archive = require('./routes/archive');
 const webhooks = require('./routes/webhooks');
+const publicPlans = require('./routes/public-plans');
 
 const namespacesRest = require('./routes/rest/namespaces');
 const sendConfigurationsRest = require('./routes/rest/send-configurations');
@@ -265,6 +267,10 @@ async function createApp(appType) {
         next();
     });
 
+    // Resolves req.account from the logged-in user (if any) before the
+    // request context is built, so every context downstream carries it.
+    app.use(resolveAccount);
+
     // Initializes the request context to be used for authorization
     app.use((req, res, next) => {
         req.context = contextHelpers.getRequestContext(req);
@@ -276,6 +282,7 @@ async function createApp(appType) {
         useWith404Fallback('/links', links);
         useWith404Fallback('/archive', archive);
         useWith404Fallback('/files', files);
+        useWith404Fallback('/api/public/plans', publicPlans);
     }
 
     useWith404Fallback('/cpgs', await campaigns.getRouter(appType)); // This needs to be different from "campaigns", which is already used by the UI

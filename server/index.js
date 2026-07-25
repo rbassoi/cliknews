@@ -7,6 +7,7 @@ const translate = require('./lib/translate');
 const http = require('http');
 const triggers = require('./services/triggers');
 const gdprCleanup = require('./services/gdpr-cleanup');
+const usageAlerts = require('./services/usage-alerts');
 const importer = require('./lib/importer');
 const feedcheck = require('./lib/feedcheck');
 const verpServer = require('./services/verp-server');
@@ -116,6 +117,7 @@ async function init() {
 
     triggers.start();
     gdprCleanup.start();
+    usageAlerts.start();
 
     await postfixBounceServer.start();
 

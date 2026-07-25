@@ -8,6 +8,7 @@ const shares = require('./shares');
 const entitySettings = require('../lib/entity-settings');
 const namespaceHelpers = require('../lib/namespace-helpers');
 const dependencyHelpers = require('../lib/dependency-helpers');
+const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
 
 
 const allowedKeys = new Set(['name', 'description', 'namespace']);
@@ -28,6 +29,7 @@ async function listTree(context) {
             [entityType.permissionsTable + '.entity']: 'namespaces.id',
             [entityType.permissionsTable + '.user']: context.user.id
         })
+        .modify(requireAccountScopeOn('namespaces'), context)
         .groupBy('namespaces.id')
         .select([
             'namespaces.id', 'namespaces.name', 'namespaces.description', 'namespaces.namespace',
@@ -112,7 +114,7 @@ function hash(entity) {
 async function getById(context, id) {
     return await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'namespace', id, 'view');
-        const entity = await tx('namespaces').where('id', id).first();
+        const entity = await tx('namespaces').where('id', id).modify(requireAccountScope, context).first();
         entity.permissions = await shares.getPermissionsTx(tx, context, 'namespace', id);
         return entity;
     });
@@ -141,6 +143,7 @@ async function getChildrenTx(tx, context, id) {
                 [entityType.permissionsTable + '.user']: context.user.id
             })
             .where('namespaces.namespace', id)
+            .modify(requireAccountScopeOn('namespaces'), context)
             .groupBy('namespaces.id')
             .select([
                 'namespaces.id', 'namespaces.name', 'namespaces.description', 'namespaces.namespace',
@@ -166,7 +169,10 @@ async function createTx(tx, context, entity) {
 
     await shares.enforceEntityPermissionTx(tx, context, 'namespace', entity.namespace, 'createNamespace');
 
-    const ids = await tx('namespaces').insert(filterObject(entity, allowedKeys));
+    const filteredEntity = filterObject(entity, allowedKeys);
+    filteredEntity.account_id = requireAccountId(context);
+
+    const ids = await tx('namespaces').insert(filteredEntity);
     const id = ids[0];
 
     // We don't have to rebuild all entity types, because no entity can be a child of the namespace at this moment.
@@ -187,7 +193,7 @@ async function updateWithConsistencyCheck(context, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'namespace', entity.id, 'edit');
 
-        const existing = await tx('namespaces').where('id', entity.id).first();
+        const existing = await tx('namespaces').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -213,7 +219,7 @@ async function updateWithConsistencyCheck(context, entity) {
             }
         }
 
-        await tx('namespaces').where('id', entity.id).update(filterObject(entity, allowedKeys));
+        await tx('namespaces').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, allowedKeys));
 
         await shares.rebuildPermissionsTx(tx);
     });
@@ -237,7 +243,7 @@ async function remove(context, id) {
 
         await dependencyHelpers.ensureNoDependencies(tx, context, id, depSpecs);
 
-        await tx('namespaces').where('id', id).del();
+        await tx('namespaces').where('id', id).modify(requireAccountScope, context).del();
     });
 }
 

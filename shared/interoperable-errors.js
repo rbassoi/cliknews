@@ -112,6 +112,20 @@ class InvalidStateError extends InteroperableError {
     }
 }
 
+class AccountInactiveError extends InteroperableError {
+    constructor(msg, data) {
+        super('AccountInactiveError', msg || 'Account Inactive', data);
+        this.status = 402;
+    }
+}
+
+class PlanLimitError extends InteroperableError {
+    constructor(msg, data) {
+        super('PlanLimitError', msg || 'Plan Limit Exceeded', data);
+        this.status = 402;
+    }
+}
+
 
 const errorTypes = {
     InteroperableError,
@@ -131,7 +145,9 @@ const errorTypes = {
     InvalidConfirmationForAddressChangeError,
     InvalidConfirmationForUnsubscriptionError,
     DependencyPresentError,
-    InvalidStateError
+    InvalidStateError,
+    AccountInactiveError,
+    PlanLimitError
 };
 
 function deserialize(errorObj) {

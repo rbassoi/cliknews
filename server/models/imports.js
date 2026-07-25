@@ -15,6 +15,7 @@ const activityLog = require('../lib/activity-log');
 
 const files = require('./files');
 const filesDir = path.join(files.filesDir, 'imports');
+const planLimits = require('../lib/plan-limits');
 
 const allowedKeysCreate = new Set(['name', 'description', 'source', 'settings']);
 const allowedKeysUpdate = new Set(['name', 'description', 'mapping_type', 'mapping']);
@@ -194,6 +195,8 @@ async function removeAllByListIdTx(tx, context, listId) {
 }
 
 async function start(context, listId, id) {
+    await planLimits.checkContactLimit(context);
+
     await knex.transaction(async tx => {
         shares.enforceGlobalPermission(context, 'setupAutomation');
         await shares.enforceEntityPermissionTx(tx, context, 'list', listId, 'manageImports');
