@@ -7,22 +7,11 @@ import {withTranslation} from './lib/i18n';
 import {requiresAuthenticatedUser, withPageHelpers} from './lib/page';
 import {withComponentMixins} from "./lib/decorator-helpers";
 import {withErrorHandling, withAsyncErrorHandler} from "./lib/error-handling";
-import {StatCard, Pill, Icon} from "./lib/bootstrap-components";
+import {StatCard, Icon} from "./lib/bootstrap-components";
 import axios from "./lib/axios";
 import {getUrl} from "./lib/urls";
 import {Link} from "react-router-dom";
-import {CampaignStatus} from "../../shared/campaigns";
-import {getCampaignLabels} from "./campaigns/helpers";
-
-function statusPill(t, campaignLabels, status) {
-    if (status === CampaignStatus.FINISHED || status === CampaignStatus.ACTIVE) {
-        return <Pill color="green">{campaignLabels[status]}</Pill>;
-    } else if (status === CampaignStatus.SCHEDULED) {
-        return <Pill color="blue">{campaignLabels[status]}</Pill>;
-    } else {
-        return <Pill color="gray">{campaignLabels[status]}</Pill>;
-    }
-}
+import {campaignStatusPill, getCampaignLabels} from "./campaigns/helpers";
 
 const listDotColors = ['#3d63d9', '#3da95f', '#d98a3d', '#c23d9e'];
 
@@ -60,7 +49,7 @@ export default class Home extends Component {
     render() {
         const t = this.props.t;
         const stats = this.state.stats;
-        const campaignLabels = getCampaignLabels(t);
+        const { campaignStatusLabels } = getCampaignLabels(t);
 
         return (
             <div>
@@ -117,7 +106,7 @@ export default class Home extends Component {
                                                 <div style={{fontWeight: 600}}>{c.name}</div>
                                                 <div style={{color: '#888'}}>{c.list || '—'}</div>
                                                 <div style={{color: '#888'}}>{moment(c.date).format('DD MMM')}</div>
-                                                <div>{statusPill(t, campaignLabels, c.status)}</div>
+                                                <div>{campaignStatusPill(t, campaignStatusLabels, c.status)}</div>
                                                 <div style={{fontWeight: 600}}>{c.openRate != null ? `${c.openRate.toFixed(0)}%` : '—'}</div>
                                             </Link>
                                         ))}

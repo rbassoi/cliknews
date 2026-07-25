@@ -50,25 +50,51 @@ Reusable pieces later phases should build on: `Pill`, `StatCard`
 `.cn-pill*`, `.cn-stat-card`, `.cn-grid-4`), and the existing `Table`/`Form`/
 `Dropdown` component kit (unchanged, just restyled).
 
-## Next: phases 4–6
+## Done: phase 4
 
-### Phase 4 — Newsletters editor (`client/src/campaigns/CUD.js`, `Content.js`)
-- Reskin `CUD.js` into the mockup's two-column layout: left = settings card
-  (`.cn-card`), right = a live preview canvas. **Keep every existing field**
-  (lists/segments, send configuration, subject, tracking, content
-  source/engine) — this is a visual pass, not a feature cut.
-- Preview panel: reuse the **existing** test-user preview render mechanism
-  already used by `Status.js`'s "Preview as test user" modal (an iframe
-  pointed at the real rendered-campaign URL) instead of fabricating preview
-  data. Show the actual current content once it exists, or a friendly empty
-  state before content is set.
-- `Content.js` (the WYSIWYG host: Mosaico/GrapesJS/CKEditor/CodeEditor,
-  sandboxed iframes) keeps its current structure/engines — only spacing/
-  colors/buttons change to match the new tokens.
-- List view (`campaigns/List.js`): swap the plain-text status column for a
-  `Pill` (reuse the `green`/`blue`/`gray` mapping pattern already used in
-  `Home.js`'s `statusPill()` helper — consider extracting it to
-  `campaigns/helpers.js` so both files share it instead of duplicating).
+- **Phase 4 — Newsletters editor.** `campaigns/CUD.js` reskinned into a
+  two-column layout: `.cn-editor-settings.cn-card` (left, every existing
+  field unchanged — lists/segments, send configuration, subject, tracking,
+  content source/engine) and `.cn-editor-preview` (right, sticky canvas).
+  Page header replaced with `.cn-page-header`/`.cn-page-title` (was the old
+  `<Title>` `<h2>`).
+  Preview panel reuses the **real** test-user preview mechanism from
+  `Status.js`'s "Preview as test user" modal: a `TableSelect` bound to
+  `rest/campaigns-test-users-table/:id` (same dataUrl/value format —
+  `listCid:subscriptionCid`), then an `<iframe>` pointed at
+  `archive/:cid/:listCid/:subscriptionCid` (or the sandboxed RSS-preview URL
+  + restricted-access-token for `CampaignType.RSS`). No fabricated preview
+  data. Empty states: "save the campaign first" (create mode), "not
+  available for triggered campaigns", "pick a test subscriber" (no
+  selection yet). The `testUser` picker is a form-tracked-but-not-submitted
+  field (`filterData` in `submitFormValuesMutator` already drops anything
+  not on its whitelist, so this needed no server change); its value
+  survives a "Save" (not "Save and leave") via `oldFormValues.testUser` in
+  `getFormValuesMutator`.
+  `Content.js` (the WYSIWYG host) untouched — out of scope, no live-preview
+  hookup needed there since `CUD.js`'s panel already covers it.
+  Extracted `campaignStatusPill(t, campaignStatusLabels, status)` to
+  `campaigns/helpers.js` (green/blue/gray `Pill` mapping), used by both
+  `Home.js` and `campaigns/List.js`'s status column (now a `Pill` instead of
+  plain text). This also fixed a latent bug in `Home.js`: it was indexing
+  `getCampaignLabels(t)`'s wrapper object (`{campaignStatusLabels,
+  campaignTypeLabels}`) directly by status code instead of its
+  `.campaignStatusLabels` sub-map, so the dashboard's recent-campaigns pill
+  text was always blank.
+  New translation keys (`previewAvailableAfterYouSaveTheCampaign`,
+  `previewIsNotAvailableForTriggeredCampaigns`,
+  `selectATestSubscriberAboveToPreviewThe`) added to `en-US` and `pt-BR`
+  only, matching the precedent set by phases 2–3 (other locales not
+  touched).
+  Verified: client build succeeds in the dev container; server unchanged
+  this phase so no restart was needed. Full click-through in a browser
+  was **not** performed — this environment has no headless-browser tool
+  available, so visual/interactive verification (picking a test user,
+  confirming the iframe renders real content, checking layout at
+  different viewport widths) is still outstanding and should be done
+  manually before calling phase 4 done.
+
+## Next: phases 5–6
 
 ### Phase 5 — Estatísticas (`client/src/campaigns/Statistics.js`)
 - New backend: `getOpensByDay(context, campaignId)` in `server/models/campaigns.js`

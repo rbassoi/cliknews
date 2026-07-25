@@ -8,7 +8,8 @@ import {withErrorHandling} from '../lib/error-handling';
 import {Table} from '../lib/table';
 import moment from 'moment';
 import {CampaignSource, CampaignStatus, CampaignType} from "../../../shared/campaigns";
-import {getCampaignLabels} from "./helpers";
+import {campaignStatusPill, getCampaignLabels} from "./helpers";
+import {Pill} from "../lib/bootstrap-components";
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../lib/modals";
 import {withComponentMixins} from "../lib/decorator-helpers";
 import styles from "./styles.scss";
@@ -75,12 +76,12 @@ export default class List extends Component {
                 if (data === CampaignStatus.SCHEDULED) {
                     const scheduled = rowData[7];
                     if (scheduled && new Date(scheduled) > new Date()) {
-                        return t('sendingScheduled');
+                        return <Pill color="blue">{t('sendingScheduled')}</Pill>;
                     } else {
-                        return t('sending');
+                        return <Pill color="blue">{t('sending')}</Pill>;
                     }
                 } else {
-                    return this.campaignStatusLabels[data];
+                    return campaignStatusPill(t, this.campaignStatusLabels, data);
                 }
             }
         });

@@ -439,6 +439,65 @@ body.cliknews {
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
+  // ---------------------------------------------------------------------
+  // Newsletter editor: two-column settings + live preview layout
+  // ---------------------------------------------------------------------
+
+  .cn-editor-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: $cn-space-8;
+
+    @include media-breakpoint-down(md) {
+      flex-direction: column;
+    }
+  }
+
+  .cn-editor-settings {
+    flex: 1 1 480px;
+    min-width: 0;
+    padding: $cn-space-9;
+  }
+
+  .cn-editor-preview {
+    flex: 1 1 480px;
+    min-width: 0;
+    position: sticky;
+    top: $cn-space-8;
+    background: $cn-bg-subtle;
+    border: 1px solid $cn-border;
+    border-radius: $cn-radius-lg;
+    padding: $cn-space-8;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cn-editor-preview-picker {
+    width: 100%;
+    margin-bottom: $cn-space-6;
+  }
+
+  .cn-editor-preview-frame {
+    width: 100%;
+    max-width: 600px;
+    height: 70vh;
+    min-height: 420px;
+    border: 1px solid $cn-border;
+    border-radius: $cn-radius-md;
+    background: white;
+    box-shadow: $cn-shadow-card;
+  }
+
+  .cn-editor-preview-empty {
+    margin: auto;
+    text-align: center;
+    color: $cn-text-muted;
+    font-size: 13px;
+    max-width: 260px;
+  }
 }
 
 .gpg-text {

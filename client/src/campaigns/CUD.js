@@ -3,7 +3,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {withTranslation} from '../lib/i18n';
-import {LinkButton, requiresAuthenticatedUser, Title, withPageHelpers} from '../lib/page'
+import {LinkButton, requiresAuthenticatedUser, withPageHelpers} from '../lib/page'
 import {
     AlignedRow,
     Button,
@@ -29,7 +29,7 @@ import {getModals, getTagLanguages, getTemplateTypes, getTypeForm, ResourceType}
 import axios from '../lib/axios';
 import styles from "../lib/styles.scss";
 import campaignsStyles from "./styles.scss";
-import {getUrl} from "../lib/urls";
+import {getPublicUrl, getSandboxUrl, getUrl} from "../lib/urls";
 import {campaignOverridables, CampaignSource, CampaignStatus, CampaignType} from "../../../shared/campaigns";
 import moment from 'moment';
 import {getMailerTypes} from "../send-configurations/helpers";
@@ -101,13 +101,15 @@ export default class CUD extends Component {
         }
 
         this.state = {
-            sendConfiguration: null
+            sendConfiguration: null,
+            previewUrl: null
         };
 
         this.initForm({
             leaveConfirmation: !props.entity || props.entity.permissions.includes('edit'),
             onChange: {
-                send_configuration: ::this.onSendConfigurationChanged
+                send_configuration: ::this.onSendConfigurationChanged,
+                testUser: ::this.onPreviewTestUserChanged
             },
             onChangeBeforeValidation: ::this.onFormChangeBeforeValidation
         });
@@ -173,7 +175,44 @@ export default class CUD extends Component {
         }
     }
 
-    getFormValuesMutator(data) {
+    onPreviewTestUserChanged(newState, key, oldValue, testUserValue) {
+        newState.previewUrl = null;
+        // noinspection JSIgnoredPromiseFromCall
+        this.fetchPreviewUrl(testUserValue);
+    }
+
+    @withAsyncErrorHandler
+    async fetchPreviewUrl(testUserValue) {
+        this.fetchPreviewUrlId = testUserValue;
+
+        if (!testUserValue) {
+            this.setState({previewUrl: null});
+            return;
+        }
+
+        const entity = this.props.entity;
+        const [listCid, subscriptionCid] = testUserValue.split(':');
+
+        let url;
+        if (entity.type === CampaignType.RSS) {
+            const result = await axios.post(getUrl('rest/restricted-access-token'), {
+                method: 'rssPreview',
+                params: {campaignCid: entity.cid, listCid}
+            });
+
+            url = getSandboxUrl(`cpgs/rss-preview/${entity.cid}/${listCid}/${subscriptionCid}`, result.data, {withLocale: true});
+        } else {
+            url = getPublicUrl(`archive/${entity.cid}/${listCid}/${subscriptionCid}`, {withLocale: true});
+        }
+
+        if (this.fetchPreviewUrlId === testUserValue) {
+            this.setState({previewUrl: url});
+        }
+    }
+
+    getFormValuesMutator(data, oldFormValues) {
+        data.testUser = (oldFormValues && oldFormValues.testUser) || null;
+
         // The source cannot be changed once campaign is created. Thus we don't have to initialize fields for all other sources
         if (data.source === CampaignSource.TEMPLATE) {
             data.data_sourceTemplate = data.data.sourceTemplate;
@@ -264,6 +303,8 @@ export default class CUD extends Component {
         } else {
 
             const data = {};
+
+            data.testUser = null;
 
             // This is for CampaignSource.TEMPLATE and CampaignSource.CUSTOM_FROM_TEMPLATE
             data.data_sourceTemplate = null;
@@ -562,6 +603,36 @@ export default class CUD extends Component {
     }
 
 
+    renderPreviewPanel(isEdit, campaignTypeKey) {
+        const t = this.props.t;
+
+        if (!isEdit) {
+            return <div className="cn-editor-preview-empty">{t('previewAvailableAfterYouSaveTheCampaign')}</div>;
+        }
+
+        if (campaignTypeKey === CampaignType.TRIGGERED) {
+            return <div className="cn-editor-preview-empty">{t('previewIsNotAvailableForTriggeredCampaigns')}</div>;
+        }
+
+        const testUsersColumns = [
+            { data: 1, title: t('email') },
+            { data: 4, title: t('list') }
+        ];
+
+        return (
+            <>
+                <div className="cn-editor-preview-picker">
+                    <TableSelect id="testUser" label={t('previewAs')} withHeader withClear dropdown dataUrl={`rest/campaigns-test-users-table/${this.props.entity.id}`} columns={testUsersColumns} selectionLabelIndex={1}/>
+                </div>
+                {this.state.previewUrl ?
+                    <iframe src={this.state.previewUrl} className="cn-editor-preview-frame" title={t('preview')}/>
+                :
+                    <div className="cn-editor-preview-empty">{t('selectATestSubscriberAboveToPreviewThe')}</div>
+                }
+            </>
+        );
+    }
+
     render() {
         const t = this.props.t;
         const isEdit = !!this.props.entity;
@@ -706,7 +777,12 @@ export default class CUD extends Component {
                 }
                 {templateModals}
 
-                <Title>{isEdit ? this.editTitles[this.getFormValue('type')] : this.createTitles[this.getFormValue('type')]}</Title>
+                <div className="cn-page-header">
+                    <div>
+                        <div className="cn-page-subtitle">{t('campaigns')}</div>
+                        <h1 className="cn-page-title">{isEdit ? this.editTitles[this.getFormValue('type')] : this.createTitles[this.getFormValue('type')]}</h1>
+                    </div>
+                </div>
 
                 {!canModify &&
                 <div className="alert alert-warning" role="alert">
@@ -721,6 +797,8 @@ export default class CUD extends Component {
                 }
 
                 <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
+                <div className="cn-editor-layout">
+                <div className="cn-editor-settings cn-card">
                     <InputField id="name" label={t('name')}/>
 
                     {isEdit &&
@@ -788,6 +866,12 @@ export default class CUD extends Component {
                         }
                         {canDelete && <LinkButton className="btn-danger" icon="trash-alt" label={t('delete')} to={`/campaigns/${this.props.entity.id}/delete`}/> }
                     </ButtonRow>
+                </div>
+
+                <div className="cn-editor-preview">
+                    {this.renderPreviewPanel(isEdit, campaignTypeKey)}
+                </div>
+                </div>
                 </Form>
             </div>
         );

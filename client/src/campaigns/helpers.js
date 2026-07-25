@@ -2,9 +2,19 @@
 
 import {CampaignStatus, CampaignType} from "../../../shared/campaigns";
 import campaignsStyles from "./styles.scss";
-import {Button} from "../lib/bootstrap-components";
+import {Button, Pill} from "../lib/bootstrap-components";
 import {CheckBox, Fieldset, TableSelect} from "../lib/form";
 import React from "react";
+
+export function campaignStatusPill(t, campaignStatusLabels, status) {
+    if (status === CampaignStatus.FINISHED || status === CampaignStatus.ACTIVE) {
+        return <Pill color="green">{campaignStatusLabels[status]}</Pill>;
+    } else if (status === CampaignStatus.SCHEDULED) {
+        return <Pill color="blue">{campaignStatusLabels[status]}</Pill>;
+    } else {
+        return <Pill color="gray">{campaignStatusLabels[status]}</Pill>;
+    }
+}
 
 export function getCampaignLabels(t) {
 
