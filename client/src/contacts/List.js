@@ -3,7 +3,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {withTranslation} from '../lib/i18n';
-import {LinkButton, requiresAuthenticatedUser, Title, Toolbar, withPageHelpers} from '../lib/page';
+import {LinkButton, requiresAuthenticatedUser, Toolbar, withPageHelpers} from '../lib/page';
 import {withErrorHandling} from '../lib/error-handling';
 import {Table} from '../lib/table';
 import {Pill} from '../lib/bootstrap-components';

@@ -544,9 +544,10 @@ export class Section extends Component {
 export class Title extends Component {
     render() {
         return (
-            <div>
-                <h2>{this.props.children}</h2>
-                <hr/>
+            <div className="cn-page-header">
+                <div>
+                    <h1 className="cn-page-title">{this.props.children}</h1>
+                </div>
             </div>
         );
     }
