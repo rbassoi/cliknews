@@ -30,6 +30,15 @@ services:
     volumes:
     - cliknews-files:/app/server/files
 
+  landing:
+    build:
+      context: ./landing
+    environment:
+    - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    - PLANS_API_URL=http://cliknews:3004/api/public/plans
+    ports:
+    - "3005:3000"
+
 volumes:
   mysql-data:
   redis-data:
