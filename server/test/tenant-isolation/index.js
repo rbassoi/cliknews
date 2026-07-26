@@ -18,6 +18,7 @@
 const { expect } = require('chai');
 const knex = require('../../lib/knex');
 const lists = require('../../models/lists');
+const fields = require('../../models/fields');
 
 const ROOT_NAMESPACE_ID = 1;
 
@@ -74,9 +75,14 @@ describe('tenant isolation', function () {
     it('blocks a user from fetching another account\'s list even with a matching ACL grant', async () => {
         const contextForUserB = {user: {id: userBId, admin: false}, account: {id: accountBId}};
 
-        const entity = await knex.transaction(tx => lists.getByIdTx(tx, contextForUserB, listAId));
+        let threw = false;
+        try {
+            await knex.transaction(tx => lists.getByIdTx(tx, contextForUserB, listAId));
+        } catch (err) {
+            threw = true;
+        }
 
-        expect(entity).to.not.exist;
+        expect(threw).to.equal(true);
     });
 
     it('still lets a user fetch their own account\'s list', async () => {
@@ -99,5 +105,55 @@ describe('tenant isolation', function () {
         }
 
         expect(threw).to.equal(true);
+    });
+
+    describe('hardened permission check protects "child" tables via their parent', () => {
+        // custom_fields has no account_id of its own — every function in
+        // fields.js only checks permission on the parent 'list'. This proves
+        // that hardening shares.js:_checkPermissionTx (rather than adding
+        // account_id to every child table individually) is enough: it blocks
+        // access here purely because the parent list belongs to another
+        // account, with zero changes to fields.js itself.
+        let fieldId;
+
+        before(async () => {
+            fieldId = (await knex('custom_fields').insert({
+                list: listAId, key: 'TEST_FIELD', type: 'text', column: 'test_field'
+            }))[0];
+
+            // Simulate the ACL system granting user B 'viewFields' on account
+            // A's list — same adversarial scenario as the 'view' grant above,
+            // just for a different operation. User A also needs its own
+            // grant (unrelated to account scoping) to legitimately read it.
+            await knex('permissions_list').insert({entity: listAId, user: userBId, operation: 'viewFields'});
+            await knex('permissions_list').insert({entity: listAId, user: userAId, operation: 'viewFields'});
+        });
+
+        after(async () => {
+            await knex('permissions_list').where({entity: listAId, operation: 'viewFields'}).del();
+            await knex('custom_fields').where('id', fieldId).del();
+        });
+
+        it('blocks a user from fetching a custom field on another account\'s list', async () => {
+            const contextForUserB = {user: {id: userBId, admin: false}, account: {id: accountBId}};
+
+            let threw = false;
+            try {
+                await fields.getById(contextForUserB, listAId, fieldId);
+            } catch (err) {
+                threw = true;
+            }
+
+            expect(threw).to.equal(true);
+        });
+
+        it('still lets a user fetch a custom field on their own account\'s list', async () => {
+            const contextForUserA = {user: {id: userAId, admin: false}, account: {id: accountAId}};
+
+            const entity = await fields.getById(contextForUserA, listAId, fieldId);
+
+            expect(entity).to.exist;
+            expect(entity.id).to.equal(fieldId);
+        });
     });
 });

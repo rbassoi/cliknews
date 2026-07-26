@@ -60,7 +60,7 @@ async function listCurrentPeriodWithLimits() {
         })
         .whereIn('accounts.status', ['trial', 'active', 'past_due'])
         .select([
-            'accounts.id as account_id', 'accounts.name as account_name',
+            'accounts.id as account_id', 'accounts.name as account_name', 'plans.name as plan_name',
             'plans.max_emails_per_month',
             knex.raw('COALESCE(account_usage.emails_sent, 0) as emails_sent'),
             knex.raw('COALESCE(account_usage.alert_80_sent, \'\') as alert_80_sent')

@@ -9,6 +9,7 @@ const interoperableErrors = require('../../shared/interoperable-errors');
 const log = require('../lib/log');
 const {getGlobalNamespaceId} = require('../../shared/namespaces');
 const {getAdminId} = require('../../shared/users');
+const {requireAccountScope, ACCOUNT_SCOPED_ENTITY_TYPES} = require('../lib/tenant-scope');
 
 // TODO: This would really benefit from some permission cache connected to rebuildPermissions
 // A bit of the problem is that the cache would have to expunged as the result of other processes modifying entites/permissions
@@ -556,7 +557,26 @@ async function _checkPermissionTx(tx, context, entityTypeId, entityId, requiredO
 
         const perms = await permsQuery.first();
 
-        return !!perms;
+        if (!perms) {
+            return false;
+        }
+
+        // The namespaces/shares ACL above was built for trusted users sharing
+        // resources with each other, not as a hard boundary between SaaS
+        // accounts — a namespace-sharing misconfiguration could otherwise
+        // grant this permission across accounts. This check protects every
+        // "child" table too (triggers, custom_fields, imports, files_*, ...),
+        // since they all check permission on their *parent* entity
+        // (campaign/list/...) before touching the child rows, and that parent
+        // type is scoped here. See docs/saas-plan.md.
+        if (entityId && ACCOUNT_SCOPED_ENTITY_TYPES.has(entityTypeId)) {
+            const belongsToAccount = await tx(entityType.entitiesTable).where('id', entityId).modify(requireAccountScope, context).first();
+            if (!belongsToAccount) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

@@ -56,7 +56,10 @@ function requireAccountScopeOn(tableName) {
 // carries a mandatory account_id column. Kept as an explicit allowlist so
 // dt-helpers never assumes a column that doesn't exist yet on tables not
 // migrated to per-account isolation in this pass (see docs/saas-plan.md).
-const ACCOUNT_SCOPED_ENTITY_TYPES = new Set(['namespace', 'list', 'campaign', 'template', 'sendConfiguration', 'user']);
+const ACCOUNT_SCOPED_ENTITY_TYPES = new Set([
+    'namespace', 'list', 'campaign', 'template', 'sendConfiguration', 'user',
+    'channel', 'mosaicoTemplate', 'report', 'reportTemplate', 'customForm'
+]);
 
 module.exports = {
     requireAccountScope,

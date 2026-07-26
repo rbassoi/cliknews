@@ -61,6 +61,33 @@ const workerBatchSize = 10;
 
 const sendConfigurationIdByCampaignId = new Map(); // campaignId -> sendConfigurationId
 const sendConfigurationStatuses = new Map(); // sendConfigurationId -> {retryCount, postponeTill}
+const sendConfigurationPriority = new Map(); // sendConfigurationId -> priority (higher = served first)
+
+// Cached indefinitely for this process's lifetime, same as sendConfigurationStatuses
+// above — an account's ip_pool changes rarely enough that this doesn't need
+// invalidation, and refreshing it is a DB round-trip we don't want on every
+// selectNextTask() tie-break (that function runs synchronously).
+async function refreshSendConfigurationPriority(sendConfigurationId) {
+    if (!sendConfigurationId || sendConfigurationPriority.has(sendConfigurationId)) {
+        return;
+    }
+
+    try {
+        const row = await knex('send_configurations')
+            .innerJoin('accounts', 'accounts.id', 'send_configurations.account_id')
+            .where('send_configurations.id', sendConfigurationId)
+            .select('accounts.ip_pool')
+            .first();
+
+        sendConfigurationPriority.set(sendConfigurationId, (row && row.ip_pool === 'dedicated') ? 1 : 0);
+    } catch (err) {
+        sendConfigurationPriority.set(sendConfigurationId, 0);
+    }
+}
+
+function getSendConfigurationPriority(sendConfigurationId) {
+    return sendConfigurationPriority.get(sendConfigurationId) || 0;
+}
 
 const sendConfigurationMessageQueue = new Map(); // sendConfigurationId -> [queuedMessage]
 const campaignMessageQueue = new Map(); // campaignId -> [campaignMessage]
@@ -244,12 +271,24 @@ async function workersLoop() {
             task => `campaignMessageQueueEmpty:${task.id}`
         );
 
+        // Higher-priority send configurations (accounts with a dedicated IP
+        // pool, today — see docs/saas-plan.md Part I) are served first;
+        // within the same priority tier, the existing fairness rule (fewest
+        // workers already assigned) still applies unchanged.
         let minTask = null;
+        let minPriority;
         let minExistingWorkers;
 
         for (const task of allocation) {
-            if (task.isValid && (minTask === null || minExistingWorkers > task.existingWorkers)) {
+            if (!task.isValid) {
+                continue;
+            }
+
+            const priority = getSendConfigurationPriority(task.sendConfigurationId);
+
+            if (minTask === null || priority > minPriority || (priority === minPriority && task.existingWorkers < minExistingWorkers)) {
                 minTask = task;
+                minPriority = priority;
                 minExistingWorkers = task.existingWorkers;
             }
         }
@@ -347,6 +386,7 @@ async function processCampaign(campaignId) {
             }
 
             sendConfigurationIdByCampaignId.set(cpg.id, cpg.send_configuration);
+            await refreshSendConfigurationPriority(cpg.send_configuration);
 
             if (isSendConfigurationPostponed(cpg.send_configuration)) {
                 // postpone campaign if its send configuration is problematic
@@ -501,6 +541,8 @@ async function processQueuedBySendConfiguration(sendConfigurationId) {
         }
     }
 
+
+    await refreshSendConfigurationPriority(sendConfigurationId);
 
     try {
         while (true) {

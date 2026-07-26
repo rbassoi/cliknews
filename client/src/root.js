@@ -75,7 +75,7 @@ class Root extends Component {
                     topLevelMenu.push(<NavLink key={entryKey} className={activeClass(link)} to={link}>{entry.title}</NavLink>);
                 }
 
-                const adminLinks = ['/users', '/namespaces', '/settings', '/send-configurations', '/blacklist', '/account/api'];
+                const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api'];
                 const isAdminActive = adminLinks.some(link => path.startsWith(link));
 
                 if (cliknewsConfig.isAuthenticated) {
@@ -89,6 +89,8 @@ class Root extends Component {
                                 {cliknewsConfig.globalPermissions.displayManageUsers && <NavLink className={activeClass('/users')} to="/users">{t('users')}</NavLink>}
                                 <NavLink className={activeClass('/namespaces')} to="/namespaces">{t('namespaces')}</NavLink>
                                 {cliknewsConfig.globalPermissions.manageSettings && <NavLink className={activeClass('/settings')} to="/settings">{t('globalSettings')}</NavLink>}
+                                <NavLink className={activeClass('/sending-domains')} to="/sending-domains">{t('sendingDomains')}</NavLink>
+                                <NavLink className={activeClass('/api-keys')} to="/api-keys">{t('apiKeys')}</NavLink>
                                 <NavLink className={activeClass('/send-configurations')} to="/send-configurations">{t('sendConfigurations')}</NavLink>
                                 {cliknewsConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
                                 <NavLink className={activeClass('/account/api')} to="/account/api">{t('api')}</NavLink>

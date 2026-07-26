@@ -46,6 +46,10 @@ router.getAsync('/campaigns-stats/:campaignId', passport.loggedIn, async (req, r
     return res.json(campaign);
 });
 
+router.getAsync('/campaigns-opens-by-day/:campaignId', passport.loggedIn, async (req, res) => {
+    return res.json(await campaigns.getOpensByDay(req.context, castToInteger(req.params.campaignId)));
+});
+
 router.getAsync('/campaigns-content/:campaignId', passport.loggedIn, async (req, res) => {
     const campaign = await campaigns.getById(req.context, castToInteger(req.params.campaignId), true, campaigns.Content.ONLY_SOURCE_CUSTOM);
     campaign.hash = campaigns.hash(campaign, campaigns.Content.ONLY_SOURCE_CUSTOM);

@@ -9,6 +9,7 @@ const namespaceHelpers = require('../lib/namespace-helpers');
 const shares = require('./shares');
 const reports = require('./reports');
 const dependencyHelpers = require('../lib/dependency-helpers');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'description', 'mime_type', 'user_fields', 'js', 'hbs', 'namespace']);
 
@@ -19,7 +20,7 @@ function hash(entity) {
 async function getById(context, id) {
     return await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'reportTemplate', id, 'view');
-        const entity = await tx('report_templates').where('id', id).first();
+        const entity = await tx('report_templates').where('id', id).modify(requireAccountScope, context).first();
         entity.permissions = await shares.getPermissionsTx(tx, context, 'reportTemplate', id);
         return entity;
     });
@@ -41,7 +42,10 @@ async function create(context, entity) {
         await shares.enforceEntityPermissionTx(tx, context, 'namespace', entity.namespace, 'createReportTemplate');
         await namespaceHelpers.validateEntity(tx, entity);
 
-        const ids = await tx('report_templates').insert(filterObject(entity, allowedKeys));
+        const filteredEntity = filterObject(entity, allowedKeys);
+        filteredEntity.account_id = requireAccountId(context);
+
+        const ids = await tx('report_templates').insert(filteredEntity);
         const id = ids[0];
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'reportTemplate', entityId: id });
@@ -55,7 +59,7 @@ async function updateWithConsistencyCheck(context, entity) {
         await shares.enforceGlobalPermission(context, 'createJavascriptWithROAccess');
         await shares.enforceEntityPermissionTx(tx, context, 'reportTemplate', entity.id, 'edit');
 
-        const existing = await tx('report_templates').where('id', entity.id).first();
+        const existing = await tx('report_templates').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -68,7 +72,7 @@ async function updateWithConsistencyCheck(context, entity) {
         await namespaceHelpers.validateEntity(tx, entity);
         await namespaceHelpers.validateMoveTx(tx, context, entity, existing, 'reportTemplate', 'createReportTemplate', 'delete');
 
-        await tx('report_templates').where('id', entity.id).update(filterObject(entity, allowedKeys));
+        await tx('report_templates').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, allowedKeys));
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'reportTemplate', entityId: entity.id });
     });
@@ -82,14 +86,14 @@ async function remove(context, id) {
             { entityTypeId: 'report', column: 'report_template' }
         ]);
 
-        await tx('report_templates').where('id', id).del();
+        await tx('report_templates').where('id', id).modify(requireAccountScope, context).del();
     });
 }
 
 async function getUserFieldsById(context, id) {
     return await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'reportTemplate', id, 'view');
-        const entity = await tx('report_templates').select(['user_fields']).where('id', id).first();
+        const entity = await tx('report_templates').select(['user_fields']).where('id', id).modify(requireAccountScope, context).first();
         return JSON.parse(entity.user_fields);
     });
 }

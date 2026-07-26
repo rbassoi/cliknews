@@ -14,6 +14,7 @@ const mjml2html = require('mjml');
 
 const lists = require('./lists');
 const dependencyHelpers = require('../lib/dependency-helpers');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const formAllowedKeys = new Set([
     'name',
@@ -70,8 +71,8 @@ async function listDTAjax(context, params) {
 }
 
 
-async function _getByIdTx(tx, id) {
-    const entity = await tx('custom_forms').where('id', id).first();
+async function _getByIdTx(tx, context, id) {
+    const entity = await tx('custom_forms').where('id', id).modify(requireAccountScope, context).first();
 
     if (!entity) {
         throw interoperableErrors.NotFoundError();
@@ -88,7 +89,7 @@ async function _getByIdTx(tx, id) {
 
 async function getByIdTx(tx, context, id, withPermissions = true) {
     await shares.enforceEntityPermissionTx(tx, context, 'customForm', id, 'view');
-    const entity = await _getByIdTx(tx, id);
+    const entity = await _getByIdTx(tx, context, id);
 
     if (withPermissions) {
         entity.permissions = await shares.getPermissionsTx(tx, context, 'customForm', id);
@@ -141,7 +142,10 @@ async function create(context, entity) {
         const form = filterObject(entity, allowedFormKeys);
         enforce(!Object.keys(checkForMjmlErrors(form)).length, 'Error(s) in form templates');
 
-        const ids = await tx('custom_forms').insert(filterObject(entity, formAllowedKeys));
+        const filteredEntity = filterObject(entity, formAllowedKeys);
+        filteredEntity.account_id = requireAccountId(context);
+
+        const ids = await tx('custom_forms').insert(filteredEntity);
         const id = ids[0];
 
         for (const formKey in form) {
@@ -161,7 +165,7 @@ async function updateWithConsistencyCheck(context, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'customForm', entity.id, 'edit');
 
-        const existing = await _getByIdTx(tx, entity.id);
+        const existing = await _getByIdTx(tx, context, entity.id);
 
         const existingHash = hash(existing);
         if (existingHash !== entity.originalHash) {
@@ -174,7 +178,7 @@ async function updateWithConsistencyCheck(context, entity) {
         const form = filterObject(entity, allowedFormKeys);
         enforce(!Object.keys(checkForMjmlErrors(form)).length, 'Error(s) in form templates');
 
-        await tx('custom_forms').where('id', entity.id).update(filterObject(entity, formAllowedKeys));
+        await tx('custom_forms').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, formAllowedKeys));
 
         for (const formKey in form) {
             await tx('custom_forms_data').update({
@@ -198,7 +202,7 @@ async function remove(context, id) {
         ]);
 
         await tx('custom_forms_data').where('form', id).del();
-        await tx('custom_forms').where('id', id).del();
+        await tx('custom_forms').where('id', id).modify(requireAccountScope, context).del();
     });
 }
 

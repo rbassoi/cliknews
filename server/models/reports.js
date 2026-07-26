@@ -16,6 +16,7 @@ const subscriptions = require('./subscriptions');
 const {Readable} = require('stream');
 
 const ReportState = require('../../shared/reports').ReportState;
+const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'description', 'report_template', 'params', 'namespace']);
 
@@ -30,6 +31,7 @@ async function getByIdWithTemplate(context, id, withPermissions = true) {
 
         const entity = await tx('reports')
             .where('reports.id', id)
+            .modify(requireAccountScopeOn('reports'), context)
             .innerJoin('report_templates', 'reports.report_template', 'report_templates.id')
             .select(['reports.id', 'reports.name', 'reports.description', 'reports.report_template', 'reports.params', 'reports.state', 'reports.namespace', 'report_templates.user_fields', 'report_templates.mime_type', 'report_templates.hbs', 'report_templates.js'])
             .first();
@@ -73,7 +75,10 @@ async function create(context, entity) {
 
         entity.params = JSON.stringify(entity.params);
 
-        const ids = await tx('reports').insert(filterObject(entity, allowedKeys));
+        const filteredEntity = filterObject(entity, allowedKeys);
+        filteredEntity.account_id = requireAccountId(context);
+
+        const ids = await tx('reports').insert(filteredEntity);
         id = ids[0];
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'report', entityId: id });
@@ -89,7 +94,7 @@ async function updateWithConsistencyCheck(context, entity) {
         await shares.enforceEntityPermissionTx(tx, context, 'report', entity.id, 'edit');
         await shares.enforceEntityPermissionTx(tx, context, 'reportTemplate', entity.report_template, 'execute');
 
-        const existing = await tx('reports').where('id', entity.id).first();
+        const existing = await tx('reports').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -109,7 +114,7 @@ async function updateWithConsistencyCheck(context, entity) {
         const filteredUpdates = filterObject(entity, allowedKeys);
         filteredUpdates.state = ReportState.SCHEDULED;
 
-        await tx('reports').where('id', entity.id).update(filteredUpdates);
+        await tx('reports').where('id', entity.id).modify(requireAccountScope, context).update(filteredUpdates);
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'report', entityId: entity.id });
     });
@@ -122,12 +127,12 @@ async function updateWithConsistencyCheck(context, entity) {
 async function removeTx(tx, context, id) {
     await shares.enforceEntityPermissionTx(tx, context, 'report', id, 'delete');
 
-    const report = await tx('reports').where('id', id).first();
+    const report = await tx('reports').where('id', id).modify(requireAccountScope, context).first();
 
     await fs.removeAsync(reportHelpers.getReportContentFile(report));
     await fs.removeAsync(reportHelpers.getReportOutputFile(report));
 
-    await tx('reports').where('id', id).del();
+    await tx('reports').where('id', id).modify(requireAccountScope, context).del();
 }
 
 async function remove(context, id) {

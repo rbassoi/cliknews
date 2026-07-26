@@ -27,6 +27,8 @@ const lists = require('./lists');
 const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 const planLimits = require('../lib/plan-limits');
 const accountUsageModel = require('./account-usage');
+const moment = require('moment');
+const suppressionList = require('./suppression-list');
 
 const {EntityActivityType, CampaignActivityType} = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
@@ -772,6 +774,11 @@ statusFieldMapping.set(CampaignMessageStatus.UNSUBSCRIBED, 'unsubscribed');
 statusFieldMapping.set(CampaignMessageStatus.BOUNCED, 'bounced');
 statusFieldMapping.set(CampaignMessageStatus.COMPLAINED, 'complained');
 
+const suppressionReasonMapping = new Map();
+suppressionReasonMapping.set(CampaignMessageStatus.BOUNCED, 'bounce');
+suppressionReasonMapping.set(CampaignMessageStatus.COMPLAINED, 'spam_complaint');
+suppressionReasonMapping.set(CampaignMessageStatus.UNSUBSCRIBED, 'unsubscribe');
+
 async function _changeStatusByMessageTx(tx, context, message, campaignMessageStatus) {
     enforce(statusFieldMapping.has(campaignMessageStatus));
 
@@ -788,6 +795,19 @@ async function _changeStatusByMessageTx(tx, context, message, campaignMessageSta
                 status: campaignMessageStatus,
                 updated: knex.fn.now()
             });
+
+        // Per-account suppression (separate from the global, manually-curated
+        // `blacklist`) — one account's bounce/complaint/unsubscribe should
+        // never affect another account's ability to send to the same address.
+        if (suppressionReasonMapping.has(campaignMessageStatus)) {
+            const campaign = await tx('campaigns').where('id', message.campaign).select('account_id').first();
+            const subsTable = subscriptions.getSubscriptionTableName(message.list);
+            const subscription = await tx(subsTable).where('id', message.subscription).select('email').first();
+
+            if (subscription && subscription.email) {
+                await suppressionList.add(campaign.account_id, subscription.email, suppressionReasonMapping.get(campaignMessageStatus));
+            }
+        }
     }
 }
 
@@ -992,6 +1012,37 @@ async function getStatisticsOpened(context, id) {
     });
 }
 
+async function getOpensByDay(context, id) {
+    return await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'campaign', id, 'viewStats');
+
+        // `created` on campaign_links reflects each subscriber's *first* open only
+        // (repeat opens just bump `count`), so this is a real daily-unique-opens
+        // series, not an approximation.
+        const rows = await tx('campaign_links')
+            .where('campaign', id)
+            .where('link', links.LinkId.OPEN)
+            .where('created', '>=', knex.raw('DATE_SUB(CURDATE(), INTERVAL 6 DAY)'))
+            .groupBy(knex.raw('DATE(created)'))
+            .select(knex.raw('DATE(created) as day'))
+            .count('* as count')
+            .orderBy('day', 'asc');
+
+        const byDay = {};
+        for (const row of rows) {
+            byDay[moment(row.day).format('YYYY-MM-DD')] = row.count;
+        }
+
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const day = moment().subtract(i, 'days').format('YYYY-MM-DD');
+            days.push({day, count: byDay[day] || 0});
+        }
+
+        return days;
+    });
+}
+
 async function fetchRssCampaign(context, cid) {
     return await knex.transaction(async tx => {
 
@@ -1173,6 +1224,7 @@ module.exports.disable = disable;
 module.exports.rawGetByTx = rawGetByTx;
 module.exports.getTrackingSettingsByCidTx = getTrackingSettingsByCidTx;
 module.exports.getStatisticsOpened = getStatisticsOpened;
+module.exports.getOpensByDay = getOpensByDay;
 
 module.exports.fetchRssCampaign = fetchRssCampaign;
 

@@ -10,6 +10,7 @@ const shares = require('./shares');
 const files = require('./files');
 const dependencyHelpers = require('../lib/dependency-helpers');
 const { allTagLanguages } = require('../../shared/templates');
+const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'description', 'type', 'tag_language', 'data', 'namespace']);
 
@@ -20,7 +21,7 @@ function hash(entity) {
 async function getById(context, id) {
     return await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'mosaicoTemplate', id, 'view');
-        const entity = await tx('mosaico_templates').where('id', id).first();
+        const entity = await tx('mosaico_templates').where('id', id).modify(requireAccountScope, context).first();
         entity.data = JSON.parse(entity.data);
         entity.permissions = await shares.getPermissionsTx(tx, context, 'mosaicoTemplate', id);
         return entity;
@@ -62,7 +63,10 @@ async function create(context, entity) {
 
         await _validateAndPreprocess(tx, entity);
 
-        const ids = await tx('mosaico_templates').insert(filterObject(entity, allowedKeys));
+        const filteredEntity = filterObject(entity, allowedKeys);
+        filteredEntity.account_id = requireAccountId(context);
+
+        const ids = await tx('mosaico_templates').insert(filteredEntity);
         const id = ids[0];
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'mosaicoTemplate', entityId: id });
@@ -75,7 +79,7 @@ async function updateWithConsistencyCheck(context, entity) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'mosaicoTemplate', entity.id, 'edit');
 
-        const existing = await tx('mosaico_templates').where('id', entity.id).first();
+        const existing = await tx('mosaico_templates').where('id', entity.id).modify(requireAccountScope, context).first();
         if (!existing) {
             throw new interoperableErrors.NotFoundError();
         }
@@ -91,7 +95,7 @@ async function updateWithConsistencyCheck(context, entity) {
 
         await namespaceHelpers.validateMoveTx(tx, context, entity, existing, 'mosaicoTemplate', 'createMosaicoTemplate', 'delete');
 
-        await tx('mosaico_templates').where('id', entity.id).update(filterObject(entity, allowedKeys));
+        await tx('mosaico_templates').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, allowedKeys));
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'mosaicoTemplate', entityId: entity.id });
     });
@@ -107,7 +111,7 @@ async function remove(context, id) {
                 rows: async (tx, limit) => {
                     const result = [];
 
-                    const tmpls = await tx('templates').where('type', 'mosaico').select(['id', 'name', 'data']);
+                    const tmpls = await tx('templates').where('type', 'mosaico').modify(requireAccountScope, context).select(['id', 'name', 'data']);
                     for (const tmpl of tmpls) {
                         const data = JSON.parse(tmpl.data);
                         if (data.mosaicoTemplate === id) {
@@ -126,7 +130,7 @@ async function remove(context, id) {
         await files.removeAllTx(tx, context, 'mosaicoTemplate', 'file', id);
         await files.removeAllTx(tx, context, 'mosaicoTemplate', 'block', id);
 
-        await tx('mosaico_templates').where('id', id).del();
+        await tx('mosaico_templates').where('id', id).modify(requireAccountScope, context).del();
     });
 }
 

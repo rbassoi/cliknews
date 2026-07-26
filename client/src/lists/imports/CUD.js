@@ -27,6 +27,7 @@ import {ImportSource, inProgress, MappingType, prepInProgress, prepFinished} fro
 import axios from "../../lib/axios";
 import {getUrl} from "../../lib/urls";
 import listStyles from "../styles.scss";
+import {Icon} from "../../lib/bootstrap-components";
 import styles from "../../lib/styles.scss";
 import interoperableErrors from "../../../../shared/interoperable-errors";
 import {withComponentMixins} from "../../lib/decorator-helpers";
@@ -54,7 +55,10 @@ export default class CUD extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            isDraggingFile: false,
+            selectedFileName: null
+        };
 
         const {importSourceLabels, mappingTypeLabels} = getImportLabels(props.t);
 
@@ -320,11 +324,48 @@ export default class CUD extends Component {
     }
 
     onFileSelected(evt, x) {
-        if (!this.getFormValue('name') && this.csvFile.files.length > 0) {
-            this.updateFormValue('name', this.csvFile.files[0].name);
+        if (this.csvFile.files.length > 0) {
+            if (!this.getFormValue('name')) {
+                this.updateFormValue('name', this.csvFile.files[0].name);
+            }
+
+            this.setState({selectedFileName: this.csvFile.files[0].name});
         }
 
         this.scheduleFormRevalidate();
+    }
+
+    onDropzoneClick() {
+        this.csvFile.click();
+    }
+
+    onDropzoneDragOver(evt) {
+        evt.preventDefault();
+        if (!this.state.isDraggingFile) {
+            this.setState({isDraggingFile: true});
+        }
+    }
+
+    onDropzoneDragLeave(evt) {
+        evt.preventDefault();
+        this.setState({isDraggingFile: false});
+    }
+
+    onDropzoneDrop(evt) {
+        evt.preventDefault();
+        this.setState({isDraggingFile: false});
+
+        const files = evt.dataTransfer.files;
+        if (files && files.length > 0) {
+            // <input type=file>.files can't be assigned a FileList directly, but it
+            // does accept one built via DataTransfer, which keeps the rest of this
+            // component (reading this.csvFile.files) unchanged for the drop case.
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(files[0]);
+            this.csvFile.files = dataTransfer.files;
+
+            this.onFileSelected(evt);
+        }
     }
 
     render() {
@@ -346,7 +387,26 @@ export default class CUD extends Component {
             } else {
                 settingsEdit =
                     <div>
-                        <AlignedRow label={t('file')}><input ref={node => this.csvFile = node} type="file" className="form-control-file" onChange={::this.onFileSelected}/></AlignedRow>
+                        <AlignedRow label={t('file')}>
+                            <div
+                                className={listStyles.dropzone + (this.state.isDraggingFile ? ' ' + listStyles.dropzoneActive : '')}
+                                onClick={::this.onDropzoneClick}
+                                onDragOver={::this.onDropzoneDragOver}
+                                onDragLeave={::this.onDropzoneDragLeave}
+                                onDrop={::this.onDropzoneDrop}
+                            >
+                                <Icon icon="file-csv" className={listStyles.dropzoneIcon}/>
+                                {this.state.selectedFileName ?
+                                    <div className={listStyles.dropzoneFileName}>{this.state.selectedFileName}</div>
+                                :
+                                    <>
+                                        <div>{t('dragACsvFileHereOrClickToBrowse')}</div>
+                                        <div className={listStyles.dropzoneHelp}>{t('csvFilesOnly')}</div>
+                                    </>
+                                }
+                                <input ref={node => this.csvFile = node} type="file" accept=".csv" className={listStyles.dropzoneInput} onChange={::this.onFileSelected}/>
+                            </div>
+                        </AlignedRow>
                         <InputField id="csvDelimiter" label={t('delimiter')}/>
                     </div>;
             }

@@ -8,6 +8,7 @@ const fs = require('fs-extra');
 const crypto = require('crypto');
 const bluebird = require('bluebird');
 const os = require('os');
+const knex = require('./knex');
 
 let zoneMtaProcess = null;
 
@@ -38,7 +39,72 @@ function getPassword() {
     return password;
 }
 
+function getPoolName(accountId) {
+    return `dedicated-${accountId}`;
+}
+
+// Called per-send from mailers.js (as async, same as the DKIM lookup it sits
+// next to) — no caching here yet, see docs/saas-plan.md Part J for the
+// known scaling caveat.
+async function getZoneNameForAccountId(accountId) {
+    if (!accountId) {
+        return 'default';
+    }
+
+    const account = await knex('accounts').where('id', accountId).select(['ip_pool', 'dedicated_ip_address']).first();
+
+    if (account && account.ip_pool === 'dedicated' && account.dedicated_ip_address) {
+        return getPoolName(accountId);
+    }
+
+    return 'default';
+}
+
 async function createConfig() {
+    // Accounts provisioned with a real dedicated outbound IP (see
+    // docs/saas-plan.md Part J — dedicated_ip_address is filled in manually
+    // or by a future provisioning script, never by this code) get their own
+    // pool+zone. Regenerated on every server start, so a newly-provisioned
+    // IP needs a restart to take effect — no dynamic hot-reload here.
+    const dedicatedAccounts = await knex('accounts')
+        .where('ip_pool', 'dedicated')
+        .whereNotNull('dedicated_ip_address')
+        .select(['id', 'dedicated_ip_address']);
+
+    const pools = {
+        default: {
+            address: '0.0.0.0',
+            name: config.builtinZoneMTA.poolName || os.hostname()
+        }
+    };
+
+    const zones = {
+        default: {
+            preferIPv6: false,
+            ignoreIPv6: true,
+            processes: config.builtinZoneMTA.processes,
+            connections: config.builtinZoneMTA.connections,
+            pool: 'default'
+        }
+    };
+
+    for (const account of dedicatedAccounts) {
+        const poolName = getPoolName(account.id);
+
+        pools[poolName] = {
+            address: account.dedicated_ip_address,
+            name: config.builtinZoneMTA.poolName || os.hostname()
+        };
+
+        zones[poolName] = {
+            preferIPv6: false,
+            ignoreIPv6: true,
+            processes: config.builtinZoneMTA.processes,
+            connections: config.builtinZoneMTA.connections,
+            pool: poolName
+        };
+    }
+
     const cnf = {    // This is the main config file
         name: 'ZoneMTA',
 
@@ -120,22 +186,8 @@ async function createConfig() {
             }
         },
 
-        pools: {
-            default: {
-              address: '0.0.0.0',
-              name: config.builtinZoneMTA.poolName || os.hostname()
-            }
-        },
-
-        zones: {
-            default: {
-                preferIPv6: false,
-                ignoreIPv6: true,
-                processes: config.builtinZoneMTA.processes,
-                connections: config.builtinZoneMTA.connections,
-                pool: 'default'
-            }
-        }
+        pools,
+        zones
     };
 
     await fs.writeFile(zoneMtaBuiltingConfig, JSON.stringify(cnf, null, 2));
@@ -203,3 +255,4 @@ function spawn(callback) {
 module.exports.spawn = bluebird.promisify(spawn);
 module.exports.getUsername = getUsername;
 module.exports.getPassword = getPassword;
+module.exports.getZoneNameForAccountId = getZoneNameForAccountId;

@@ -3,12 +3,16 @@
 const knex = require('../lib/knex');
 const dtHelpers = require('../lib/dt-helpers');
 const { getSubscriptionTableName } = require('./subscriptions');
-const { requireAccountScopeOn } = require('../lib/tenant-scope');
+const { requireAccountScope, requireAccountScopeOn } = require('../lib/tenant-scope');
 
 /** Lists the current user may view subscribers of. Used to build the cross-list contacts UNION. */
 async function getPermittedListsTx(tx, context) {
     if (context.user.admin) {
-        return await tx('lists').select('id', 'name');
+        // A "scoped admin" context (account present, e.g. an API-key request —
+        // see server/lib/middleware/api-key-auth.js) still gets filtered by
+        // that account; a true admin context (no account, background jobs)
+        // is unaffected, same as requireAccountScope's bypass everywhere else.
+        return await tx('lists').select('id', 'name').modify(requireAccountScope, context);
     }
 
     return await tx('lists')

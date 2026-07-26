@@ -94,38 +94,55 @@ Reusable pieces later phases should build on: `Pill`, `StatCard`
   different viewport widths) is still outstanding and should be done
   manually before calling phase 4 done.
 
-## Next: phases 5–6
+## Done: phases 5–6
 
 ### Phase 5 — Estatísticas (`client/src/campaigns/Statistics.js`)
-- New backend: `getOpensByDay(context, campaignId)` in `server/models/campaigns.js`
-  (same file/pattern as the existing `getStatisticsOpened`), querying
-  `campaign_links WHERE campaign=? AND link=-1 GROUP BY DATE(created)` for
-  the last 7 days. This is a real daily-**unique**-opens series (the `created`
-  column reflects each subscriber's *first* open only — repeat opens just
-  bump a `count`, they don't get a new timestamped row) — no schema
-  migration needed, the `created_index` already exists.
+- `getOpensByDay(context, id)` in `server/models/campaigns.js`: queries
+  `campaign_links WHERE campaign=? AND link=OPEN AND created >= NOW()-7d
+  GROUP BY DATE(created)`, zero-fills missing days, protected by the
+  existing `enforceEntityPermissionTx(tx, context, 'campaign', id, 'viewStats')`
+  (and, since Part H below, that check is now also account-scoped).
 - New route `GET rest/campaigns-opens-by-day/:campaignId` in
-  `server/routes/rest/campaigns.js`, next to the existing `campaigns-stats`
-  route.
-- Frontend: reskin the 4 overview numbers into `StatCard`s, add the 7-bar
-  CSS chart (plain height%/opacity divs like the mockup — no new chart
-  library needed for a 7-bar chart; `react-google-charts` stays reserved for
-  the pie/geo charts on `StatisticsOpened.js`, untouched). Add a "campaign
-  performance" table below (reuse the existing per-campaign stat columns
-  already on the `campaigns` table: `delivered`/`opened`/`clicks`/
-  `unsubscribed` — check whether the existing `campaigns-table` query
-  already exposes these or needs a small column addition).
+  `server/routes/rest/campaigns.js`, next to `campaigns-stats`.
+- Frontend: 4 overview numbers reskinned into `StatCard`s (sent/openRate/
+  clickRate/unsubscribed), a 7-bar CSS chart (height%/opacity divs, no new
+  chart library) fed by the new route. The original `renderMetrics`/
+  `renderMetricsWithProgress` drill-down links (delivered/blacklisted/
+  bounced/complained/unsubscribed/opened/clicks) were kept intact — those
+  sub-routes still exist in `campaigns/root.js`.
 
 ### Phase 6 — Importar (`client/src/lists/imports/CUD.js`)
-- Frontend-only, no backend change: replace the native `<input type=file>`
-  in the create step with a real drag-and-drop dropzone (HTML5 drag events +
-  hidden input fallback for click-to-browse), styled per the mockup
-  (`.cn-card`, dashed border, accent-blue on hover). Same
-  `multipart/form-data` POST to the existing `rest/imports/:listId` endpoint.
-- Reskin the column-mapping section (phase 2 of the form, once the CSV is
-  parsed) into the mockup's 3-column grid (CSV column pill → arrow → target
-  field dropdown) — reuses the exact same mapping data/state already in
-  `CUD.js`, purely a layout/style change.
+- Frontend-only: the native `<input type=file>` replaced by a real
+  drag-and-drop dropzone (HTML5 drag events, `DataTransfer`-based
+  click-to-browse fallback wired to the same hidden `this.csvFile` ref),
+  styled per the mockup (`.cn-card`, dashed border, accent-blue on hover,
+  selected-filename display). Same `multipart/form-data` POST to
+  `rest/imports/:listId` — no backend change.
+
+Verified: client build succeeded (webpack, clean) before any backend work
+in the following round started.
+
+## Round 2: SaaS backlog (isolation, DKIM/IP, priority queue, API, usage alerts)
+
+Done alongside phases 5–6, per the user's request to clear the rest of the
+SaaS backlog in one pass. Full detail lives in `docs/saas-plan.md`'s "Done:
+round 2" section — this note is just the redesign-plan pointer, since none
+of it touches `client/src` except the two new admin pages below.
+
+- New admin-facing client pages, following the existing sidebar/settings
+  pattern (`client/src/settings/root.js`, `client/src/root.js`):
+  `client/src/settings/SendingDomains.js` (add a sending domain, see the
+  expected DNS TXT record, verified/pending status) and
+  `client/src/settings/ApiKeys.js` (scope checkboxes, generate/revoke,
+  one-time raw-key display since only the hash is stored server-side).
+- Central account-isolation hardening (`server/models/shares.js`) meant the
+  tenant-isolation test suite's first test needed its assertion updated:
+  `lists.getByIdTx` now **throws** on a cross-account access attempt (fails
+  at the permission-check step) instead of silently returning `undefined`
+  (which used to happen one query later, at the scoped fetch) — stricter,
+  not a regression. `server/test/tenant-isolation/index.js` updated
+  accordingly, plus a new test for the hardened check protecting a "child"
+  table (`fields.js`/custom fields) via its parent list.
 
 ## Verification approach (same for each phase)
 1. Rebuild the client inside the dev container (`mailtrain-cliknews-1`):

@@ -12,6 +12,7 @@ const builtinZoneMta = require('./builtin-zone-mta');
 
 const contextHelpers = require('./context-helpers');
 const settings = require('../models/settings');
+const sendingDomainsModel = require('../models/sending-domains');
 
 const bluebird = require('bluebird');
 
@@ -46,7 +47,7 @@ function invalidateMailer(sendConfigurationId) {
 
 
 
-function _addDkimKeys(transport, mail) {
+async function _addDkimKeys(transport, mail) {
     const sendConfiguration = transport.mailer.sendConfiguration;
 
     if (sendConfiguration.mailer_type === MailerType.ZONE_MTA) {
@@ -57,27 +58,67 @@ function _addDkimKeys(transport, mail) {
                 mail.headers = {};
             }
 
-            const dkimDomain = mailerSettings.dkimDomain;
-            const dkimSelector = (mailerSettings.dkimSelector || '').trim();
-            const dkimPrivateKey = (mailerSettings.dkimPrivateKey || '').trim();
+            const from = (mail.from.address || '').trim();
+            const domain = from.split('@').pop().toLowerCase().trim();
 
-            if (dkimSelector && dkimPrivateKey) {
-                const from = (mail.from.address || '').trim();
-                const domain = from.split('@').pop().toLowerCase().trim();
+            // Prefer a real per-account sending domain (own DKIM keypair,
+            // verified via DNS) over the legacy keys embedded directly in
+            // this send configuration's mailer_settings.
+            const sendingDomain = sendConfiguration.account_id
+                ? await sendingDomainsModel.getVerifiedByAccountAndDomain(sendConfiguration.account_id, domain)
+                : null;
 
+            if (sendingDomain) {
                 mail.headers['x-cliknews-dkim'] = JSON.stringify({
-                    domainName: dkimDomain || domain,
-                    keySelector: dkimSelector,
-                    privateKey: dkimPrivateKey
+                    domainName: sendingDomain.domain,
+                    keySelector: sendingDomain.dkim_selector,
+                    privateKey: sendingDomain.dkim_private_key
                 });
+            } else {
+                const dkimDomain = mailerSettings.dkimDomain;
+                const dkimSelector = (mailerSettings.dkimSelector || '').trim();
+                const dkimPrivateKey = (mailerSettings.dkimPrivateKey || '').trim();
+
+                if (dkimSelector && dkimPrivateKey) {
+                    mail.headers['x-cliknews-dkim'] = JSON.stringify({
+                        domainName: dkimDomain || domain,
+                        keySelector: dkimSelector,
+                        privateKey: dkimPrivateKey
+                    });
+                }
             }
         }
     }
 }
 
 
+async function _applySendingZone(transport, mail) {
+    const sendConfiguration = transport.mailer.sendConfiguration;
+
+    if (sendConfiguration.mailer_type !== MailerType.ZONE_MTA || !sendConfiguration.account_id) {
+        return;
+    }
+
+    const mailerSettings = sendConfiguration.mailer_settings;
+    if (mailerSettings.zoneMtaType !== ZoneMTAType.BUILTIN) {
+        return;
+    }
+
+    // Only overrides the header when the account actually has a dedicated
+    // zone — otherwise leaves whatever _sendTransactionalMail/_sendMail
+    // already set (the pre-existing transactional-vs-default distinction).
+    const zone = await builtinZoneMta.getZoneNameForAccountId(sendConfiguration.account_id);
+    if (zone !== 'default') {
+        if (!mail.headers) {
+            mail.headers = {};
+        }
+        mail.headers['X-Sending-Zone'] = zone;
+    }
+}
+
 async function _sendMail(transport, mail, template) {
-    _addDkimKeys(transport, mail);
+    await _addDkimKeys(transport, mail);
+    await _applySendingZone(transport, mail);
 
     try {
         return await transport.sendMailAsync(mail);

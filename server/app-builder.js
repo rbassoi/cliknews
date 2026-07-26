@@ -61,6 +61,9 @@ const filesRest = require('./routes/rest/files');
 const settingsRest = require('./routes/rest/settings');
 const contactsRest = require('./routes/rest/contacts');
 const dashboardRest = require('./routes/rest/dashboard');
+const sendingDomainsRest = require('./routes/rest/sending-domains');
+const apiKeysRest = require('./routes/rest/api-keys');
+const apiV1 = require('./routes/api-v1');
 
 const index = require('./routes/index');
 
@@ -305,6 +308,12 @@ async function createApp(appType) {
         // API endpoints
         useWith404Fallback('/api', api);
 
+        // Deliberately NOT nested under /api: that path is blanket-covered by
+        // `passport.authByAccessToken` above (a different, user-level auth
+        // mechanism keyed off a completely different header), which would
+        // reject every api-key request before it ever reached this router.
+        useWith404Fallback('/api-v1', apiV1);
+
         // REST endpoints
         app.use('/rest', namespacesRest);
         app.use('/rest', sendConfigurationsRest);
@@ -329,6 +338,8 @@ async function createApp(appType) {
         app.use('/rest', settingsRest);
         app.use('/rest', contactsRest);
         app.use('/rest', dashboardRest);
+        app.use('/rest', sendingDomainsRest);
+        app.use('/rest', apiKeysRest);
 
         if (config.reports && config.reports.enabled === true) {
             app.use('/rest', reportTemplatesRest);

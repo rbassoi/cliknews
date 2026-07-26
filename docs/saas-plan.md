@@ -117,6 +117,126 @@ needs it), own `.env.example`.
 - Verified: `npm install` + `npm run build` succeed; `npm run dev` against the live
   `public-plans` endpoint renders all 4 real plans (Grátis/Starter/Business/Enterprise).
 
+## Done: round 2 (sending isolation, dedicated IPs, public API, child-table isolation, usage-alert e-mail)
+
+Closes almost everything the "Not done yet" section below used to list.
+Billing (Mercado Pago) is still deliberately out of scope.
+
+- **Central account-isolation hardening** — the actual finding that reshaped
+  this round's approach: `server/models/shares.js:_checkPermissionTx` never
+  checked `account_id`, only that a `permissions_<type>` row existed. Every
+  "child" table (`triggers`, custom fields/`fields.js`, imports, `files_*`)
+  already calls `enforceEntityPermissionTx` on its **parent** entity
+  (campaign/list) before touching child rows — so hardening
+  `_checkPermissionTx` once, to also verify (for any entity type in
+  `ACCOUNT_SCOPED_ENTITY_TYPES`) that the entity belongs to the caller's
+  account, closes the child-table gap everywhere at once, without adding
+  `account_id` to any of those tables or touching those model files. This
+  also means `enforceEntityPermissionTx` now **throws** immediately on a
+  cross-account access attempt instead of allowing a later
+  `requireAccountScope`-filtered query to silently return nothing — a
+  stricter, earlier failure, not a behavior regression (see
+  `docs/redesign-plan.md`'s round-2 note on the updated test assertion).
+- **Wave 2 of "first-class" account-scoped tables** —
+  `20260726120000_account_scope_wave_2.js` adds `account_id` (nullable →
+  backfilled to Legacy → `NOT NULL` + indexed) to `channels`,
+  `mosaico_templates`, `reports`, `report_templates`, `custom_forms` — the 5
+  remaining tables confirmed (by reading each model file) to have their own
+  `namespace` column + `permissions_<type>`/`shares_<type>` tables, same
+  shape as the original 7. `tenant-scope.js`'s `ACCOUNT_SCOPED_ENTITY_TYPES`
+  extended to match; the 5 model files (`channels.js`, `mosaico-templates.js`,
+  `reports.js`, `report-templates.js`, `forms.js`) scoped following the same
+  pattern as the original 7.
+- **Suppression list** — new `suppression_list` table, per account,
+  deliberately **separate** from the pre-existing global `blacklist` (which
+  stays install-wide/manual, used by `/api/blacklist`). Auto-populated in
+  `campaigns.js:_changeStatusByMessageTx` when a message flips to
+  `BOUNCED`/`COMPLAINED`/`UNSUBSCRIBED`. Checked in
+  `message-sender.js` right next to the existing `blacklist.isBlacklisted`
+  check, same silent-skip behavior.
+- **DKIM per account** — this codebase already resolves DKIM keys
+  dynamically per outgoing message (a real Zone-MTA mechanism,
+  `envelope.dkim.keys`, injected via the `x-cliknews-dkim` header consumed
+  by `zone-mta/plugins/cliknews-receiver.js`); the only gap was the "source
+  of truth" being embedded in `mailer_settings` instead of a real table.
+  New `sending_domains` table (`account_id, domain, dkim_selector,
+  dkim_private_key, dkim_public_key, spf_verified, dkim_verified,
+  dmarc_verified, verified_at`); `server/models/sending-domains.js`
+  generates the RSA keypair on `create`; `server/services/dns-verification.js`
+  (hourly, same style as `usage-alerts.js`) checks the `<selector>._domainkey.<domain>`
+  TXT record via `dns.promises.resolveTxt`; `mailers.js:_addDkimKeys` (now
+  async) resolves the account's verified sending domain first, falling back
+  to the legacy embedded-key mechanism. REST + `client/src/settings/SendingDomains.js`
+  (add domain, see the expected TXT record, verified/pending status).
+  **Caught in review**: `listByAccount`/`create` initially returned every
+  column, including `dkim_private_key`, to the client — fixed to explicitly
+  `.select()` only the safe columns.
+- **Priority send queue** — no new dependency. `sender-master.js`'s
+  `selectNextTask()` (the single function deciding which idle worker gets
+  the next task) now weighs candidates by the owning account's priority
+  (dedicated-IP accounts first) before falling back to the existing
+  fairness tie-break (fewest `existingWorkers`). Priority is resolved once
+  per campaign/send-configuration and cached in memory
+  (`sendConfigurationPriority`), same pattern already used for
+  `sendConfigurationStatuses`.
+- **Dedicated IP pools (code side only)** — `accounts.dedicated_ip_address`
+  (nullable) added alongside the pre-existing `accounts.ip_pool`.
+  `builtin-zone-mta.js:createConfig()` now generates one extra Zone-MTA
+  pool+zone per account with `ip_pool='dedicated'` AND a real
+  `dedicated_ip_address` set, alongside the `default` pool everyone else
+  uses; `mailers.js` sets `X-Sending-Zone` to the resolved zone for every
+  send (generalizing the pattern already used for transactional mail),
+  only overriding the header when a real dedicated zone applies.
+  **Deliberately not done**: no IP is actually provisioned/bound by this
+  work — that requires a real network interface on the sending host, which
+  doesn't exist in this dev environment. The code activates automatically
+  once `dedicated_ip_address` is filled in (manually, or by a future
+  provisioning script) and the server is restarted (zones are regenerated
+  on boot, not hot-reloaded).
+- **Public API with keys + rate limiting** — the existing `/api/*`
+  (`server/routes/api.js`) authenticates by **user** access-token
+  (`passport.authByAccessToken`, applied blanket to all of `/api/*`); an
+  API key belongs to the **account**, not a user, so this is a fully
+  parallel path rather than an extension: `server/lib/middleware/api-key-auth.js`
+  populates `req.account`/`req.apiScopes` from an `Api-Key` header (never
+  touches `req.user`), authorizing downstream model calls via a "scoped
+  admin" context (`{user: {admin: true, id: 0}, account: req.account}` —
+  same pattern as `getAdminContext(accountId)`, bypasses the namespaces/
+  shares ACL since there's no real user, stays hard-scoped by `account_id`).
+  New `api_keys` table (`account_id, key_hash, key_prefix, scopes,
+  last_used_at, revoked_at` — only a SHA-256 hash is stored, the raw key is
+  shown exactly once on creation). Rate limiting via `rate-limiter-flexible`
+  (new dependency), `RateLimiterMemory` (not Redis-backed — `config.redis.enabled`
+  is `false` by default here, and each app-type runs as a single process, so
+  there's no second instance to keep in sync), limits keyed by plan code.
+  New routes mounted at **`/api-v1`** (`server/routes/api-v1.js`) — a
+  routing collision forced this off the more natural `/api/v1`:
+  `app.all('/api/*', passport.authByAccessToken)` in `app-builder.js` runs
+  unconditionally on all of `/api/*` and 403s any request without a
+  user-level access token, which would reject every API-key request before
+  it ever reached the new router. `server/routes/rest/api-keys.js` (session-
+  authenticated CRUD, DataTables-ajax listing) + `client/src/settings/ApiKeys.js`.
+- **Usage-alert e-mail (the real thing)** — `server/services/usage-alerts.js`
+  now sends an actual e-mail (`server/views/account/usage-alert-80-{html,text}.hbs`,
+  via `messageSender.queueSubscriptionMessage(getSystemSendConfigurationId(), ...)`,
+  same convention as `users.js`'s password-reset e-mail) instead of only
+  logging a warning. Recipient is the account's earliest-created user
+  (there's no dedicated owner/billing-contact field yet).
+- **Redesign phases 5–6** (Estatísticas opens-by-day chart, Importar
+  drag-and-drop) landed in the same round — see `docs/redesign-plan.md`.
+
+**Verified**: `npm run test:tenant-isolation` — 5/5 passing (3 original +
+1 new hardened-check test + 1 updated assertion). Full container restart,
+then an HTTP-level smoke test against the real dev server: session login,
+`rest/sending-domains` (empty list, 200), `rest/api-keys-table` (DT-ajax,
+200), created a real API key, called `/api-v1/account` and
+`/api-v1/contacts/count` with it (200, correct account-scoped data),
+confirmed an invalid key is rejected (401) and a revoked key stops working
+immediately, burst-tested the rate limiter (20 rapid calls, no errors,
+enterprise-plan limit of 2000/min not hit — exhausting a limit that high
+wasn't practical to test directly). Client rebuilt successfully
+(`SendingDomains.js`/`ApiKeys.js`/sidebar wiring included).
+
 ## Verification approach (same for each future phase)
 
 1. Before any schema change: `mysqldump` the dev DB (kept in the session's scratchpad
@@ -132,25 +252,33 @@ needs it), own `.env.example`.
    is pinned to Node 10, this is intentionally a separate floor), then `npm run dev`
    against the real `public-plans` endpoint to confirm pricing isn't hardcoded/stale.
 
-## Not done yet (next phases, per the doc's own ordering)
+## Not done yet
 
 - **Billing** (doc §5) — deferred; user is integrating Mercado Pago later. No
   gateway-specific code exists yet; `accounts.gateway_customer_id`/`gateway_subscription_id`
-  are intentionally generic.
-- **Sending isolation** (doc §4) — per-account sending-domain DKIM, priority queues,
-  per-account suppression list. `sending_domains`/`suppression_list`/`api_keys`/
-  `billing_events` tables from the doc's §1.1 were **not** created this round (no code
-  uses them yet — creating unused schema seemed worse than adding it when the feature
-  actually lands).
-- **Dedicated IP pools** (doc §4.1) — depends on physical/network provisioning, not just code.
-- **Public API with keys + rate limiting** (doc §6) — needs `api_keys` (not yet created).
-- **`account_id` on "child" tables** (`channels`, `triggers`, `blacklist`, `custom_fields`,
-  `imports`, `reports`, `mosaico_templates`, `custom_forms`, `files_*`) — isolation for
-  these today is indirect (via their parent list/campaign/template, which *is*
-  account-scoped), not a direct column + filter. Fine for now, but should get the same
-  treatment eventually for defense-in-depth and query performance.
+  are intentionally generic. `billing_events` table from the doc's §1.1 still not created.
+- **Dedicated IP pools — physical provisioning** — the code side (Zone-MTA pool/zone
+  generation, `X-Sending-Zone` routing) is done (see round 2 above); no IP is actually
+  bound to a network interface by any of this work, since that requires real
+  infrastructure this dev environment doesn't have. Needs a manual step (or a future
+  provisioning script) to fill in `accounts.dedicated_ip_address`, then a server restart.
+- **`account_id` on "child" tables** (`triggers`, custom fields, `imports`, `files_*`,
+  `blacklist`) — still indirect (via the parent entity's `account_id`, enforced by the
+  hardened `_checkPermissionTx`), not a direct column. This was a deliberate choice this
+  round (see "Central account-isolation hardening" above) rather than a gap — direct
+  columns would be redundant with the central check, only worth adding later for query
+  performance if these tables ever need to be queried/filtered by account_id directly
+  (e.g. a per-account analytics rollup), not for isolation correctness.
 - **`server/lib/models/segments.js:getQueryGeneratorTx`** and a couple of other
   `context`-less internal helpers (`campaigns.js:lockByIdTx`) were left unscoped — they're
   always called immediately after (or before relying on) an already-scoped read, so the
   actual account boundary is enforced by their caller, not by these helpers themselves.
   Worth tightening if they ever get a new call site that doesn't already do that.
+- **API-key rate limiter is in-memory per app-type process** — fine today (single
+  process per app-type), but if this app is ever horizontally scaled (multiple
+  instances behind a load balancer), the limiter would need to move to Redis
+  (`rate-limiter-flexible` supports a `RateLimiterRedis` drop-in) to stay accurate
+  across instances.
+- **Dedicated-IP zone lookup (`builtin-zone-mta.js:getZoneNameForAccountId`) is
+  uncached** — one query per send-configuration resolution; noted as a known
+  scaling caveat in the code, fine at current volume.

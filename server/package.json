@@ -103,6 +103,7 @@
     "openpgp": "^4.7.2",
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
+    "rate-limiter-flexible": "^2.4.2",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "serve-favicon": "^2.5.0",

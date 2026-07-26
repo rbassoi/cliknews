@@ -15,6 +15,7 @@ const dependencyHelpers = require('../lib/dependency-helpers');
 
 const {EntityActivityType, CampaignActivityType} = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
+const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
 
 const allowedKeys = new Set(['name', 'description', 'namespace', 'cpg_name', 'cpg_description',
     'send_configuration', 'from_name_override', 'from_email_override', 'reply_to_override', 'subject', 'data', 'click_tracking_disabled', 'open_tracking_disabled', 'unsubscribe_url', 'source']);
@@ -60,6 +61,7 @@ async function listWithCreateCampaignPermissionDTAjax(context, params) {
 
 async function _getByTx(tx, context, key, id, withPermissions = true) {
     const entity = await tx('channels').where('channels.' + key, id)
+        .modify(requireAccountScopeOn('channels'), context)
         .leftJoin('channel_lists', 'channels.id', 'channel_lists.channel')
         .groupBy('channels.id')
         .select([
@@ -148,6 +150,7 @@ async function _createTx(tx, context, entity, content) {
         const filteredEntity = filterObject(entity, allowedKeys);
         filteredEntity.cid = shortid.generate();
         filteredEntity.data = JSON.stringify(filteredEntity.data);
+        filteredEntity.account_id = requireAccountId(context);
 
         const ids = await tx('channels').insert(filteredEntity);
         const id = ids[0];
@@ -188,7 +191,7 @@ async function updateWithConsistencyCheck(context, entity) {
         await tx('channel_lists').insert(entity.lists.map(x => ({channel: entity.id, ...x})));
 
         filteredEntity.data = JSON.stringify(filteredEntity.data);
-        await tx('channels').where('id', entity.id).update(filteredEntity);
+        await tx('channels').where('id', entity.id).modify(requireAccountScope, context).update(filteredEntity);
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'channel', entityId: entity.id });
 
@@ -205,7 +208,7 @@ async function remove(context, id) {
             { entityTypeId: 'campaign', column: 'channel' }
         ]);
 
-        await tx('channels').where('id', id).del();
+        await tx('channels').where('id', id).modify(requireAccountScope, context).del();
 
         await activityLog.logEntityActivity('channel', EntityActivityType.REMOVE, id);
     });

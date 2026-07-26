@@ -21,6 +21,7 @@ const request = require('request-promise');
 const files = require('../models/files');
 const {getPublicUrl} = require('./urls');
 const blacklist = require('../models/blacklist');
+const suppressionList = require('../models/suppression-list');
 const libmime = require('libmime');
 const { enforce, hashEmail } = require('./helpers');
 const senders = require('./senders');
@@ -418,6 +419,10 @@ class MessageSender {
         }
 
         if (await blacklist.isBlacklisted(email)) {
+            return;
+        }
+
+        if (await suppressionList.isSuppressed(sendConfiguration.account_id, email)) {
             return;
         }
 
