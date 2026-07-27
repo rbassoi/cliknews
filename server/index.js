@@ -88,16 +88,16 @@ async function init() {
     await shares.regenerateRoleNamesTable();
     await shares.rebuildPermissions();
 
-    await privilegeHelpers.ensureClikNewsDir(filesDir);
+    await privilegeHelpers.ensureClikerDir(filesDir);
 
     // Update owner of all files under 'files' dir. This should not be necessary, but when files are copied over,
     // the ownership needs to be fixed.
     for (const dirEnt of klawSync(filesDir, {})) {
-        await privilegeHelpers.ensureClikNewsOwner(dirEnt.path);
+        await privilegeHelpers.ensureClikerOwner(dirEnt.path);
     }
 
-    await privilegeHelpers.ensureClikNewsDir(uploadedFilesDir);
-    await privilegeHelpers.ensureClikNewsDir(reportFilesDir);
+    await privilegeHelpers.ensureClikerDir(uploadedFilesDir);
+    await privilegeHelpers.ensureClikerDir(reportFilesDir);
 
     await executor.spawn();
     await testServer.start();

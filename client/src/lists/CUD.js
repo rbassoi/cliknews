@@ -190,7 +190,7 @@ export default class CUD extends Component {
         const formsOptions = [
             {
                 key: 'default',
-                label: t('defaultClikNewsForms')
+                label: t('defaultClikerForms')
             },
             {
                 key: 'custom',
@@ -275,7 +275,7 @@ export default class CUD extends Component {
                     <Dropdown id="form" label={t('forms')} options={formsOptions} help={t('webAndEmailFormsAndTemplatesUsedIn')}/>
 
                     {this.getFormValue('form') === 'custom' &&
-                        <TableSelect id="default_form" label={t('customForms')} withHeader dropdown dataUrl='rest/forms-table' columns={customFormsColumns} selectionLabelIndex={1} help={<Trans i18nKey="theCustomFormUsedForThisListYouCanCreate">The custom form used for this list. You can create a form <a href={`/forms/create`}>here</a>.</Trans>}/>
+                        <TableSelect id="default_form" label={t('customForms')} withHeader dropdown dataUrl='rest/forms-table' columns={customFormsColumns} selectionLabelIndex={1} help={<Trans i18nKey="theCustomFormUsedForThisListYouCanCreate">The custom form used for this list. You can create a form <a href={`/forms/custom/create`}>here</a>.</Trans>}/>
                     }
 
                     <CheckBox id="public_subscribe" label={t('subscription')} text={t('allowPublicUsersToSubscribeThemselves')}/>

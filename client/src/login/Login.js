@@ -17,7 +17,7 @@ import {
 import {withErrorHandling} from '../lib/error-handling';
 import qs from 'querystringify';
 import interoperableErrors from '../../../shared/interoperable-errors';
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import {getUrl} from "../lib/urls";
 import {withComponentMixins} from "../lib/decorator-helpers";
 
@@ -108,12 +108,12 @@ export default class Login extends Component {
         const t = this.props.t;
 
         let passwordResetLink;
-        if (cliknewsConfig.isAuthMethodLocal) {
+        if (clikerConfig.isAuthMethodLocal) {
             passwordResetLink = <Link to={`/login/forgot/${this.getFormValue('username')}`}>{t('forgotYourPassword?')}</Link>;
-        } else if (cliknewsConfig.externalPasswordResetLink) {
-            passwordResetLink = <a href={cliknewsConfig.externalPasswordResetLink}>{t('forgotYourPassword?')}</a>;
+        } else if (clikerConfig.externalPasswordResetLink) {
+            passwordResetLink = <a href={clikerConfig.externalPasswordResetLink}>{t('forgotYourPassword?')}</a>;
         }
-        if (cliknewsConfig.authMethod != 'cas') {
+        if (clikerConfig.authMethod != 'cas') {
           return (
             <div>
                 <Title>{t('signIn')}</Title>

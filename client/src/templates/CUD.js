@@ -23,7 +23,7 @@ import {
 import {withErrorHandling} from '../lib/error-handling';
 import {getDefaultNamespace, NamespaceSelect, validateNamespace} from '../lib/namespace';
 import {ContentModalDialog, DeleteModalDialog} from "../lib/modals";
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import {getEditForm, getModals, getTagLanguages, getTemplateTypes, getTypeForm} from './helpers';
 import axios from '../lib/axios';
 import styles from "../lib/styles.scss";
@@ -132,8 +132,8 @@ export default class CUD extends Component {
                 name: '',
                 description: '',
                 namespace: getDefaultNamespace(this.props.permissions),
-                type: cliknewsConfig.editors[0],
-                tag_language: cliknewsConfig.tagLanguages[0],
+                type: clikerConfig.editors[0],
+                tag_language: clikerConfig.tagLanguages[0],
 
                 fromExistingEntity: false,
                 existingEntity: null,
@@ -141,7 +141,7 @@ export default class CUD extends Component {
                 text: '',
                 html: '',
                 data: {},
-                ...this.templateTypes[cliknewsConfig.editors[0]].initData()
+                ...this.templateTypes[clikerConfig.editors[0]].initData()
             });
         }
     }
@@ -298,12 +298,12 @@ export default class CUD extends Component {
         const canDelete = isEdit && this.props.entity.permissions.includes('delete');
 
         const typeOptions = [];
-        for (const key of cliknewsConfig.editors) {
+        for (const key of clikerConfig.editors) {
             typeOptions.push({key, label: this.templateTypes[key].typeName});
         }
 
         const tagLanguageOptions = [];
-        for (const key of cliknewsConfig.tagLanguages) {
+        for (const key of clikerConfig.tagLanguages) {
             tagLanguageOptions.push({key, label: this.tagLanguages[key].name});
         }
 

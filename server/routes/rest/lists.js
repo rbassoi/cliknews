@@ -42,5 +42,10 @@ router.deleteAsync('/lists/:listId', passport.loggedIn, passport.csrfProtection,
     return res.json();
 });
 
+router.postAsync('/lists/:listId/ensure-form', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    const formId = await lists.ensureDefaultForm(req.context, castToInteger(req.params.listId));
+    return res.json(formId);
+});
+
 
 module.exports = router;

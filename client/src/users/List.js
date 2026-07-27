@@ -4,7 +4,7 @@ import React, {Component} from "react";
 import {withTranslation} from '../lib/i18n';
 import {LinkButton, requiresAuthenticatedUser, Title, Toolbar, withPageHelpers} from "../lib/page";
 import {Table} from "../lib/table";
-import cliknewsConfig from "cliknewsConfig";
+import clikerConfig from "clikerConfig";
 import {Icon} from "../lib/bootstrap-components";
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../lib/modals";
 import {withComponentMixins} from "../lib/decorator-helpers";
@@ -32,7 +32,7 @@ export default class List extends Component {
             { data: 1, title: t("username") },
         ];
 
-        if (cliknewsConfig.isAuthMethodLocal) {
+        if (clikerConfig.isAuthMethodLocal) {
             columns.push({ data: 2, title: t("fullName") });
         }
 

@@ -4,7 +4,7 @@ SET @schema_version = '32';
 
 # Set default X-Mailer header value
 LOCK TABLES `settings` WRITE;
-INSERT INTO `settings` (`key`, `value`) VALUES ('x_mailer','ClikNews Mailer (+https://cliknews.org)') ON DUPLICATE KEY UPDATE `value`='ClikNews Mailer (+https://cliknews.org)';
+INSERT INTO `settings` (`key`, `value`) VALUES ('x_mailer','Cliker Mailer (+https://cliker.org)') ON DUPLICATE KEY UPDATE `value`='Cliker Mailer (+https://cliker.org)';
 UNLOCK TABLES;
 
 # Footer section. Updates schema version in settings

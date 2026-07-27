@@ -78,7 +78,7 @@ const server = new SMTPServer({
     // log to console
     logger: false,
 
-    banner: 'ClikNews VERP bouncer',
+    banner: 'Cliker VERP bouncer',
 
     disabledCommands: ['AUTH', 'STARTTLS'],
 

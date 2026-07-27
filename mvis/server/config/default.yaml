@@ -4,10 +4,10 @@ mysql:
   password: mvis
   database: mvis
 
-cliknews:
+cliker:
   url: http://localhost:3000/
   namespace: 1
-  userRole: cliknewsUser
+  userRole: clikerUser
 
 www:
   # HTTP interface to listen on
@@ -26,15 +26,15 @@ www:
 
 roles:
   global:
-    cliknewsUser:
-      name: "ClikNews User"
+    clikerUser:
+      name: "Cliker User"
       admin: true
       description: "Limited permissions that allow only read-only access"
       permissions:
 
   namespace:
-    cliknewsUser:
-      name: "ClikNews User"
+    clikerUser:
+      name: "Cliker User"
       description: "Limited permissions that allow only read-only access"
       permissions: ["view"]
       children:
@@ -46,31 +46,31 @@ roles:
         signalSet: ["view", "query"]
 
 #  template:
-#    cliknewsUser:
-#      name: "ClikNews User"
+#    clikerUser:
+#      name: "Cliker User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view", "viewFiles", "execute"]
 #
 #  workspace:
-#    cliknewsUser:
-#      name: "ClikNews User"
+#    clikerUser:
+#      name: "Cliker User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view"]
 #
 #  panel:
-#    cliknewsUser:
-#      name: "ClikNews User"
+#    clikerUser:
+#      name: "Cliker User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view"]
 #
 #  signal:
-#    cliknewsUser:
-#      name: "ClikNews User"
+#    clikerUser:
+#      name: "Cliker User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view", "query"]
 #
 #  signalSet:
-#    cliknewsUser:
-#      name: "ClikNews User"
+#    clikerUser:
+#      name: "Cliker User"
 #      description: "Limited permissions that allow only read-only access"
 #      permissions: ["view", "query"]

@@ -6,6 +6,7 @@ import ListsList from './List';
 import ListsCUD from './CUD';
 import FormsList from './forms/List';
 import FormsCUD from './forms/CUD';
+import FormsOverview from './forms/FormsOverview';
 import FieldsList from './fields/List';
 import FieldsCUD from './fields/CUD';
 import SubscriptionsList from './subscriptions/List';
@@ -212,37 +213,60 @@ function getMenus(t) {
             }
         },
         forms: {
-            title: t('customForms-1'),
+            title: t('forms'),
             link: '/forms',
             checkPermissions: {
+                // These two used to cascade down from the parent 'lists' node
+                // before Custom Forms was promoted to its own top-level sidebar
+                // item — forms/List.js's create button depends on
+                // permissions.createCustomForm specifically, not the
+                // differently-named keys namespaceCheckPermissions() produces.
+                createCustomForm: {
+                    entityTypeId: 'namespace',
+                    requiredOperations: ['createCustomForm']
+                },
+                viewCustomForm: {
+                    entityTypeId: 'customForm',
+                    requiredOperations: ['view']
+                },
                 ...namespaceCheckPermissions('createCustomForm')
             },
-            panelRender: props => <FormsList permissions={props.permissions}/>,
+            panelRender: props => <FormsOverview permissions={props.permissions}/>,
             children: {
-                ':formsId([0-9]+)': {
-                    title: resolved => t('customFormsName', {name: ellipsizeBreadcrumbLabel(resolved.forms.name)}),
-                    resolve: {
-                        forms: params => `rest/forms/${params.formsId}`
-                    },
-                    link: params => `/forms/${params.formsId}/edit`,
-                    navs: {
-                        ':action(edit|delete)': {
-                            title: t('edit'),
-                            link: params => `/forms/${params.formsId}/edit`,
-                            visible: resolved => resolved.forms.permissions.includes('edit'),
-                            panelRender: props => <FormsCUD action={props.match.params.action} entity={props.resolved.forms} permissions={props.permissions} />
+                // A genuine URL sub-path this time (unlike the earlier /lists/forms
+                // bug): /forms/custom is meant to resolve as a child of /forms, so
+                // it works with the path-prefix resolver instead of against it.
+                custom: {
+                    title: t('customForms-1'),
+                    link: '/forms/custom',
+                    panelRender: props => <FormsList permissions={props.permissions}/>,
+                    children: {
+                        ':formsId([0-9]+)': {
+                            title: resolved => t('customFormsName', {name: ellipsizeBreadcrumbLabel(resolved.forms.name)}),
+                            resolve: {
+                                forms: params => `rest/forms/${params.formsId}`
+                            },
+                            link: params => `/forms/custom/${params.formsId}/edit`,
+                            navs: {
+                                ':action(edit|delete)': {
+                                    title: t('edit'),
+                                    link: params => `/forms/custom/${params.formsId}/edit`,
+                                    visible: resolved => resolved.forms.permissions.includes('edit'),
+                                    panelRender: props => <FormsCUD action={props.match.params.action} entity={props.resolved.forms} permissions={props.permissions} />
+                                },
+                                share: {
+                                    title: t('share'),
+                                    link: params => `/forms/custom/${params.formsId}/share`,
+                                    visible: resolved => resolved.forms.permissions.includes('share'),
+                                    panelRender: props => <Share title={t('share')} entity={props.resolved.forms} entityTypeId="customForm" />
+                                }
+                            }
                         },
-                        share: {
-                            title: t('share'),
-                            link: params => `/forms/${params.formsId}/share`,
-                            visible: resolved => resolved.forms.permissions.includes('share'),
-                            panelRender: props => <Share title={t('share')} entity={props.resolved.forms} entityTypeId="customForm" />
+                        create: {
+                            title: t('create'),
+                            panelRender: props => <FormsCUD action="create" permissions={props.permissions} />
                         }
                     }
-                },
-                create: {
-                    title: t('create'),
-                    panelRender: props => <FormsCUD action="create" permissions={props.permissions} />
                 }
             }
         }

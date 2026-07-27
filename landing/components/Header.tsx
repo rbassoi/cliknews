@@ -7,7 +7,7 @@ export default function Header() {
             <div className="cn-container" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 72}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
                     <div style={{width: 28, height: 28, borderRadius: 8, background: 'var(--cn-accent)'}} />
-                    <span style={{fontWeight: 800, fontSize: 17}}>ClikNews</span>
+                    <span style={{fontWeight: 800, fontSize: 17}}>Cliker</span>
                 </div>
 
                 <nav style={{display: 'flex', alignItems: 'center', gap: 28, fontSize: 14, fontWeight: 500}}>

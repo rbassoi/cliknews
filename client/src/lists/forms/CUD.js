@@ -25,7 +25,7 @@ import {
 import {withErrorHandling} from '../../lib/error-handling';
 import {getDefaultNamespace, NamespaceSelect, validateNamespace} from '../../lib/namespace';
 import {DeleteModalDialog} from "../../lib/modals";
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import {getTrustedUrl, getUrl} from "../../lib/urls";
 import {ActionLink, Icon} from "../../lib/bootstrap-components";
 import styles from "../../lib/styles.scss";
@@ -292,9 +292,9 @@ export default class CUD extends Component {
 
 
     supplyDefaults(data) {
-        for (const key in cliknewsConfig.defaultCustomFormValues) {
+        for (const key in clikerConfig.defaultCustomFormValues) {
             if (!data[key]) {
-                data[key] = cliknewsConfig.defaultCustomFormValues[key];
+                data[key] = clikerConfig.defaultCustomFormValues[key];
             }
         }
     }
@@ -467,7 +467,7 @@ export default class CUD extends Component {
         if (submitResult) {
             if (this.props.entity) {
                 if (submitAndLeave) {
-                    this.navigateToWithFlashMessage('/forms', 'success', t('customFormsUpdated'));
+                    this.navigateToWithFlashMessage('/forms/custom', 'success', t('customFormsUpdated'));
                 } else {
                     await this.getFormValuesFromURL(`rest/forms/${this.props.entity.id}`);
                     this.enableForm();
@@ -475,9 +475,9 @@ export default class CUD extends Component {
                 }
             } else {
                 if (submitAndLeave) {
-                    this.navigateToWithFlashMessage('/forms', 'success', t('customFormsCreated'));
+                    this.navigateToWithFlashMessage('/forms/custom', 'success', t('customFormsCreated'));
                 } else {
-                    this.navigateToWithFlashMessage(`/forms/${submitResult}/edit`, 'success', t('customFormsCreated'));
+                    this.navigateToWithFlashMessage(`/forms/custom/${submitResult}/edit`, 'success', t('customFormsCreated'));
                 }
             }
         } else {
@@ -546,8 +546,8 @@ export default class CUD extends Component {
                         stateOwner={this}
                         visible={this.props.action === 'delete'}
                         deleteUrl={`rest/forms/${this.props.entity.id}`}
-                        backUrl={`/forms/${this.props.entity.id}/edit`}
-                        successUrl="/forms"
+                        backUrl={`/forms/custom/${this.props.entity.id}/edit`}
+                        successUrl="/forms/custom"
                         deletingMsg={t('deletingForm')}
                         deletedMsg={t('formDeleted')}/>
                 }
@@ -673,7 +673,7 @@ export default class CUD extends Component {
                     <ButtonRow>
                         <Button type="submit" className="btn-primary" icon="check" label={t('save')}/>
                         <Button type="submit" className="btn-primary" icon="check" label={t('saveAndLeave')} onClickAsync={async () => await this.submitHandler(true)}/>
-                        {canDelete && <LinkButton className="btn-danger" icon="trash-alt" label={t('delete')} to={`/forms/${this.props.entity.id}/delete`}/>}
+                        {canDelete && <LinkButton className="btn-danger" icon="trash-alt" label={t('delete')} to={`/forms/custom/${this.props.entity.id}/delete`}/>}
                     </ButtonRow>
                 </Form>
             </div>

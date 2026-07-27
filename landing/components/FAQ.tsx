@@ -4,7 +4,7 @@ const faqs = [
         a: 'Sim. Você pode importar seus contatos via CSV com mapeamento de colunas — leva poucos minutos e não exige conhecimento técnico.'
     },
     {
-        q: 'O ClikNews está em conformidade com a LGPD?',
+        q: 'O Cliker está em conformidade com a LGPD?',
         a: 'Sim. Contatos podem ser removidos ou anonimizados sob demanda, e o descadastro é automático em todo envio.'
     },
     {

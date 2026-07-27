@@ -1,9 +1,9 @@
 const rows = [
-    {feature: 'Suporte em português', cliknews: true, outros: false},
-    {feature: 'Pix no checkout', cliknews: true, outros: false},
-    {feature: 'Editor de e-mail arrasta-e-solta', cliknews: true, outros: true},
-    {feature: 'Conformidade com a LGPD nativa', cliknews: true, outros: false},
-    {feature: 'API e webhooks', cliknews: true, outros: true}
+    {feature: 'Suporte em português', cliker: true, outros: false},
+    {feature: 'Pix no checkout', cliker: true, outros: false},
+    {feature: 'Editor de e-mail arrasta-e-solta', cliker: true, outros: true},
+    {feature: 'Conformidade com a LGPD nativa', cliker: true, outros: false},
+    {feature: 'API e webhooks', cliker: true, outros: true}
 ];
 
 function Check({on}: {on: boolean}) {
@@ -28,13 +28,13 @@ export default function Comparison() {
                 <div className="cn-card" style={{overflow: 'hidden'}}>
                     <div style={{display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '14px 20px', background: 'var(--cn-bg-subtle)', fontSize: 12, fontWeight: 700, color: 'var(--cn-text-muted)', textTransform: 'uppercase', letterSpacing: '0.03em'}}>
                         <div></div>
-                        <div style={{textAlign: 'center'}}>ClikNews</div>
+                        <div style={{textAlign: 'center'}}>Cliker</div>
                         <div style={{textAlign: 'center'}}>Outras plataformas</div>
                     </div>
                     {rows.map(r => (
                         <div key={r.feature} style={{display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '16px 20px', borderTop: '1px solid var(--cn-border)', fontSize: 14, alignItems: 'center'}}>
                             <div>{r.feature}</div>
-                            <div style={{textAlign: 'center'}}><Check on={r.cliknews} /></div>
+                            <div style={{textAlign: 'center'}}><Check on={r.cliker} /></div>
                             <div style={{textAlign: 'center'}}><Check on={r.outros} /></div>
                         </div>
                     ))}

@@ -14,19 +14,19 @@ export DEBIAN_FRONTEND=noninteractive
 
 MYSQL_PASSWORD=`pwgen 12 -1`
 
-# Setup MySQL user for ClikNews Tests
-mysql -u root -e "CREATE USER 'cliknews_test'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
-mysql -u root -e "GRANT ALL PRIVILEGES ON cliknews_test.* TO 'cliknews_test'@'localhost';"
-mysql -u cliknews_test --password="$MYSQL_PASSWORD" -e "CREATE database cliknews_test;"
+# Setup MySQL user for Cliker Tests
+mysql -u root -e "CREATE USER 'cliker_test'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+mysql -u root -e "GRANT ALL PRIVILEGES ON cliker_test.* TO 'cliker_test'@'localhost';"
+mysql -u cliker_test --password="$MYSQL_PASSWORD" -e "CREATE database cliker_test;"
 
 # Setup installation configuration
 cat >> config/test.toml <<EOT
 [www]
 port=3000
 [mysql]
-user="cliknews_test"
+user="cliker_test"
 password="$MYSQL_PASSWORD"
-database="cliknews_test"
+database="cliker_test"
 [testServer]
 enabled=true
 [seleniumWebDriver]

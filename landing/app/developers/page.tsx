@@ -6,8 +6,8 @@ import DevDocsNav, {DocSection} from '@/components/DevDocsNav';
 import {APP_URL, LOGIN_URL} from '@/lib/config';
 
 export const metadata: Metadata = {
-    title: 'Documentação da API — ClikNews',
-    description: 'Autentique, envie campanhas, gerencie contatos e dispare e-mails transacionais direto da API do ClikNews.'
+    title: 'Documentação da API — Cliker',
+    description: 'Autentique, envie campanhas, gerencie contatos e dispare e-mails transacionais direto da API do Cliker.'
 };
 
 const API_BASE = `${APP_URL}/api-v1`;
@@ -82,7 +82,7 @@ export default function DevelopersPage() {
                     <div style={{minWidth: 0, maxWidth: 720}}>
                         <Section id="introducao" title="Introdução">
                             <p style={{color: 'var(--cn-text-secondary)', lineHeight: 1.7}}>
-                                A API do ClikNews usa URLs previsíveis orientadas a recursos, corpos e respostas em JSON, e códigos de status HTTP
+                                A API do Cliker usa URLs previsíveis orientadas a recursos, corpos e respostas em JSON, e códigos de status HTTP
                                 padrão. Toda chamada é escopada à sua conta — você nunca vê dados de outra conta, e uma chave de API só
                                 enxerga o que os escopos dela permitem.
                             </p>

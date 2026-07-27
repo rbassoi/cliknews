@@ -5,7 +5,7 @@ import * as ri18n from 'react-i18next';
 import {I18nextProvider} from 'react-i18next';
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import moment from 'moment';
 
 import {convertToFake, getLang} from '../../../shared/langs';
@@ -29,7 +29,7 @@ const resourcesCommon = {
 };
 
 const resources = {};
-for (const lng of cliknewsConfig.enabledLanguages) {
+for (const lng of clikerConfig.enabledLanguages) {
     const langDesc = getLang(lng);
     resources[langDesc.longCode] = {
         common: resourcesCommon[langDesc.longCode]
@@ -41,7 +41,7 @@ i18n
     .init({
         resources,
 
-        fallbackLng: cliknewsConfig.defaultLanguage,
+        fallbackLng: clikerConfig.defaultLanguage,
         defaultNS: 'common',
 
         interpolation: {
@@ -60,7 +60,7 @@ i18n
             caches: ['localStorage', 'cookie']
         },
 
-        whitelist: cliknewsConfig.enabledLanguages,
+        whitelist: clikerConfig.enabledLanguages,
         load: 'currentOnly',
 
         debug: false

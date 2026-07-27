@@ -1,4 +1,4 @@
-# ClikNews redesign — development plan
+# Cliker redesign — development plan
 
 ## Context
 
@@ -46,7 +46,7 @@ Scope decisions (confirmed):
 
 Reusable pieces later phases should build on: `Pill`, `StatCard`
 (`client/src/lib/bootstrap-components.js`), the `.cn-*` CSS classes in
-`client/src/scss/cliknews.scss` (`.cn-card`, `.cn-page-header`, `.cn-btn*`,
+`client/src/scss/cliker.scss` (`.cn-card`, `.cn-page-header`, `.cn-btn*`,
 `.cn-pill*`, `.cn-stat-card`, `.cn-grid-4`), and the existing `Table`/`Form`/
 `Dropdown` component kit (unchanged, just restyled).
 
@@ -145,7 +145,7 @@ of it touches `client/src` except the two new admin pages below.
   table (`fields.js`/custom fields) via its parent list.
 
 ## Verification approach (same for each phase)
-1. Rebuild the client inside the dev container (`mailtrain-cliknews-1`):
+1. Rebuild the client inside the dev container (`mailtrain-cliker-1`):
    `npm run build` in `/app/client`.
 2. If server-side files changed (new/edited files under `server/`), restart
    the node process so `app-builder.js`'s route wiring picks up changes —

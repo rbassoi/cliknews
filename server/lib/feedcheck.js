@@ -48,7 +48,7 @@ async function fetch(url) {
     const httpOptions = {
         uri: url,
         headers: {
-            'user-agent': 'ClikNews',
+            'user-agent': 'Cliker',
             'accept': 'text/html,application/xhtml+xml'
         }
     };

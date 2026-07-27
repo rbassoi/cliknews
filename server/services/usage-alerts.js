@@ -32,7 +32,7 @@ async function notifyAccount(row, percentUsed) {
             text: 'account/usage-alert-80-text.hbs',
             locale,
             data: {
-                title: tUI('cliknews', locale),
+                title: tUI('cliker', locale),
                 accountName: row.account_name,
                 planName: row.plan_name,
                 percentUsed,

@@ -2,7 +2,7 @@
 
 import {anonymousRestrictedAccessToken} from '../../../shared/urls';
 import {AppType} from '../../../shared/app';
-import cliknewsConfig from "cliknewsConfig";
+import clikerConfig from "clikerConfig";
 import i18n from './i18n';
 
 let restrictedAccessToken = anonymousRestrictedAccessToken;
@@ -12,12 +12,12 @@ export function setRestrictedAccessToken(token) {
 }
 
 export function getTrustedUrl(path) {
-    return cliknewsConfig.trustedUrlBase + (path || '');
+    return clikerConfig.trustedUrlBase + (path || '');
 }
 
 export function getSandboxUrl(path, customRestrictedAccessToken, opts) {
     const localRestrictedAccessToken = customRestrictedAccessToken || restrictedAccessToken;
-     const url = new URL(localRestrictedAccessToken + '/' + (path || ''), cliknewsConfig.sandboxUrlBase);
+     const url = new URL(localRestrictedAccessToken + '/' + (path || ''), clikerConfig.sandboxUrlBase);
 
     if (opts && opts.withLocale) {
         url.searchParams.append('locale', i18n.language);
@@ -27,7 +27,7 @@ export function getSandboxUrl(path, customRestrictedAccessToken, opts) {
 }
 
 export function getPublicUrl(path, opts) {
-    const url = new URL(path || '', cliknewsConfig.publicUrlBase);
+    const url = new URL(path || '', clikerConfig.publicUrlBase);
 
     if (opts && opts.withLocale) {
         url.searchParams.append('locale', i18n.language);
@@ -37,21 +37,21 @@ export function getPublicUrl(path, opts) {
 }
 
 export function getUrl(path) {
-    if (cliknewsConfig.appType === AppType.TRUSTED) {
+    if (clikerConfig.appType === AppType.TRUSTED) {
         return getTrustedUrl(path);
-    } else if (cliknewsConfig.appType === AppType.SANDBOXED) {
+    } else if (clikerConfig.appType === AppType.SANDBOXED) {
         return getSandboxUrl(path);
-    } else if (cliknewsConfig.appType === AppType.PUBLIC) {
+    } else if (clikerConfig.appType === AppType.PUBLIC) {
         return getPublicUrl(path);
     }
 }
 
 export function getBaseDir() {
-    if (cliknewsConfig.appType === AppType.TRUSTED) {
-        return cliknewsConfig.trustedUrlBaseDir;
-    } else if (cliknewsConfig.appType === AppType.SANDBOXED) {
-        return cliknewsConfig.sandboxUrlBaseDir + restrictedAccessToken;
-    } else if (cliknewsConfig.appType === AppType.PUBLIC) {
-        return cliknewsConfig.publicUrlBaseDir;
+    if (clikerConfig.appType === AppType.TRUSTED) {
+        return clikerConfig.trustedUrlBaseDir;
+    } else if (clikerConfig.appType === AppType.SANDBOXED) {
+        return clikerConfig.sandboxUrlBaseDir + restrictedAccessToken;
+    } else if (clikerConfig.appType === AppType.PUBLIC) {
+        return clikerConfig.publicUrlBaseDir;
     }
 }

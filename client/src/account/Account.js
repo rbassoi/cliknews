@@ -18,7 +18,7 @@ import {
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import passwordValidator from '../../../shared/password-validator';
 import interoperableErrors from '../../../shared/interoperable-errors';
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import {withComponentMixins} from "../lib/decorator-helpers";
 import Company from "./Company";
 
@@ -186,7 +186,7 @@ export default class Account extends Component {
     render() {
         const t = this.props.t;
 
-        if (cliknewsConfig.isAuthMethodLocal) {
+        if (clikerConfig.isAuthMethodLocal) {
             return (
                 <div>
                     <Title>{t('account')}</Title>
@@ -220,7 +220,7 @@ export default class Account extends Component {
 
                     <p>{t('accountManagementIsNotPossibleBecause')}</p>
 
-                    {cliknewsConfig.externalPasswordResetLink && <p><Trans i18nKey="ifYouWantToChangeThePasswordUseThisLink">If you want to change the password, use <a href={cliknewsConfig.externalPasswordResetLink}>this link</a>.</Trans></p>}
+                    {clikerConfig.externalPasswordResetLink && <p><Trans i18nKey="ifYouWantToChangeThePasswordUseThisLink">If you want to change the password, use <a href={clikerConfig.externalPasswordResetLink}>this link</a>.</Trans></p>}
                 </div>
             );
         }

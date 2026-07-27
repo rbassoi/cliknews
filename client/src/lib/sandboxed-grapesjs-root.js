@@ -34,7 +34,7 @@ import {withComponentMixins} from "./decorator-helpers";
 // recognizing a component's type when HTML is re-parsed (e.g. reopening the editor),
 // so no custom isComponent/toHTML logic is needed; the exported HTML already IS the
 // final stored value.
-grapesjs.plugins.add('cliknews-form-blocks', (editor, opts = {}) => {
+grapesjs.plugins.add('cliker-form-blocks', (editor, opts = {}) => {
     const bm = editor.BlockManager;
 
     bm.add('cn-title', {label: 'Título', category: 'Conteúdo', content: '<h2>Título</h2>'});
@@ -71,7 +71,7 @@ grapesjs.plugins.add('cliknews-form-blocks', (editor, opts = {}) => {
 });
 
 
-grapesjs.plugins.add('cliknews-remove-buttons', (editor, opts = {}) => {
+grapesjs.plugins.add('cliker-remove-buttons', (editor, opts = {}) => {
     // This needs to be done in on-load and after gjs plugin because grapesjs-preset-newsletter tries to set titles to all buttons (including those we remove)
     // see https://github.com/artf/grapesjs-preset-newsletter/blob/e0a91636973a5a1481e9d7929e57a8869b1db72e/src/index.js#L248
     editor.on('load', () => {
@@ -661,8 +661,8 @@ export class GrapesJSSandbox extends Component {
             defaultSource = '<h2>Assine nossa newsletter</h2>\n<p>Preencha os campos abaixo para se inscrever.</p>';
             defaultStyle = '';
 
-            config.plugins.push('cliknews-form-blocks');
-            config.pluginsOpts['cliknews-form-blocks'] = {
+            config.plugins.push('cliker-form-blocks');
+            config.pluginsOpts['cliker-form-blocks'] = {
                 fields: props.formFields || []
             };
         }
@@ -670,7 +670,7 @@ export class GrapesJSSandbox extends Component {
         config.components = props.initialSource ? base(props.initialSource, this.props.tagLanguage, trustedUrlBase, sandboxUrlBase, publicUrlBase) : defaultSource;
         config.style = props.initialStyle ? base(props.initialStyle, this.props.tagLanguage, trustedUrlBase, sandboxUrlBase, publicUrlBase) : defaultStyle;
 
-        config.plugins.push('cliknews-remove-buttons');
+        config.plugins.push('cliker-remove-buttons');
 
         this.editor = grapesjs.init(config);
     }

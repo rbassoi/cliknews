@@ -1,8 +1,8 @@
-# ClikNews → SaaS multi-tenant — development plan
+# Cliker → SaaS multi-tenant — development plan
 
 ## Context
 
-`ClikNews_SaaS_Detalhamento_Completo.md` (repo root) describes converting ClikNews into a
+`Cliker_SaaS_Detalhamento_Completo.md` (repo root) describes converting Cliker into a
 commercial multi-tenant SaaS: schema + hard account isolation, plan-limit enforcement,
 billing, per-account sending isolation (DKIM/IP pools), a public API, and a separate
 marketing landing page — 8 phases, in that order, with phases 1–2 (schema + isolation) as
@@ -14,7 +14,7 @@ project in parallel. Billing (Mercado Pago, to be wired in later) and everything
 
 ## Architecture decision: `account_id` is parallel to `namespaces`, not derived from it
 
-ClikNews already has a permission system: a single shared `namespaces` tree (root `id=1`)
+Cliker already has a permission system: a single shared `namespaces` tree (root `id=1`)
 plus `shares_<type>`/`permissions_<type>` tables, materialized by
 `server/models/shares.js:rebuildPermissionsTx` and checked by `_checkPermissionTx`. That
 system was built for trusted internal users delegating access to each other — it is not a
@@ -112,7 +112,7 @@ needs it), own `.env.example`.
   tokens (`app/globals.css`, ported from `client/src/scss/_tokens.scss`) for brand
   consistency between the marketing site and the logged-in app.
 - `landing` service added to all 3 compose files (`docker-compose.yml`, `-local.yml`,
-  `-develop.yml`), pointing at `http://cliknews:3004/api/public/plans` (container-network
+  `-develop.yml`), pointing at `http://cliker:3004/api/public/plans` (container-network
   hostname, not `localhost`) for the plans fetch.
 - Verified: `npm install` + `npm run build` succeed; `npm run dev` against the live
   `public-plans` endpoint renders all 4 real plans (Grátis/Starter/Business/Enterprise).
@@ -156,8 +156,8 @@ Billing (Mercado Pago) is still deliberately out of scope.
   check, same silent-skip behavior.
 - **DKIM per account** — this codebase already resolves DKIM keys
   dynamically per outgoing message (a real Zone-MTA mechanism,
-  `envelope.dkim.keys`, injected via the `x-cliknews-dkim` header consumed
-  by `zone-mta/plugins/cliknews-receiver.js`); the only gap was the "source
+  `envelope.dkim.keys`, injected via the `x-cliker-dkim` header consumed
+  by `zone-mta/plugins/cliker-receiver.js`); the only gap was the "source
   of truth" being embedded in `mailer_settings` instead of a real table.
   New `sending_domains` table (`account_id, domain, dkim_selector,
   dkim_private_key, dkim_public_key, spf_verified, dkim_verified,

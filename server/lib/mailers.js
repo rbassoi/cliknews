@@ -53,7 +53,7 @@ async function _addDkimKeys(transport, mail) {
     if (sendConfiguration.mailer_type === MailerType.ZONE_MTA) {
         const mailerSettings = sendConfiguration.mailer_settings;
 
-        if (mailerSettings.zoneMtaType === ZoneMTAType.WITH_CLIKNEWS_HEADER_CONF || mailerSettings.zoneMtaType === ZoneMTAType.BUILTIN) {
+        if (mailerSettings.zoneMtaType === ZoneMTAType.WITH_CLIKER_HEADER_CONF || mailerSettings.zoneMtaType === ZoneMTAType.BUILTIN) {
             if (!mail.headers) {
                 mail.headers = {};
             }
@@ -69,7 +69,7 @@ async function _addDkimKeys(transport, mail) {
                 : null;
 
             if (sendingDomain) {
-                mail.headers['x-cliknews-dkim'] = JSON.stringify({
+                mail.headers['x-cliker-dkim'] = JSON.stringify({
                     domainName: sendingDomain.domain,
                     keySelector: sendingDomain.dkim_selector,
                     privateKey: sendingDomain.dkim_private_key
@@ -80,7 +80,7 @@ async function _addDkimKeys(transport, mail) {
                 const dkimPrivateKey = (mailerSettings.dkimPrivateKey || '').trim();
 
                 if (dkimSelector && dkimPrivateKey) {
-                    mail.headers['x-cliknews-dkim'] = JSON.stringify({
+                    mail.headers['x-cliker-dkim'] = JSON.stringify({
                         domainName: dkimDomain || domain,
                         keySelector: dkimSelector,
                         privateKey: dkimPrivateKey

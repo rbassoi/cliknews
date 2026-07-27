@@ -8,7 +8,7 @@ import {BrowserRouter as Router, Link, Route, Switch} from "react-router-dom";
 import {withErrorHandling} from "./error-handling";
 import interoperableErrors from "../../../shared/interoperable-errors";
 import {ActionLink, Button, DismissibleAlert, DropdownActionLink, Icon} from "./bootstrap-components";
-import cliknewsConfig from "cliknewsConfig";
+import clikerConfig from "clikerConfig";
 import styles from "./styles.scss";
 import {getRoutes, renderRoute, Resolver, SectionContentContext, withPageHelpers} from "./page-common";
 import {getBaseDir, getUrl} from "./urls";
@@ -182,7 +182,7 @@ function renderFrameWithContent(t, panelInFullScreen, showSidebar, primaryMenu, 
                 <div key="cnSidebar" className="cn-sidebar">
                     <Link className="cn-sidebar-brand" to="/">
                         <div className="cn-sidebar-logo"/>
-                        <div className="cn-sidebar-wordmark">ClikNews</div>
+                        <div className="cn-sidebar-wordmark">Cliker</div>
                     </Link>
 
                     <nav className="cn-sidebar-nav">
@@ -437,8 +437,8 @@ export class SectionContent extends Component {
     }
 
     ensureAuthenticated() {
-        if (!cliknewsConfig.isAuthenticated) {
-           if (cliknewsConfig.authMethod == 'cas') {
+        if (!clikerConfig.isAuthenticated) {
+           if (clikerConfig.authMethod == 'cas') {
               window.location.href=getUrl('cas/login?next=' + encodeURIComponent(window.location.pathname));
            } else {
               this.navigateTo('/login?next=' + encodeURIComponent(window.location.pathname));
@@ -759,7 +759,7 @@ export const requiresAuthenticatedUser = createComponentMixin({
 
 export function getLanguageChooser(t) {
     const languageOptions = [];
-    for (const lng of cliknewsConfig.enabledLanguages) {
+    for (const lng of clikerConfig.enabledLanguages) {
         const langDesc = getLang(lng);
         const label = langDesc.getLabel(t);
 

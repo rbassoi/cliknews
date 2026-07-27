@@ -15,7 +15,7 @@ import {
     withFormErrorHandlers
 } from '../lib/form';
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import {withComponentMixins} from "../lib/decorator-helpers";
 
 @withComponentMixins([
@@ -86,7 +86,7 @@ export default class Company extends Component {
     render() {
         const t = this.props.t;
 
-        if (!cliknewsConfig.globalPermissions.manageSettings) {
+        if (!clikerConfig.globalPermissions.manageSettings) {
             return null;
         }
 

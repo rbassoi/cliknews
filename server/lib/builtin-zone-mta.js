@@ -32,7 +32,7 @@ setInterval(() => {
 }, 300000 /* 5 mins */);
 
 function getUsername() {
-    return 'cliknews';
+    return 'cliker';
 }
 
 function getPassword() {
@@ -176,10 +176,10 @@ async function createConfig() {
                 futureDate: false,
                 xOriginatingIP: false
             },
-            'cliknews-main': {
+            'cliker-main': {
                 enabled: ['main']
             },
-            'cliknews-receiver': {
+            'cliker-receiver': {
                 enabled: ['receiver'],
                 username: getUsername(),
                 password: getPassword()

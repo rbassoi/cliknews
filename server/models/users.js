@@ -338,7 +338,7 @@ async function sendPasswordReset(locale, usernameOrEmail) {
                 text: 'users/password-reset-text.hbs',
                 locale,
                 data: {
-                    title: tUI('cliknews', locale),
+                    title: tUI('cliker', locale),
                     username: user.username,
                     name: user.name,
                     confirmUrl: getTrustedUrl(`login/reset/${encodeURIComponent(user.username)}/${encodeURIComponent(resetToken)}`)

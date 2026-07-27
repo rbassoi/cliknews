@@ -62,7 +62,7 @@ async function ensureCampaignTracker() {
         schema,
         'Campaign Tracker',
         '',
-        config.cliknews.namespace
+        config.cliker.namespace
     );
 }
 

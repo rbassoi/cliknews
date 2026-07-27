@@ -5,7 +5,7 @@
 // Bootstrap, e.g. $link-hover-color: darken($link-color, 15%)) cannot parse oklch()
 // and the build fails. Bootstrap-consumed variables here use plain hex approximations
 // of the token palette instead; the real oklch design language is applied directly as
-// plain CSS in cliknews.scss's .cn-* classes, which never run through Sass color math.
+// plain CSS in cliker.scss's .cn-* classes, which never run through Sass color math.
 $table-cell-padding: .5rem;
 $input-border-color: #d8d5cf; // ~= $cn-border-strong
 $input-border-radius: $cn-radius-sm;

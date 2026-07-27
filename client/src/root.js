@@ -21,7 +21,7 @@ import settings from './settings/root';
 
 import {DropdownLink, getLanguageChooser, NavDropdown, NavGroup, NavLink, Section} from "./lib/page";
 
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import Home from "./Home";
 import {DropdownActionLink, Icon} from "./lib/bootstrap-components";
 import axios from './lib/axios';
@@ -31,7 +31,7 @@ import Update from "./settings/Update";
 
 const topLevelMenuKeys = ['contacts', 'lists', 'forms', 'channels', 'templates', 'campaigns'];
 
-if (cliknewsConfig.reportsEnabled) {
+if (clikerConfig.reportsEnabled) {
     topLevelMenuKeys.push('reports');
 }
 
@@ -78,7 +78,7 @@ class Root extends Component {
                 const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api'];
                 const isAdminActive = adminLinks.some(link => path.startsWith(link));
 
-                if (cliknewsConfig.isAuthenticated) {
+                if (clikerConfig.isAuthenticated) {
                     return (
                         <>
                             <ul className="cn-nav-list">
@@ -86,25 +86,25 @@ class Root extends Component {
                                 {topLevelMenu}
                             </ul>
                             <NavGroup label={t('administration')} startOpen={isAdminActive}>
-                                {cliknewsConfig.globalPermissions.displayManageUsers && <NavLink className={activeClass('/users')} to="/users">{t('users')}</NavLink>}
+                                {clikerConfig.globalPermissions.displayManageUsers && <NavLink className={activeClass('/users')} to="/users">{t('users')}</NavLink>}
                                 <NavLink className={activeClass('/namespaces')} to="/namespaces">{t('namespaces')}</NavLink>
-                                {cliknewsConfig.globalPermissions.manageSettings && <NavLink className={activeClass('/settings')} to="/settings">{t('globalSettings')}</NavLink>}
+                                {clikerConfig.globalPermissions.manageSettings && <NavLink className={activeClass('/settings')} to="/settings">{t('globalSettings')}</NavLink>}
                                 <NavLink className={activeClass('/sending-domains')} to="/sending-domains">{t('sendingDomains')}</NavLink>
                                 <NavLink className={activeClass('/api-keys')} to="/api-keys">{t('apiKeys')}</NavLink>
                                 <NavLink className={activeClass('/send-configurations')} to="/send-configurations">{t('sendConfigurations')}</NavLink>
-                                {cliknewsConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
+                                {clikerConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
                                 <NavLink className={activeClass('/account/api')} to="/account/api">{t('api')}</NavLink>
                             </NavGroup>
                             <div className="cn-sidebar-footer">
                                 <ul className="cn-sidebar-user navbar-nav">
                                     {getLanguageChooser(t)}
-                                    <NavDropdown menuClassName="dropdown-menu-right" label={cliknewsConfig.user.username} icon="user">
+                                    <NavDropdown menuClassName="dropdown-menu-right" label={clikerConfig.user.username} icon="user">
                                         <DropdownLink to="/account"><Icon icon='user'/> {t('account')}</DropdownLink>
-                                        {cliknewsConfig.authMethod == 'cas' && <DropdownLink to="/cas/logout" forceReload><Icon icon="sign-out-alt"/> {t('logOut')}</DropdownLink>}
-                                        {cliknewsConfig.authMethod != 'cas' && <DropdownActionLink onClickAsync={::this.logout}><Icon icon='sign-out-alt'/> {t('logOut')}</DropdownActionLink>}
+                                        {clikerConfig.authMethod == 'cas' && <DropdownLink to="/cas/logout" forceReload><Icon icon="sign-out-alt"/> {t('logOut')}</DropdownLink>}
+                                        {clikerConfig.authMethod != 'cas' && <DropdownActionLink onClickAsync={::this.logout}><Icon icon='sign-out-alt'/> {t('logOut')}</DropdownActionLink>}
                                     </NavDropdown>
                                 </ul>
-                                <div className="cn-sidebar-copyright">&copy; 2026 ClikNews. <a href="https://github.com/rbassoi/cliknews">{t('sourceOnGitHub')}</a></div>
+                                <div className="cn-sidebar-copyright">&copy; 2026 Cliker. <a href="https://github.com/rbassoi/cliker">{t('sourceOnGitHub')}</a></div>
                             </div>
                         </>
                     );

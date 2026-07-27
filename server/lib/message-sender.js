@@ -505,7 +505,7 @@ class MessageSender {
 
         } else {
             /*
-                Fallback - ClikNews v1 behavior
+                Fallback - Cliker v1 behavior
              */
             response = info.response || info.messageId;
             responseId = response.split(/\s+/).pop();

@@ -4,13 +4,13 @@ import React from 'react';
 import Login from './Login';
 import Reset from './Forgot';
 import ResetLink from './Reset';
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 
 
 function getMenus(t) {
     const subPaths = {}
 
-    if (cliknewsConfig.isAuthMethodLocal) {
+    if (clikerConfig.isAuthMethodLocal) {
         subPaths.forgot = {
             title: t('passwordReset-1'),
             extraParams: [':username?'],

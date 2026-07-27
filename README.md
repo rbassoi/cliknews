@@ -1,8 +1,8 @@
-# ClikNews V1
+# Cliker V1
 
-ClikNews is a self hosted newsletter application built on Node.js (v14+) and MySQL (v8+) or MariaDB (v10+).
+Cliker is a self hosted newsletter application built on Node.js (v14+) and MySQL (v8+) or MariaDB (v10+).
 
-This is version 1 of ClikNews. It mostly implements all features of v1 and add some more. It is a complete rewrite, so you will have to install it from scratch.
+This is version 1 of Cliker. It mostly implements all features of v1 and add some more. It is a complete rewrite, so you will have to install it from scratch.
 
 ## Features
 
@@ -24,25 +24,25 @@ This is version 1 of ClikNews. It mostly implements all features of v1 and add s
 ## Quick Start
 
 ### Preparation
-ClikNews creates three URL endpoints, which are referred to as "trusted", "sandbox" and "public". This allows ClikNews
+Cliker creates three URL endpoints, which are referred to as "trusted", "sandbox" and "public". This allows Cliker
 to guarantee security and avoid XSS attacks in the multi-user settings. The function of these three endpoints is as follows:
 - *trusted* - This is the main endpoint for the UI that a logged-in user uses to manage lists, send campaigns, etc.
 - *sandbox* - This is an endpoint not directly visible to a user. It is used to host WYSIWYG template editors.
 - *public* - This is an endpoint for subscribers. It is used to host subscription management forms, files and archive.
 
-The recommended deployment of ClikNews would use 3 DNS entries that all points to the **same** IP address. For example as follows:
+The recommended deployment of Cliker would use 3 DNS entries that all points to the **same** IP address. For example as follows:
 - *lists.example.com* - public endpoint (A record `lists` under `example.com` domain)
-- *cliknews.example.com* - trusted endpoint (CNAME record `cliknews` under `example.com` domain that points to `lists`)
-- *sbox-cliknews.example.com* - sandbox endpoint (CNAME record `sbox-cliknews` under `example.com` domain that points to `lists`)
+- *cliker.example.com* - trusted endpoint (CNAME record `cliker` under `example.com` domain that points to `lists`)
+- *sbox-cliker.example.com* - sandbox endpoint (CNAME record `sbox-cliker` under `example.com` domain that points to `lists`)
 
 
 ### Installation on fresh CentOS 7 or Ubuntu 18.04 LTS (public website secured by SSL)
 
-This will setup a publicly accessible ClikNews instance. All endpoints (trusted, sandbox, public) will provide both HTTP (on port 80)
+This will setup a publicly accessible Cliker instance. All endpoints (trusted, sandbox, public) will provide both HTTP (on port 80)
 and HTTPS (on port 443). The HTTP ports just issue HTTP redirect to their HTTPS counterparts.
 
 The script below will also acquire a valid certificate from [Let's Encrypt](https://letsencrypt.org/).
-If you are hosting ClikNews on AWS or some other cloud provider, make sure that **before** running the installation
+If you are hosting Cliker on AWS or some other cloud provider, make sure that **before** running the installation
 script you allow inbound connection to ports 80 (HTTP) and 443 (HTTPS).
 
 **Note,** that this will automatically accept the Let's Encrypt's Terms of Service.
@@ -67,11 +67,11 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
     apt-get install -y git
     ```
 
-3. Download ClikNews using git to the `/opt/cliknews` directory
+3. Download Cliker using git to the `/opt/cliker` directory
     ```
     cd /opt
-    git clone https://github.com/rbassoi/cliknews.git
-    cd cliknews
+    git clone https://github.com/rbassoi/cliker.git
+    cd cliker
     git checkout v2
     ```
 
@@ -80,21 +80,21 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
 
    For Centos 7 type:
     ```
-    bash setup/install-centos7-https.sh cliknews.example.com sbox-cliknews.example.com lists.example.com admin@example.com
+    bash setup/install-centos7-https.sh cliker.example.com sbox-cliker.example.com lists.example.com admin@example.com
     ```
 
    For Ubuntu 18.04 LTS type:
     ```
-    bash setup/install-ubuntu1804-https.sh cliknews.example.com sbox-cliknews.example.com lists.example.com admin@example.com
+    bash setup/install-ubuntu1804-https.sh cliker.example.com sbox-cliker.example.com lists.example.com admin@example.com
     ```
 
-5. Start ClikNews and enable to be started by default when your server starts.
+5. Start Cliker and enable to be started by default when your server starts.
     ```
-    systemctl start cliknews
-    systemctl enable cliknews
+    systemctl start cliker
+    systemctl enable cliker
     ```
 
-6. Open the trusted endpoint (like `https://cliknews.example.com`)
+6. Open the trusted endpoint (like `https://cliker.example.com`)
 
 7. Authenticate as `admin`:`test`
 
@@ -107,7 +107,7 @@ Thus, by running this script below, you agree with the Let's Encrypt's Terms of 
 
 ### Installation on fresh CentOS 7 or Ubuntu 18.04 LTS (local installation)
 
-This will setup a locally accessible ClikNews instance (primarily for development and testing).
+This will setup a locally accessible Cliker instance (primarily for development and testing).
 All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
 - http://localhost:3000 - trusted endpoint
 - http://localhost:3003 - sandbox endpoint
@@ -130,11 +130,11 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
     apt-get install -y git
     ```
 
-3. Download ClikNews using git to the `/opt/cliknews` directory
+3. Download Cliker using git to the `/opt/cliker` directory
     ```
     cd /opt
-    git clone https://github.com/rbassoi/cliknews.git
-    cd cliknews
+    git clone https://github.com/rbassoi/cliker.git
+    cd cliker
     git checkout v2
     ```
 
@@ -151,10 +151,10 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
     bash setup/install-ubuntu1804-local.sh
     ```
 
-5. Start ClikNews and enable to be started by default when your server starts.
+5. Start Cliker and enable to be started by default when your server starts.
     ```
-    systemctl start cliknews
-    systemctl enable cliknews
+    systemctl start cliker
+    systemctl enable cliker
     ```
 
 6. Open the trusted endpoint http://localhost:3000
@@ -165,30 +165,30 @@ All endpoints (trusted, sandbox, public) will provide only HTTP as follows:
 
 ### Deployment with Docker and Docker compose
 
-This setup starts a stack composed of ClikNews, MongoDB, Redis, and MariaDB. It will setup a locally accessible ClikNews instance with HTTP endpoints as follows.
+This setup starts a stack composed of Cliker, MongoDB, Redis, and MariaDB. It will setup a locally accessible Cliker instance with HTTP endpoints as follows.
 - http://localhost:3000 - trusted endpoint
 - http://localhost:3003 - sandbox endpoint
 - http://localhost:3004 - public endpoint
 
-To make this publicly accessible, you should add reverse proxy that makes these endpoints publicly available over HTTPS. If using the proxy, you also need to set the URL bases and `--withProxy` parameter via `CLIKNEWS_SETTING` as shown below.
+To make this publicly accessible, you should add reverse proxy that makes these endpoints publicly available over HTTPS. If using the proxy, you also need to set the URL bases and `--withProxy` parameter via `CLIKER_SETTING` as shown below.
 An example of such proxy would be:
-- http://localhost:3000 -> https://cliknews.example.com
-- http://localhost:3003 -> https://sbox-cliknews.example.com
+- http://localhost:3000 -> https://cliker.example.com
+- http://localhost:3003 -> https://sbox-cliker.example.com
 - http://localhost:3004 -> https://lists.example.com
 
-To deploy ClikNews with Docker, you need the following two dependencies installed:
+To deploy Cliker with Docker, you need the following two dependencies installed:
 
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
 
-These are the steps to start ClikNews via docker-compose:
+These are the steps to start Cliker via docker-compose:
 
-1. Download ClikNews's docker-compose build file
+1. Download Cliker's docker-compose build file
     ```
-    curl -O https://raw.githubusercontent.com/rbassoi/cliknews/v1/docker-compose.yml
+    curl -O https://raw.githubusercontent.com/rbassoi/cliker/v1/docker-compose.yml
     ```
 
-2. Deploy ClikNews via docker-compose (in the directory to which you downloaded the `docker-compose.yml` file). This will take quite some time when run for the first time. Subsequent executions will be fast.
+2. Deploy Cliker via docker-compose (in the directory to which you downloaded the `docker-compose.yml` file). This will take quite some time when run for the first time. Subsequent executions will be fast.
     ```
     docker-compose up
     ```
@@ -211,7 +211,7 @@ This setup starts a stack like above, but is tweaked to be used for local develo
     ```
 3. Connect to a shell inside the container
     ```
-    docker-compose exec cliknews bash
+    docker-compose exec cliker bash
     ```
 4. Run these commands once to install all the node modules and build the client webapp
     ```
@@ -226,13 +226,13 @@ This setup starts a stack like above, but is tweaked to be used for local develo
 
 
 ### Docker Environment Variables
-When using Docker, you can override the default ClikNews settings via the following environment variables. These variables have to be defined in the docker-compose config
+When using Docker, you can override the default Cliker settings via the following environment variables. These variables have to be defined in the docker-compose config
 file. You can give them a value directly in the `docker-compose.yml` config file. 
 
 Alternatively, you can just declare them there leaving their value empty 
 (see https://docs.docker.com/compose/environment-variables/#pass-environment-variables-to-containers). In that case, the 
 value can be provided via a file called `.env` or via environment 
-variables (e.g. `URL_BASE_TRUSTED=https://cliknews.domain.com (and more env-vars..) docker-compose -f docker-compose.yml build (or up)`)  
+variables (e.g. `URL_BASE_TRUSTED=https://cliker.domain.com (and more env-vars..) docker-compose -f docker-compose.yml build (or up)`)  
 
 #### !!!WARNING!!! Always set ADMIN_PASSWORD, as it will leave your instance otherwise vurnerable with the default password being `test`!
 
@@ -243,11 +243,11 @@ variables (e.g. `URL_BASE_TRUSTED=https://cliknews.domain.com (and more env-vars
 | PORT_TRUSTED     | sets the trusted port of the instance (default: 3000)                 |
 | PORT_SANDBOX     | sets the sandbox port of the instance (default: 3003)                 |
 | PORT_PUBLIC      | sets the public port of the instance (default: 3004)                  |
-| URL_BASE_TRUSTED | sets the external trusted url of the instance (default: http://localhost:3000), e.g. https://cliknews.example.com |
-| URL_BASE_SANDBOX | sets the external sandbox url of the instance (default: http://localhost:3003), e.g. https://sbox-cliknews.example.com |
+| URL_BASE_TRUSTED | sets the external trusted url of the instance (default: http://localhost:3000), e.g. https://cliker.example.com |
+| URL_BASE_SANDBOX | sets the external sandbox url of the instance (default: http://localhost:3003), e.g. https://sbox-cliker.example.com |
 | URL_BASE_PUBLIC  | sets the external public url of the instance (default: http://localhost:3004), e.g. https://lists.example.com |
 | WWW_HOST         | sets the address that the server binds to (default: 0.0.0.0)          |
-| WWW_PROXY        | use if ClikNews is behind an http reverse proxy (default: false)     |
+| WWW_PROXY        | use if Cliker is behind an http reverse proxy (default: false)     |
 | WWW_SECRET       | sets the secret for the express session (default: `$(pwgen -1)`)      |
 | MONGO_HOST       | sets mongo host (default: mongo)                                      |
 | WITH_REDIS       | enables or disables redis (default: true)                             |
@@ -255,9 +255,9 @@ variables (e.g. `URL_BASE_TRUSTED=https://cliknews.domain.com (and more env-vars
 | REDIS_PORT       | sets redis host (default: 6379)                                       |
 | MYSQL_HOST       | sets mysql host (default: mysql)                                      |
 | MYSQL_PORT       | sets mysql port (default: 3306)                                       |
-| MYSQL_DATABASE   | sets mysql database (default: cliknews)                              |
-| MYSQL_USER       | sets mysql user (default: cliknews)                                  |
-| MYSQL_PASSWORD   | sets mysql password (default: cliknews)                              |
+| MYSQL_DATABASE   | sets mysql database (default: cliker)                              |
+| MYSQL_USER       | sets mysql user (default: cliker)                                  |
+| MYSQL_PASSWORD   | sets mysql password (default: cliker)                              |
 | WITH_LDAP        | use if you want to enable LDAP authentication                         |
 | LDAP_HOST        | LDAP Host for authentication (default: ldap)                          |
 | LDAP_PORT        | LDAP port (default: 389)                                              |
@@ -286,7 +286,7 @@ If you don't want to modify the original `docker-compose.yml`, you can put your 
 ```
 version: '3'
 services:
-  cliknews:
+  cliker:
     environment:
     - URL_BASE_TRUSTED
     - URL_BASE_SANDBOX

@@ -4,10 +4,10 @@ services:
   mysql:
     image: mariadb:10.4
     environment:
-    - MYSQL_ROOT_PASSWORD=cliknews
-    - MYSQL_DATABASE=cliknews
-    - MYSQL_USER=cliknews
-    - MYSQL_PASSWORD=cliknews
+    - MYSQL_ROOT_PASSWORD=cliker
+    - MYSQL_DATABASE=cliker
+    - MYSQL_USER=cliker
+    - MYSQL_PASSWORD=cliker
     volumes:
     - mysql-data:/var/lib/mysql
 
@@ -21,7 +21,7 @@ services:
     volumes:
     - mongo-data:/data/db
 
-  cliknews:
+  cliker:
     build:
       context: .
       dockerfile: Dockerfile-Develop
@@ -37,7 +37,7 @@ services:
       context: ./landing
     environment:
     - NEXT_PUBLIC_APP_URL=http://localhost:3100
-    - PLANS_API_URL=http://cliknews:3004/api/public/plans
+    - PLANS_API_URL=http://cliker:3004/api/public/plans
     ports:
     - "3105:3000"
 

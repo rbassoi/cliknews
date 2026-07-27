@@ -56,12 +56,12 @@ module.exports = (...extras) => Object.assign({
             await this.ensureUrl();
         }
 
-        await driver.executeScript('document.cliknewsRefreshAcknowledged = true;');
+        await driver.executeScript('document.clikerRefreshAcknowledged = true;');
     },
 
     async waitUntilVisibleAfterRefresh(selector) {
         await driver.wait(new webdriver.Condition('for refresh', async driver => {
-            const val = await driver.executeScript('return document.cliknewsRefreshAcknowledged;');
+            const val = await driver.executeScript('return document.clikerRefreshAcknowledged;');
             return !val;
         }), waitTimeout);
 

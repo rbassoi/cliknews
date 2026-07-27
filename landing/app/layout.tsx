@@ -5,7 +5,7 @@ import './globals.css';
 const inter = Inter({subsets: ['latin'], variable: '--font-inter'});
 
 export const metadata: Metadata = {
-    title: 'ClikNews — E-mail marketing sem complicação',
+    title: 'Cliker — E-mail marketing sem complicação',
     description: 'Campanhas, automação e relatórios de e-mail marketing em uma plataforma brasileira, com Pix e suporte em português.'
 };
 

@@ -38,12 +38,12 @@ async function getRouter(appType) {
 
     if (appType === AppType.SANDBOXED) {
         router.getAsync('/editor', passport.csrfProtection, async (req, res) => {
-            const cliknewsConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
+            const clikerConfig = await clientHelpers.getAnonymousConfig(req.context, appType);
 
             res.render('ckeditor/root', {
                 layout: 'ckeditor/layout',
                 reactCsrfToken: req.csrfToken(),
-                cliknewsConfig: JSON.stringify(cliknewsConfig),
+                clikerConfig: JSON.stringify(clikerConfig),
                 scriptFiles: [
                     getSandboxUrl('client/ckeditor-root.js')
                 ],

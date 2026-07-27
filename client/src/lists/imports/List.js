@@ -8,7 +8,7 @@ import {withErrorHandling} from '../../lib/error-handling';
 import {Table} from '../../lib/table';
 import {getImportLabels} from './helpers';
 import {Icon} from "../../lib/bootstrap-components";
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import moment from "moment";
 import {inProgress} from '../../../../shared/imports';
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../../lib/modals";
@@ -59,7 +59,7 @@ export default class List extends Component {
                         refreshTimeout = 1000;
                     }
 
-                    if (cliknewsConfig.globalPermissions.setupAutomation && this.props.list.permissions.includes('manageImports')) {
+                    if (clikerConfig.globalPermissions.setupAutomation && this.props.list.permissions.includes('manageImports')) {
                         actions.push({
                             label: <Icon icon="edit" title={t('edit')}/>,
                             link: `/lists/${this.props.list.id}/imports/${data[0]}/edit`
@@ -83,7 +83,7 @@ export default class List extends Component {
         return (
             <div>
                 {tableRestActionDialogRender(this)}
-                {cliknewsConfig.globalPermissions.setupAutomation && this.props.list.permissions.includes('manageImports') &&
+                {clikerConfig.globalPermissions.setupAutomation && this.props.list.permissions.includes('manageImports') &&
                     <Toolbar>
                         <LinkButton to={`/lists/${this.props.list.id}/imports/create`} className="btn-primary" icon="plus" label={t('createImport')}/>
                     </Toolbar>

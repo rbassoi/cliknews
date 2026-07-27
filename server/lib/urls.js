@@ -45,18 +45,18 @@ function getPublicUrl(path, opts) {
 
 
 function getTrustedUrlBaseDir() {
-    const cliknewsUrl = urllib.parse(config.www.trustedUrlBase);
-    return cliknewsUrl.pathname;
+    const clikerUrl = urllib.parse(config.www.trustedUrlBase);
+    return clikerUrl.pathname;
 }
 
 function getSandboxUrlBaseDir() {
-    const cliknewsUrl = urllib.parse(config.www.sandboxUrlBase);
-    return cliknewsUrl.pathname;
+    const clikerUrl = urllib.parse(config.www.sandboxUrlBase);
+    return clikerUrl.pathname;
 }
 
 function getPublicUrlBaseDir() {
-    const cliknewsUrl = urllib.parse(config.www.publicUrlBase);
-    return cliknewsUrl.pathname;
+    const clikerUrl = urllib.parse(config.www.publicUrlBase);
+    return clikerUrl.pathname;
 }
 
 module.exports = {

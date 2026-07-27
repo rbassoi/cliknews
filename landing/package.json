@@ -1,8 +1,8 @@
 {
-  "name": "cliknews-landing",
+  "name": "cliker-landing",
   "private": true,
   "version": "1.0.0",
-  "description": "ClikNews marketing/landing site — separate from the logged-in app (client/) and API (server/)",
+  "description": "Cliker marketing/landing site — separate from the logged-in app (client/) and API (server/)",
   "engines": {
     "node": ">=18.18.0"
   },

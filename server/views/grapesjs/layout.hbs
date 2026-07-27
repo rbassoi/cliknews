@@ -10,14 +10,14 @@
     <link rel="shortcut icon" href="{{publicPath}}static/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="{{publicPath}}static/favicon.ico">
 
-    <title>ClikNews</title>
+    <title>Cliker</title>
 
     <script src="{{publicPath}}static-npm/jquery.min.js"></script>
 
-    {{#if cliknewsConfig}}
+    {{#if clikerConfig}}
         <script>
             {{#if reactCsrfToken}}window.csrfToken = '{{reactCsrfToken}}';{{/if}}
-            window.cliknewsConfig = {{{cliknewsConfig}}};
+            window.clikerConfig = {{{clikerConfig}}};
         </script>
 
         {{#each scriptFiles}}

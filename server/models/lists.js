@@ -14,6 +14,11 @@ const imports = require('./imports');
 const entitySettings = require('../lib/entity-settings');
 const dependencyHelpers = require('../lib/dependency-helpers');
 const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
+// Not destructured: forms.js itself requires lists.js (server/models/forms.js's
+// dependencyHelpers usage), so a plain reference (accessed at call time, below) is
+// used to stay safe under that circular require — same pattern as contacts.js's
+// subscriptions.js reference, see docs/saas-plan.md's form-builder round.
+const forms = require('./forms');
 
 const {EntityActivityType} = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
@@ -55,7 +60,14 @@ async function _listDTAjax(context, namespaceId, params) {
                         .where(`${campaignEntityType.permissionsTable}.operation`, 'viewTriggers')
                         .count()
                         .as('triggerCount')
-            }
+            },
+            // Appended at the end of the explicit column list — but dt-helpers'
+            // ajaxListWithPermissionsTx auto-appends a permissions column AFTER whatever
+            // is passed here, so this pushes that permissions column from index 7 to 8.
+            // client/src/lists/List.js's data[7] permission reads were bumped to data[8]
+            // to match; every other rest/lists-table consumer only reads columns 0-2 and
+            // is unaffected.
+            'lists.default_form'
         ]
     );
 }
@@ -275,6 +287,38 @@ async function updateWithConsistencyCheck(context, entity) {
     });
 }
 
+async function ensureDefaultForm(context, listId) {
+    return await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'list', listId, 'edit');
+
+        const list = await tx('lists').where('id', listId).modify(requireAccountScope, context).first();
+        if (!list) {
+            shares.throwPermissionDenied();
+        }
+
+        if (list.default_form) {
+            return list.default_form;
+        }
+
+        // forms.create() opens its own transaction, so it can't be nested inside this
+        // one; a concurrent double-click could in theory create two custom_forms rows
+        // (only one ends up assigned, the other is orphaned but harmless), an acceptable
+        // tradeoff for a low-traffic admin action rather than duplicating its creation logic here.
+        const defaults = await forms.getDefaultCustomFormValues();
+        const formId = await forms.create(context, {
+            name: list.name,
+            description: '',
+            namespace: list.namespace,
+            fromExistingEntity: false,
+            ...defaults
+        });
+
+        await tx('lists').where('id', listId).modify(requireAccountScope, context).update({ default_form: formId });
+
+        return formId;
+    });
+}
+
 async function remove(context, id) {
     await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'list', id, 'delete');
@@ -314,4 +358,5 @@ module.exports.getByCid = getByCid;
 module.exports.getByNamespaceId = getByNamespaceId;
 module.exports.create = create;
 module.exports.updateWithConsistencyCheck = updateWithConsistencyCheck;
+module.exports.ensureDefaultForm = ensureDefaultForm;
 module.exports.remove = remove;

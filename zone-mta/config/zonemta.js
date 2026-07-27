@@ -28,8 +28,8 @@ module.exports = {
 
     api: {
         maildrop: false,
-        user: 'cliknews',
-        pass: 'cliknews'
+        user: 'cliker',
+        pass: 'cliker'
     },
 
     smtpInterfaces: {
@@ -74,13 +74,13 @@ module.exports = {
             futureDate: false,
             xOriginatingIP: false
         },
-        'cliknews-main': {
+        'cliker-main': {
             enabled: ['main']
         },
-        'cliknews-receiver': {
+        'cliker-receiver': {
             enabled: ['receiver'],
-            username: 'cliknews',
-            password: 'cliknews'
+            username: 'cliker',
+            password: 'cliker'
         }
     },
 

@@ -48,7 +48,7 @@ function getConfigROUidGid() {
     return _getConfigUidGid('roUser', 'roGroup', rwIds.uid, rwIds.gid);
 }
 
-function ensureClikNewsOwner(file, callback) {
+function ensureClikerOwner(file, callback) {
     const ids = getConfigUidGid();
 
     if (callback) {
@@ -58,9 +58,9 @@ function ensureClikNewsOwner(file, callback) {
     }
 }
 
-async function ensureClikNewsDir(dir) {
+async function ensureClikerDir(dir) {
     await fs.ensureDirAsync(dir);
-    await ensureClikNewsOwner(dir);
+    await ensureClikerOwner(dir);
 }
 
 function dropRootPrivileges() {
@@ -85,8 +85,8 @@ function dropRootPrivileges() {
 
 module.exports = {
     dropRootPrivileges,
-    ensureClikNewsOwner,
-    ensureClikNewsDir,
+    ensureClikerOwner,
+    ensureClikerDir,
     getConfigUidGid,
     getConfigROUidGid
 };

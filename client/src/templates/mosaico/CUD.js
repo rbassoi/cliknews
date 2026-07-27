@@ -20,7 +20,7 @@ import {
 import {withErrorHandling} from '../../lib/error-handling';
 import {getDefaultNamespace, NamespaceSelect, validateNamespace} from '../../lib/namespace';
 import {DeleteModalDialog} from "../../lib/modals";
-import cliknewsConfig from 'cliknewsConfig';
+import clikerConfig from 'clikerConfig';
 import {getMJMLSample, getVersafix} from "../../../../shared/mosaico-templates";
 import {getTemplateTypes, getTemplateTypesOrder} from "./helpers";
 import {withComponentMixins} from "../../lib/decorator-helpers";
@@ -94,7 +94,7 @@ export default class CUD extends Component {
                     description: '',
                     namespace: getDefaultNamespace(this.props.permissions),
                     type: 'html',
-                    tag_language: cliknewsConfig.tagLanguages[0]
+                    tag_language: clikerConfig.tagLanguages[0]
                 });
 
             } else if (wizard === 'mjml-sample') {
@@ -103,7 +103,7 @@ export default class CUD extends Component {
                     description: '',
                     namespace: getDefaultNamespace(this.props.permissions),
                     type: 'mjml',
-                    tag_language: cliknewsConfig.tagLanguages[0]
+                    tag_language: clikerConfig.tagLanguages[0]
                 });
 
             } else {
@@ -112,7 +112,7 @@ export default class CUD extends Component {
                     description: '',
                     namespace: getDefaultNamespace(this.props.permissions),
                     type: 'html',
-                    tag_language: cliknewsConfig.tagLanguages[0],
+                    tag_language: clikerConfig.tagLanguages[0],
                     html: ''
                 });
             }
@@ -192,7 +192,7 @@ export default class CUD extends Component {
         const typeKey = this.getFormValue('type');
 
         const tagLanguageOptions = [];
-        for (const key of cliknewsConfig.tagLanguages) {
+        for (const key of clikerConfig.tagLanguages) {
             tagLanguageOptions.push({key, label: this.tagLanguages[key].name});
         }
 

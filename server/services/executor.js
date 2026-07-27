@@ -1,6 +1,6 @@
 'use strict';
 
-/* Privileged executor. If ClikNews is started as root, this process keeps the root privilege to be able to spawn workers
+/* Privileged executor. If Cliker is started as root, this process keeps the root privilege to be able to spawn workers
    that can chroot.
   */
 
@@ -38,12 +38,12 @@ function spawnProcess(tid, executable, args, outFile, errFile, cwd, uid, gid) {
                 return;
             }
 
-            privilegeHelpers.ensureClikNewsOwner(outFile, err => {
+            privilegeHelpers.ensureClikerOwner(outFile, err => {
                 if (err) {
                     log.warn('Executor', 'Cannot change owner of output file of process tid:%s', tid);
                 }
 
-                privilegeHelpers.ensureClikNewsOwner(errFile, err => {
+                privilegeHelpers.ensureClikerOwner(errFile, err => {
                     if (err) {
                         log.warn('Executor', 'Cannot change owner of error output file of process tid:%s', tid);
                     }

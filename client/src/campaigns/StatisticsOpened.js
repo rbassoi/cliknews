@@ -14,7 +14,7 @@ import styles from "./styles.scss";
 import {Table} from "../lib/table";
 import {Link} from "react-router-dom";
 
-import cliknewsConfig from "cliknewsConfig";
+import clikerConfig from "clikerConfig";
 import {withComponentMixins} from "../lib/decorator-helpers";
 
 @withComponentMixins([
@@ -201,7 +201,7 @@ export default class StatisticsOpened extends Component {
                                     ['Country', 'Count'],
                                     ...stats.countries.map(entry => [entry.key || t('unknown'), entry.count])
                                 ]}
-                                mapsApiKey={cliknewsConfig.mapsApiKey}
+                                mapsApiKey={clikerConfig.mapsApiKey}
                             />
                         </div>
                     </div>

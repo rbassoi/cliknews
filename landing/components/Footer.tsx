@@ -4,7 +4,7 @@ export default function Footer() {
             <div className="cn-container" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
                     <div style={{width: 22, height: 22, borderRadius: 6, background: 'var(--cn-accent)'}} />
-                    <span style={{fontWeight: 700, fontSize: 14}}>ClikNews</span>
+                    <span style={{fontWeight: 700, fontSize: 14}}>Cliker</span>
                     <span style={{fontSize: 13, color: 'var(--cn-text-faint)'}}>© {new Date().getFullYear()}</span>
                 </div>
 
