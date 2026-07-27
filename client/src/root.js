@@ -29,7 +29,7 @@ import {getUrl} from "./lib/urls";
 import {withComponentMixins} from "./lib/decorator-helpers";
 import Update from "./settings/Update";
 
-const topLevelMenuKeys = ['contacts', 'lists', 'channels', 'templates', 'campaigns'];
+const topLevelMenuKeys = ['contacts', 'lists', 'forms', 'channels', 'templates', 'campaigns'];
 
 if (cliknewsConfig.reportsEnabled) {
     topLevelMenuKeys.push('reports');

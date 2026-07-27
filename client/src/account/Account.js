@@ -20,6 +20,7 @@ import passwordValidator from '../../../shared/password-validator';
 import interoperableErrors from '../../../shared/interoperable-errors';
 import cliknewsConfig from 'cliknewsConfig';
 import {withComponentMixins} from "../lib/decorator-helpers";
+import Company from "./Company";
 
 @withComponentMixins([
     withTranslation,
@@ -51,7 +52,7 @@ export default class Account extends Component {
     }
 
     submitFormValuesMutator(data) {
-        return filterData(data, ['name', 'email', 'password', 'currentPassword']);
+        return filterData(data, ['name', 'email', 'phone', 'password', 'currentPassword']);
     }
 
     @withAsyncErrorHandler
@@ -194,6 +195,7 @@ export default class Account extends Component {
                         <Fieldset label={t('generalSettings')}>
                             <InputField id="name" label={t('fullName')}/>
                             <InputField id="email" label={t('email')} help={t('thisAddressIsUsedForAccountRecoveryIn')}/>
+                            <InputField id="phone" label={t('phone')}/>
                         </Fieldset>
 
                         <Fieldset label={t('passwordChange')}>
@@ -207,6 +209,8 @@ export default class Account extends Component {
                             <Button type="submit" className="btn-primary" icon="check" label={t('update')}/>
                         </ButtonRow>
                     </Form>
+
+                    <Company/>
                 </div>
             );
         } else {

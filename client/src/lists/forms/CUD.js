@@ -32,6 +32,8 @@ import styles from "../../lib/styles.scss";
 import formsStyles from "./styles.scss";
 import axios from "../../lib/axios";
 import {withComponentMixins} from "../../lib/decorator-helpers";
+import {GrapesJSHost} from "../../lib/sandboxed-grapesjs";
+import {visualBuilderKeys, wrapVisualBuilderContent} from "./helpers";
 
 @withComponentMixins([
     withTranslation,
@@ -46,8 +48,12 @@ export default class CUD extends Component {
 
         this.state = {
             previewContents: null,
-            previewFullscreen: false
+            previewFullscreen: false,
+            useVisualBuilder: true,
+            formFields: null
         };
+
+        this.grapesJsHostRefHandler = node => this.grapesJsHost = node;
 
         this.serverValidatedFields = [
             'layout',
@@ -323,7 +329,12 @@ export default class CUD extends Component {
             'mail_confirm_address_change_text',
             'web_unsubscribed_notice',
             'mail_unsubscription_confirmed_html',
-            'mail_unsubscription_confirmed_text', 'web_manual_unsubscribe_notice', 'web_privacy_policy_notice'
+            'mail_unsubscription_confirmed_text', 'web_manual_unsubscribe_notice', 'web_privacy_policy_notice',
+
+            // Raw GrapesJS project state for the visual builder — see forms/helpers.js.
+            'web_subscribe_source', 'web_manage_source', 'web_confirm_subscription_notice_source',
+            'web_subscribed_notice_source', 'web_updated_notice_source', 'web_confirm_unsubscription_notice_source',
+            'web_unsubscribed_notice_source', 'web_manual_unsubscribe_notice_source', 'web_privacy_policy_notice_source'
         ]);
     }
 
@@ -344,6 +355,48 @@ export default class CUD extends Component {
 
             this.populateFormValues(data);
         }
+
+        this.fetchFormFields();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.getFormValue('previewList') !== this.lastFetchedFieldsListId) {
+            this.fetchFormFields();
+        }
+    }
+
+    async fetchFormFields() {
+        const t = this.props.t;
+        const listId = this.getFormValue('previewList');
+        this.lastFetchedFieldsListId = listId;
+
+        if (!listId) {
+            this.setState({formFields: null});
+            return;
+        }
+
+        const response = await axios.get(getUrl(`rest/fields/${listId}`));
+        const formFields = [
+            {key: 'EMAIL', name: t('emailAddress-2')},
+            ...response.data.map(fld => ({key: fld.key, name: fld.name}))
+        ];
+
+        this.setState({formFields});
+    }
+
+    /* Pulls the current block layout out of the visual builder (via the same
+       exportState() RPC templates already use) and writes it into this form's own
+       state — the same field the ACE editor also binds to, and the outer Save
+       button (bottom of this form) persists either way. */
+    async syncBuilderAsync(key) {
+        if (!this.grapesJsHost) {
+            return;
+        }
+
+        const {source, style} = await this.grapesJsHost.exportState();
+
+        this.updateFormValue(key, wrapVisualBuilderContent(key, source));
+        this.updateFormValue(key + '_source', JSON.stringify({source, style}));
     }
 
     localValidateFormValues(state) {
@@ -414,7 +467,7 @@ export default class CUD extends Component {
         if (submitResult) {
             if (this.props.entity) {
                 if (submitAndLeave) {
-                    this.navigateToWithFlashMessage('/lists/forms', 'success', t('customFormsUpdated'));
+                    this.navigateToWithFlashMessage('/forms', 'success', t('customFormsUpdated'));
                 } else {
                     await this.getFormValuesFromURL(`rest/forms/${this.props.entity.id}`);
                     this.enableForm();
@@ -422,9 +475,9 @@ export default class CUD extends Component {
                 }
             } else {
                 if (submitAndLeave) {
-                    this.navigateToWithFlashMessage('/lists/forms', 'success', t('customFormsCreated'));
+                    this.navigateToWithFlashMessage('/forms', 'success', t('customFormsCreated'));
                 } else {
-                    this.navigateToWithFlashMessage(`/lists/forms/${submitResult}/edit`, 'success', t('customFormsCreated'));
+                    this.navigateToWithFlashMessage(`/forms/${submitResult}/edit`, 'success', t('customFormsCreated'));
                 }
             }
         } else {
@@ -493,8 +546,8 @@ export default class CUD extends Component {
                         stateOwner={this}
                         visible={this.props.action === 'delete'}
                         deleteUrl={`rest/forms/${this.props.entity.id}`}
-                        backUrl={`/lists/forms/${this.props.entity.id}/edit`}
-                        successUrl="/lists/forms"
+                        backUrl={`/forms/${this.props.entity.id}/edit`}
+                        successUrl="/forms"
                         deletingMsg={t('deletingForm')}
                         deletedMsg={t('formDeleted')}/>
                 }
@@ -574,7 +627,44 @@ export default class CUD extends Component {
                             { selectedTemplate &&
                             <Fieldset label={t('templates')}>
                                 <Dropdown id="selectedTemplate" label={t('edit')} options={templateOptGroups} help={this.templateSettings[selectedTemplate].help}/>
-                                <ACEEditor id={selectedTemplate} height="500px" mode={this.templateSettings[selectedTemplate].mode}/>
+
+                                {visualBuilderKeys[selectedTemplate] && isEdit ?
+                                    <div>
+                                        <AlignedRow>
+                                            <ActionLink onClickAsync={async () => this.setState({useVisualBuilder: true})}><strong>{this.state.useVisualBuilder ? '● ' : ''}{t('visualEditor')}</strong></ActionLink>
+                                            {' | '}
+                                            <ActionLink onClickAsync={async () => this.setState({useVisualBuilder: false})}><strong>{!this.state.useVisualBuilder ? '● ' : ''}{t('code')}</strong></ActionLink>
+                                        </AlignedRow>
+
+                                        {this.state.useVisualBuilder ?
+                                            (visualBuilderKeys[selectedTemplate].mode === 'form' && !previewListId ?
+                                                <div style={{padding: '20px', color: '#888'}}>{t('selectAListAboveToUseTheVisualBuilder')}</div>
+                                            :
+                                                <div style={{height: '600px'}}>
+                                                    <GrapesJSHost
+                                                        key={selectedTemplate}
+                                                        ref={this.grapesJsHostRefHandler}
+                                                        entityTypeId="customForm"
+                                                        entity={this.props.entity}
+                                                        initialSource={this.getFormValue(selectedTemplate + '_source') && JSON.parse(this.getFormValue(selectedTemplate + '_source')).source}
+                                                        initialStyle={this.getFormValue(selectedTemplate + '_source') && JSON.parse(this.getFormValue(selectedTemplate + '_source')).style}
+                                                        sourceType={visualBuilderKeys[selectedTemplate].sourceType}
+                                                        title={this.templateSettings[selectedTemplate].label}
+                                                        canSave={true}
+                                                        onSave={() => this.syncBuilderAsync(selectedTemplate)}
+                                                        tokenMethod="grapesjs-form"
+                                                        extraContentProps={visualBuilderKeys[selectedTemplate].mode === 'form' ? {formFields: this.state.formFields || []} : undefined}
+                                                        onFullscreenAsync={async () => {}}
+                                                    />
+                                                </div>
+                                            )
+                                        :
+                                            <ACEEditor id={selectedTemplate} height="500px" mode={this.templateSettings[selectedTemplate].mode}/>
+                                        }
+                                    </div>
+                                :
+                                    <ACEEditor id={selectedTemplate} height="500px" mode={this.templateSettings[selectedTemplate].mode}/>
+                                }
                             </Fieldset>
                             }
                         </>
@@ -583,7 +673,7 @@ export default class CUD extends Component {
                     <ButtonRow>
                         <Button type="submit" className="btn-primary" icon="check" label={t('save')}/>
                         <Button type="submit" className="btn-primary" icon="check" label={t('saveAndLeave')} onClickAsync={async () => await this.submitHandler(true)}/>
-                        {canDelete && <LinkButton className="btn-danger" icon="trash-alt" label={t('delete')} to={`/lists/forms/${this.props.entity.id}/delete`}/>}
+                        {canDelete && <LinkButton className="btn-danger" icon="trash-alt" label={t('delete')} to={`/forms/${this.props.entity.id}/delete`}/>}
                     </ButtonRow>
                 </Form>
             </div>

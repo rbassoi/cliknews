@@ -19,6 +19,7 @@ const { expect } = require('chai');
 const knex = require('../../lib/knex');
 const lists = require('../../models/lists');
 const fields = require('../../models/fields');
+const shares = require('../../models/shares');
 
 const ROOT_NAMESPACE_ID = 1;
 
@@ -105,6 +106,38 @@ describe('tenant isolation', function () {
         }
 
         expect(threw).to.equal(true);
+    });
+
+    it('blocks a "scoped admin" context (e.g. an API key) from reaching another account\'s entity via shares.enforceEntityPermissionTx', async () => {
+        // A "scoped admin" context (admin:true WITH context.account present —
+        // used for API-key requests, see server/lib/middleware/api-key-auth.js)
+        // is not a true admin bypass (that's reserved for admin:true WITHOUT
+        // context.account). The admin branch of _checkPermissionTx used to only
+        // check that the entity existed at all, regardless of which account it
+        // belonged to — this proves that gap is closed.
+        const scopedAdminForAccountB = {user: {admin: true, id: 0}, account: {id: accountBId}};
+
+        let threw = false;
+        try {
+            await knex.transaction(tx => shares.enforceEntityPermissionTx(tx, scopedAdminForAccountB, 'list', listAId, 'view'));
+        } catch (err) {
+            threw = true;
+        }
+
+        expect(threw).to.equal(true);
+    });
+
+    it('still lets a "scoped admin" context reach its own account\'s entity', async () => {
+        const scopedAdminForAccountA = {user: {admin: true, id: 0}, account: {id: accountAId}};
+
+        let threw = false;
+        try {
+            await knex.transaction(tx => shares.enforceEntityPermissionTx(tx, scopedAdminForAccountA, 'list', listAId, 'view'));
+        } catch (err) {
+            threw = true;
+        }
+
+        expect(threw).to.equal(false);
     });
 
     describe('hardened permission check protects "child" tables via their parent', () => {

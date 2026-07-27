@@ -50,7 +50,25 @@ const allowedFormKeys = new Set([
     'web_privacy_policy_notice'
 ]);
 
-const hashKeys = new Set([...formAllowedKeys, ...allowedFormKeys]);
+// The web-facing pieces the visual block builder can edit (client/src/lists/forms/helpers.js
+// and CUD.js). mail_* pieces (real outbound emails), layout/form_input_style, and
+// web_manage_address/web_unsubscribe (small fixed-field forms, not driven by the list's
+// custom fields, so a block builder wouldn't add much) stay on the raw code editor.
+const webFacingFormKeys = new Set(['web_subscribe', 'web_manage']);
+const webFacingNoticeKeys = new Set([
+    'web_confirm_subscription_notice', 'web_subscribed_notice', 'web_updated_notice',
+    'web_confirm_unsubscription_notice', 'web_unsubscribed_notice', 'web_manual_unsubscribe_notice',
+    'web_privacy_policy_notice'
+]);
+const webFacingKeys = new Set([...webFacingFormKeys, ...webFacingNoticeKeys]);
+
+// One sibling key per web-facing piece, storing the raw GrapesJS project JSON (not MJML) so the
+// visual builder can restore the exact block arrangement when reopened — mirrors templates.js's
+// own data.source/data.html split. Kept OUT of allowedFormKeys (and out of checkForMjmlErrors)
+// since these values are never MJML-compiled or rendered directly.
+const formSourceKeys = new Set([...webFacingKeys].map(k => k + '_source'));
+
+const hashKeys = new Set([...formAllowedKeys, ...allowedFormKeys, ...formSourceKeys]);
 
 const allowedKeysServerValidate = new Set(['layout', ...allowedFormKeys]);
 
@@ -135,12 +153,17 @@ async function create(context, entity) {
             for (const key of allowedFormKeys) {
                 entity[key] = existing[key];
             }
+            for (const key of formSourceKeys) {
+                entity[key] = existing[key];
+            }
         }
 
         await namespaceHelpers.validateEntity(tx, entity);
 
         const form = filterObject(entity, allowedFormKeys);
         enforce(!Object.keys(checkForMjmlErrors(form)).length, 'Error(s) in form templates');
+
+        const formSource = filterObject(entity, formSourceKeys);
 
         const filteredEntity = filterObject(entity, formAllowedKeys);
         filteredEntity.account_id = requireAccountId(context);
@@ -153,6 +176,14 @@ async function create(context, entity) {
                 form: id,
                 data_key: formKey,
                 data_value: form[formKey]
+            })
+        }
+
+        for (const formKey in formSource) {
+            await tx('custom_forms_data').insert({
+                form: id,
+                data_key: formKey,
+                data_value: formSource[formKey]
             })
         }
 
@@ -178,6 +209,8 @@ async function updateWithConsistencyCheck(context, entity) {
         const form = filterObject(entity, allowedFormKeys);
         enforce(!Object.keys(checkForMjmlErrors(form)).length, 'Error(s) in form templates');
 
+        const formSource = filterObject(entity, formSourceKeys);
+
         await tx('custom_forms').where('id', entity.id).modify(requireAccountScope, context).update(filterObject(entity, formAllowedKeys));
 
         for (const formKey in form) {
@@ -187,6 +220,20 @@ async function updateWithConsistencyCheck(context, entity) {
                 form: entity.id,
                 data_key: formKey
             });
+        }
+
+        // Upsert, not update: a form saved before the visual builder existed has no
+        // existing row for these keys yet, so a plain update().where(...) would silently
+        // affect 0 rows and lose the block layout on first save. knex 0.16 (this app's
+        // version) has no onConflict().merge(), so this is done manually.
+        for (const formKey in formSource) {
+            const updated = await tx('custom_forms_data')
+                .where({form: entity.id, data_key: formKey})
+                .update({data_value: formSource[formKey]});
+
+            if (!updated) {
+                await tx('custom_forms_data').insert({form: entity.id, data_key: formKey, data_value: formSource[formKey]});
+            }
         }
 
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'customForm', entityId: entity.id });

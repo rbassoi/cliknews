@@ -65,10 +65,17 @@ async function takeConfirmationAndValidate(req, action, errorFactory) {
     return confirmation;
 }
 
-async function injectCustomFormData(customFormId, viewKey, data) {
+async function injectCustomFormData(customFormId, viewKey, data, listCid) {
     function sortAndFilterCustomFieldsBy(key) {
         data.customFields = data.customFields.filter(fld => fld[key] !== null);
         data.customFields.sort((a, b) => a[key] - b[key]);
+    }
+
+    // Used by the LGPD consent block in the visual form builder
+    // (client/src/lib/sandboxed-form-builder.js) — passed explicitly rather than
+    // read off data.cid since not every call site sets that (e.g. web_unsubscribe).
+    if (listCid) {
+        data.privacyPolicyUrl = getPublicUrl(`subscription/${listCid}/privacy-policy`);
     }
 
     if (viewKey === 'web_subscribe') {
@@ -178,7 +185,7 @@ async function _renderSubscribe(req, res, list, subscription) {
         type: 'mjml'
     };
 
-    await injectCustomFormData(req.query.fid || list.default_form, 'web_subscribe', data);
+    await injectCustomFormData(req.query.fid || list.default_form, 'web_subscribe', data, list.cid);
 
     const htmlRenderer = await tools.getTemplate(data.template, req.locale);
 
@@ -337,7 +344,7 @@ router.getAsync('/:cid/widget', cors(corsOptions), async (req, res) => {
         layout: null,
     };
 
-    await injectCustomFormData(req.query.fid || list.default_form, 'web_subscribe', data);
+    await injectCustomFormData(req.query.fid || list.default_form, 'web_subscribe', data, list.cid);
 
     const htmlRenderer = await tools.getTemplate(data.template, req.locale);
 
@@ -385,7 +392,7 @@ router.getAsync('/:lcid/manage/:ucid', passport.csrfProtection, async (req, res)
         type: 'mjml'
     };
 
-    await injectCustomFormData(req.query.fid || list.default_form, 'web_manage', data);
+    await injectCustomFormData(req.query.fid || list.default_form, 'web_manage', data, list.cid);
 
     const htmlRenderer = await tools.getTemplate(data.template, req.locale);
 
@@ -434,7 +441,7 @@ router.getAsync('/:lcid/manage-address/:ucid', passport.csrfProtection, async (r
         type: 'mjml'
     };
 
-    await injectCustomFormData(req.query.fid || list.default_form, 'web_manage_address', data);
+    await injectCustomFormData(req.query.fid || list.default_form, 'web_manage_address', data, list.cid);
 
     const htmlRenderer = await tools.getTemplate(data.template, req.locale);
 
@@ -533,7 +540,7 @@ router.getAsync('/:lcid/unsubscribe/:ucid', passport.csrfProtection, async (req,
             type: 'mjml'
         };
 
-        await injectCustomFormData(req.query.fid || list.default_form, 'web_unsubscribe', data);
+        await injectCustomFormData(req.query.fid || list.default_form, 'web_unsubscribe', data, list.cid);
 
         const htmlRenderer = await tools.getTemplate(data.template, req.locale);
 
@@ -681,7 +688,7 @@ async function webNotice(type, req, res) {
         }
     };
 
-    await injectCustomFormData(req.query.fid || list.default_form, 'web_' + type.replace('-', '_') + '_notice', data);
+    await injectCustomFormData(req.query.fid || list.default_form, 'web_' + type.replace('-', '_') + '_notice', data, list.cid);
 
     const htmlRenderer = await tools.getTemplate(data.template, req.locale);
 

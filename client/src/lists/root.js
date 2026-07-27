@@ -208,41 +208,41 @@ function getMenus(t) {
                 create: {
                     title: t('create'),
                     panelRender: props => <ListsCUD action="create" permissions={props.permissions} />
-                },
-                forms: {
-                    title: t('customForms-1'),
-                    link: '/lists/forms',
-                    checkPermissions: {
-                        ...namespaceCheckPermissions('createCustomForm')
+                }
+            }
+        },
+        forms: {
+            title: t('customForms-1'),
+            link: '/forms',
+            checkPermissions: {
+                ...namespaceCheckPermissions('createCustomForm')
+            },
+            panelRender: props => <FormsList permissions={props.permissions}/>,
+            children: {
+                ':formsId([0-9]+)': {
+                    title: resolved => t('customFormsName', {name: ellipsizeBreadcrumbLabel(resolved.forms.name)}),
+                    resolve: {
+                        forms: params => `rest/forms/${params.formsId}`
                     },
-                    panelRender: props => <FormsList permissions={props.permissions}/>,
-                    children: {
-                        ':formsId([0-9]+)': {
-                            title: resolved => t('customFormsName', {name: ellipsizeBreadcrumbLabel(resolved.forms.name)}),
-                            resolve: {
-                                forms: params => `rest/forms/${params.formsId}`
-                            },
-                            link: params => `/lists/forms/${params.formsId}/edit`,
-                            navs: {
-                                ':action(edit|delete)': {
-                                    title: t('edit'),
-                                    link: params => `/lists/forms/${params.formsId}/edit`,
-                                    visible: resolved => resolved.forms.permissions.includes('edit'),
-                                    panelRender: props => <FormsCUD action={props.match.params.action} entity={props.resolved.forms} permissions={props.permissions} />
-                                },
-                                share: {
-                                    title: t('share'),
-                                    link: params => `/lists/forms/${params.formsId}/share`,
-                                    visible: resolved => resolved.forms.permissions.includes('share'),
-                                    panelRender: props => <Share title={t('share')} entity={props.resolved.forms} entityTypeId="customForm" />
-                                }
-                            }
+                    link: params => `/forms/${params.formsId}/edit`,
+                    navs: {
+                        ':action(edit|delete)': {
+                            title: t('edit'),
+                            link: params => `/forms/${params.formsId}/edit`,
+                            visible: resolved => resolved.forms.permissions.includes('edit'),
+                            panelRender: props => <FormsCUD action={props.match.params.action} entity={props.resolved.forms} permissions={props.permissions} />
                         },
-                        create: {
-                            title: t('create'),
-                            panelRender: props => <FormsCUD action="create" permissions={props.permissions} />
+                        share: {
+                            title: t('share'),
+                            link: params => `/forms/${params.formsId}/share`,
+                            visible: resolved => resolved.forms.permissions.includes('share'),
+                            panelRender: props => <Share title={t('share')} entity={props.resolved.forms} entityTypeId="customForm" />
                         }
                     }
+                },
+                create: {
+                    title: t('create'),
+                    panelRender: props => <FormsCUD action="create" permissions={props.permissions} />
                 }
             }
         }

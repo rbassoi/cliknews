@@ -46,13 +46,13 @@ export default class List extends Component {
                     if (perms.includes('edit')) {
                         actions.push({
                             label: <Icon icon="edit" title={t('edit')}/>,
-                            link: `/lists/forms/${data[0]}/edit`
+                            link: `/forms/${data[0]}/edit`
                         });
                     }
                     if (perms.includes('share')) {
                         actions.push({
                             label: <Icon icon="share" title={t('share')}/>,
-                            link: `/lists/forms/${data[0]}/share`
+                            link: `/forms/${data[0]}/share`
                         });
                     }
 
@@ -68,7 +68,7 @@ export default class List extends Component {
                 {tableRestActionDialogRender(this)}
                 {createPermitted &&
                     <Toolbar>
-                        <LinkButton to="/lists/forms/create" className="btn-primary" icon="plus" label={t('createCustomForm')}/>
+                        <LinkButton to="/forms/create" className="btn-primary" icon="plus" label={t('createCustomForm')}/>
                     </Toolbar>
                 }
 

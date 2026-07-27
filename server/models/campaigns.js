@@ -98,6 +98,21 @@ async function listDTAjax(context, params) {
     return await _listDTAjax(context, undefined, undefined, params);
 }
 
+// For the public API (server/routes/api-v1.js): listDTAjax/_listDTAjax go
+// through dt-helpers.js's ajaxListWithPermissions, which is per-user-ACL
+// oriented and explicitly rejects an admin-style context. A "scoped admin"
+// context (API key) has no per-user ACL to check against — same reasoning
+// as contacts.js:getPermittedListsTx's own admin branch — so this is a
+// plain account-scoped query instead.
+async function listForAccount(context, limit) {
+    return await knex('campaigns')
+        .whereNull('parent')
+        .modify(requireAccountScope, context)
+        .orderBy('created', 'desc')
+        .limit(limit)
+        .select(['id', 'name', 'cid', 'description', 'type', 'status', 'scheduled', 'source', 'created']);
+}
+
 async function listByNamespaceDTAjax(context, namespaceId, params) {
     return await _listDTAjax(context, namespaceId, undefined, params);
 }
@@ -1185,6 +1200,7 @@ module.exports.Content = Content;
 module.exports.hash = hash;
 
 module.exports.listDTAjax = listDTAjax;
+module.exports.listForAccount = listForAccount;
 module.exports.listByChannelDTAjax = listByChannelDTAjax;
 module.exports.listByNamespaceDTAjax = listByNamespaceDTAjax;
 module.exports.listChildrenDTAjax = listChildrenDTAjax;

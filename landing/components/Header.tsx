@@ -11,9 +11,10 @@ export default function Header() {
                 </div>
 
                 <nav style={{display: 'flex', alignItems: 'center', gap: 28, fontSize: 14, fontWeight: 500}}>
-                    <Link href="#recursos">Recursos</Link>
-                    <Link href="#planos">Planos</Link>
-                    <Link href="#faq">Perguntas frequentes</Link>
+                    <Link href="/#recursos">Recursos</Link>
+                    <Link href="/#planos">Planos</Link>
+                    <Link href="/#faq">Perguntas frequentes</Link>
+                    <Link href="/developers">Desenvolvedores</Link>
                 </nav>
 
                 <div style={{display: 'flex', gap: 10}}>

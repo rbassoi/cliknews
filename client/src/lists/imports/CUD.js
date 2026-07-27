@@ -330,9 +330,37 @@ export default class CUD extends Component {
             }
 
             this.setState({selectedFileName: this.csvFile.files[0].name});
+            this.detectAndSetDelimiter(this.csvFile.files[0]);
         }
 
         this.scheduleFormRevalidate();
+    }
+
+    // Locale exports (e.g. Excel in pt-BR) commonly use ";" instead of "," since
+    // "," is the decimal separator there. Without this, the whole header line gets
+    // treated as one column and every mapping dropdown ends up with a single,
+    // useless option — pick whichever delimiter actually splits the header row.
+    detectAndSetDelimiter(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const firstLine = String(reader.result || '').split(/\r\n|\r|\n/, 1)[0] || '';
+
+            let bestDelimiter = null;
+            let bestCount = 0;
+            for (const candidate of [',', ';', '\t']) {
+                const count = firstLine.split(candidate).length - 1;
+                if (count > bestCount) {
+                    bestDelimiter = candidate;
+                    bestCount = count;
+                }
+            }
+
+            if (bestDelimiter) {
+                this.updateFormValue('csvDelimiter', bestDelimiter);
+            }
+        };
+
+        reader.readAsText(file.slice(0, 4096));
     }
 
     onDropzoneClick() {

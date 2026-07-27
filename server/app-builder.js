@@ -24,6 +24,7 @@ const api = require('./routes/api');
 const reports = require('./routes/reports');
 const quickReports = require('./routes/quick-reports');
 const subscriptions = require('./routes/subscriptions');
+const contactsExport = require('./routes/contacts-export');
 const campaigns = require('./routes/campaigns');
 const subscription = require('./routes/subscription');
 const sandboxedMosaico = require('./routes/sandboxed-mosaico');
@@ -124,6 +125,28 @@ hbs.registerHelper('flash_messages', function () { // eslint-disable-line prefer
     return new hbs.handlebars.SafeString(
         response.join('\n')
     );
+});
+
+/**
+ * Used by forms built with the visual form builder (client/src/lib/sandboxed-form-builder.js):
+ * each dropped field block compiles to `{{customField 'field_key'}}`, rendering that one field
+ * via the same per-type markup subscription-custom-fields.hbs's auto-loop already uses (factored
+ * out into subscription-custom-field.hbs, singular). @root is used instead of a fixed relative
+ * depth since this helper can be called from any nesting level in the visual builder's output.
+ */
+hbs.registerHelper('customField', function (fieldKey, options) { // eslint-disable-line prefer-arrow-callback
+    const root = (options.data && options.data.root) || this; // eslint-disable-line no-invalid-this
+    const customFields = root.customFields || [];
+    const field = customFields.find(fld => fld.key === fieldKey);
+
+    if (!field) {
+        return '';
+    }
+
+    const partial = hbs.handlebars.partials['subscription_custom_field'];
+    const render = typeof partial === 'function' ? partial : hbs.handlebars.compile(partial);
+
+    return new hbs.handlebars.SafeString(render(field, {data: {root}}));
 });
 
 
@@ -270,6 +293,11 @@ async function createApp(appType) {
         next();
     });
 
+    app.all('/api-v1/*', (req, res, next) => {
+        req.needsAPIJSONResponse = true;
+        next();
+    });
+
     // Resolves req.account from the logged-in user (if any) before the
     // request context is built, so every context downstream carries it.
     app.use(resolveAccount);
@@ -297,6 +325,9 @@ async function createApp(appType) {
 
     if (appType === AppType.TRUSTED || appType === AppType.SANDBOXED) {
         useWith404Fallback('/subscriptions', subscriptions);
+        // Deliberately not "/contacts" — that's already the client SPA route for
+        // the unified Contacts page (same reason /rpts and /cpgs exist below).
+        useWith404Fallback('/contacts-export', contactsExport);
         useWith404Fallback('/webhooks', webhooks);
 
         if (config.reports && config.reports.enabled === true) {

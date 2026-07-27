@@ -124,7 +124,7 @@ export default class List extends Component {
                         <LinkButton to="/lists/create" className="btn-primary" icon="plus" label={t('createList')}/>
                     }
                     { customFormsPermitted &&
-                        <LinkButton to="/lists/forms" className="btn-primary" label={t('customForms-1')}/>
+                        <LinkButton to="/forms" className="btn-primary" label={t('customForms-1')}/>
                     }
                 </Toolbar>
 

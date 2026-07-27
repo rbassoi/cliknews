@@ -26,6 +26,51 @@ import {GrapesJSSourceType} from "./sandboxed-grapesjs-shared";
 import {withComponentMixins} from "./decorator-helpers";
 
 
+// Blocks for the visual subscription-form builder (web_subscribe/web_manage — see
+// docs/redesign-plan.md's form-builder round). Plain GrapesJS core, no email preset:
+// this canvas produces a real <form> with <input> elements, not an email layout.
+// Field/LGPD blocks compile straight to Handlebars via the customField helper
+// (server/app-builder.js) — data-gjs-type is GrapesJS's own built-in convention for
+// recognizing a component's type when HTML is re-parsed (e.g. reopening the editor),
+// so no custom isComponent/toHTML logic is needed; the exported HTML already IS the
+// final stored value.
+grapesjs.plugins.add('cliknews-form-blocks', (editor, opts = {}) => {
+    const bm = editor.BlockManager;
+
+    bm.add('cn-title', {label: 'Título', category: 'Conteúdo', content: '<h2>Título</h2>'});
+    bm.add('cn-text', {label: 'Texto', category: 'Conteúdo', content: '<p>Texto</p>'});
+    bm.add('cn-image', {label: 'Imagem', category: 'Conteúdo', content: {type: 'image'}});
+    bm.add('cn-divider', {label: 'Divisor', category: 'Conteúdo', content: '<hr>'});
+
+    for (const field of (opts.fields || [])) {
+        const key = field.key.replace(/'/g, "\\'");
+        bm.add('cn-field-' + field.key, {
+            label: 'Campo: ' + field.name,
+            category: 'Campos',
+            content: `<div class="cn-form-field" data-gjs-type="cn-field" data-cn-field-key="${field.key}">{{customField '${key}'}}</div>`
+        });
+    }
+
+    bm.add('cn-lgpd', {
+        label: 'Consentimento LGPD',
+        category: 'Privacidade',
+        content: '<label class="cn-form-field cn-lgpd" data-gjs-type="cn-lgpd"><input type="checkbox" name="gdpr_consent" required> Eu concordo com a <a href="{{privacyPolicyUrl}}">Política de Privacidade</a></label>'
+    });
+
+    const lockedDefaults = {
+        editable: false,
+        draggable: true,
+        droppable: false,
+        removable: true,
+        copyable: true,
+        highlightable: true
+    };
+
+    editor.DomComponents.addType('cn-field', {model: {defaults: lockedDefaults}});
+    editor.DomComponents.addType('cn-lgpd', {model: {defaults: lockedDefaults}});
+});
+
+
 grapesjs.plugins.add('cliknews-remove-buttons', (editor, opts = {}) => {
     // This needs to be done in on-load and after gjs plugin because grapesjs-preset-newsletter tries to set titles to all buttons (including those we remove)
     // see https://github.com/artf/grapesjs-preset-newsletter/blob/e0a91636973a5a1481e9d7929e57a8869b1db72e/src/index.js#L248
@@ -57,7 +102,8 @@ export class GrapesJSSandbox extends Component {
         tagLanguage: PropTypes.string,
         initialSource: PropTypes.string,
         initialStyle: PropTypes.string,
-        sourceType: PropTypes.string
+        sourceType: PropTypes.string,
+        formFields: PropTypes.array
     }
 
     async exportState(method, params) {
@@ -98,6 +144,14 @@ export class GrapesJSSandbox extends Component {
             const preHtml = '<!doctype html><html><head><meta charset="utf-8"><title></title></head><body>';
             const postHtml = '</body></html>';
             html = preHtml + unbase(htmlBody, this.props.tagLanguage, trustedUrlBase, sandboxUrlBase, publicUrlBase, true) + postHtml;
+
+        } else if (props.sourceType === GrapesJSSourceType.FORM) {
+            // No email-client compatibility hacks needed (real web page, not an
+            // email) and no per-key <form> shell here — the outer form builder
+            // host (client/src/lib/sandboxed-form-builder.js) wraps this inner
+            // content with the right <form>/hidden-fields/submit-button shell
+            // for whichever key (web_subscribe vs web_manage) is being edited.
+            html = source;
         }
 
 
@@ -602,6 +656,15 @@ export class GrapesJSSandbox extends Component {
                 '  }';
 
             config.plugins.push('gjs-preset-newsletter');
+
+        } else if (props.sourceType === GrapesJSSourceType.FORM) {
+            defaultSource = '<h2>Assine nossa newsletter</h2>\n<p>Preencha os campos abaixo para se inscrever.</p>';
+            defaultStyle = '';
+
+            config.plugins.push('cliknews-form-blocks');
+            config.pluginsOpts['cliknews-form-blocks'] = {
+                fields: props.formFields || []
+            };
         }
 
         config.components = props.initialSource ? base(props.initialSource, this.props.tagLanguage, trustedUrlBase, sandboxUrlBase, publicUrlBase) : defaultSource;

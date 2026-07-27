@@ -6,12 +6,14 @@ import {withTranslation} from '../lib/i18n';
 import {LinkButton, requiresAuthenticatedUser, Toolbar, withPageHelpers} from '../lib/page';
 import {withErrorHandling} from '../lib/error-handling';
 import {Table} from '../lib/table';
-import {Pill} from '../lib/bootstrap-components';
+import {Button, Pill} from '../lib/bootstrap-components';
 import {Dropdown, Form, withForm} from '../lib/form';
 import {SubscriptionStatus} from '../../../shared/lists';
 import {getSubscriptionStatusLabels} from '../lists/subscriptions/helpers';
+import {getUrl} from '../lib/urls';
 import moment from 'moment';
 import {withComponentMixins} from "../lib/decorator-helpers";
+import ImportListPickerModal from './ImportListPickerModal';
 
 const statusPillColors = {
     [SubscriptionStatus.SUBSCRIBED]: 'green',
@@ -32,7 +34,9 @@ export default class List extends Component {
         super(props);
 
         const t = props.t;
-        this.state = {};
+        this.state = {
+            isImportModalOpen: false
+        };
         this.statusLabels = getSubscriptionStatusLabels(t);
 
         this.initForm({
@@ -114,9 +118,21 @@ export default class List extends Component {
                         <h1 className="cn-page-title">{t('contacts')}</h1>
                     </div>
                     <Toolbar>
+                        <a href={getUrl('contacts-export' + (this.props.status ? '?status=' + this.props.status : ''))}>
+                            <Button label={t('exportAsCsv')} className="cn-btn cn-btn-secondary"/>
+                        </a>
+                        <Button
+                            label={t('importContacts')}
+                            className="cn-btn cn-btn-secondary"
+                            onClickAsync={() => this.setState({isImportModalOpen: true})}
+                        />
                         <LinkButton to="/lists" className="cn-btn cn-btn-primary" icon="plus" label={t('addContact')}/>
                     </Toolbar>
                 </div>
+
+                {this.state.isImportModalOpen &&
+                    <ImportListPickerModal onClose={() => this.setState({isImportModalOpen: false})}/>
+                }
 
                 <div className="cn-card" style={{padding: '10px 14px', marginBottom: 14, display: 'inline-block'}}>
                     <Form format="inline" stateOwner={this}>

@@ -9,6 +9,7 @@ const files = require('../models/files');
 const fileHelpers = require('../lib/file-helpers');
 
 const templates = require('../models/templates');
+const forms = require('../models/forms');
 
 const contextHelpers = require('../lib/context-helpers');
 
@@ -24,6 +25,24 @@ users.registerRestrictedAccessTokenMethod('grapesjs', async ({entityTypeId, enti
             return {
                 permissions: {
                     'template': {
+                        [entityId]: new Set(['viewFiles', 'manageFiles', 'view'])
+                    }
+                }
+            };
+        }
+    }
+});
+
+// Used by the visual form/notice builder (client/src/lib/sandboxed-form-builder.js) —
+// same shape as the 'grapesjs' method above, scoped to custom_forms instead of templates.
+users.registerRestrictedAccessTokenMethod('grapesjs-form', async ({entityTypeId, entityId}) => {
+    if (entityTypeId === 'customForm') {
+        const frm = await forms.getById(contextHelpers.getAdminContext(), entityId, false);
+
+        if (frm) {
+            return {
+                permissions: {
+                    'customForm': {
                         [entityId]: new Set(['viewFiles', 'manageFiles', 'view'])
                     }
                 }

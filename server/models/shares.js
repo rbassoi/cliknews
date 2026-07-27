@@ -540,6 +540,16 @@ async function _checkPermissionTx(tx, context, entityTypeId, entityId, requiredO
 
         if (entityId) {
             existsQuery.where('id', entityId);
+
+            // Same reasoning as the account-scope check below for non-admin
+            // callers: a "scoped admin" context (admin:true WITH context.account
+            // present, e.g. an API-key request) must not be able to reach another
+            // account's entity just because it exists. A true admin context (no
+            // context.account — login/background jobs) is unaffected, since
+            // requireAccountScope no-ops for it.
+            if (ACCOUNT_SCOPED_ENTITY_TYPES.has(entityTypeId)) {
+                existsQuery.modify(requireAccountScope, context);
+            }
         }
 
         const exists = await existsQuery.first();

@@ -99,7 +99,11 @@ function prepareCsv(impt) {
 
             } else {
                 const dbRecord = {};
-                for (let idx = 0; idx < record.length; idx++) {
+                // A row longer than the header (relax_column_count lets these through
+                // instead of erroring) has no matching column_N in the created table —
+                // bound to the header's count and drop any extra fields on that row.
+                const colCount = Math.min(record.length, impt.settings.csv.columns.length);
+                for (let idx = 0; idx < colCount; idx++) {
                     dbRecord['column_' + idx] = record[idx];
                 }
 
@@ -121,7 +125,11 @@ function prepareCsv(impt) {
     const inputStream = fs.createReadStream(filePath);
     const parser = csvparse({
         comment: '#',
-        delimiter: impt.settings.csv.delimiter
+        delimiter: impt.settings.csv.delimiter,
+        // Real-world CSV exports often have a handful of malformed rows (a stray
+        // delimiter, a truncated line). Without this, csv-parse aborts the entire
+        // import on the first such row instead of just that one row.
+        relax_column_count: true
     });
 
     inputStream.on('error', err => finishWithError('Error reading CSV file.', err));

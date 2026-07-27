@@ -26,9 +26,9 @@ const passport = require('../lib/passport');
 const namespaceHelpers = require('../lib/namespace-helpers');
 
 const allowedKeys = new Set(['username', 'name', 'email', 'password', 'namespace', 'role']);
-const ownAccountAllowedKeys = new Set(['name', 'email', 'password']);
+const ownAccountAllowedKeys = new Set(['name', 'email', 'password', 'phone']);
 const allowedKeysExternal = new Set(['username', 'namespace', 'role', 'name', 'email']);
-const hashKeys = new Set(['username', 'name', 'email', 'namespace', 'role']);
+const hashKeys = new Set(['username', 'name', 'email', 'namespace', 'role', 'phone']);
 const shares = require('./shares');
 const contextHelpers = require('../lib/context-helpers');
 const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
@@ -38,7 +38,7 @@ function hash(entity) {
 }
 
 async function _getByTx(tx, context, key, value, extraColumns = []) {
-    const columns = ['id', 'username', 'name', 'email', 'namespace', 'role', 'account_id', ...extraColumns];
+    const columns = ['id', 'username', 'name', 'email', 'phone', 'namespace', 'role', 'account_id', ...extraColumns];
 
     const user = await tx('users').select(columns).where(key, value).modify(requireAccountScope, context).first();
 

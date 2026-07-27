@@ -37,7 +37,9 @@ export class GrapesJSHost extends Component {
         canSave: PropTypes.bool,
         onTestSend: PropTypes.func,
         onShowExport: PropTypes.func,
-        onFullscreenAsync: PropTypes.func
+        onFullscreenAsync: PropTypes.func,
+        tokenMethod: PropTypes.string,
+        extraContentProps: PropTypes.object
     }
 
     async toggleFullscreenAsync() {
@@ -61,7 +63,8 @@ export class GrapesJSHost extends Component {
             tagLanguage: getTagLanguageFromEntity(this.props.entity, this.props.entityTypeId),
             initialSource: this.props.initialSource,
             initialStyle: this.props.initialStyle,
-            sourceType: this.props.sourceType
+            sourceType: this.props.sourceType,
+            ...this.props.extraContentProps
         };
 
         const tokenData = {
@@ -84,7 +87,7 @@ export class GrapesJSHost extends Component {
                         <a className={styles.btn} onClick={::this.toggleFullscreenAsync} title={t('maximizeEditor')}><Icon icon="window-maximize"/></a>
                     </div>
                 </div>
-                <UntrustedContentHost ref={this.contentNodeRefHandler} className={styles.host} singleToken={true} contentProps={editorData} contentSrc="grapesjs/editor" tokenMethod="grapesjs" tokenParams={tokenData}/>
+                <UntrustedContentHost ref={this.contentNodeRefHandler} className={styles.host} singleToken={true} contentProps={editorData} contentSrc="grapesjs/editor" tokenMethod={this.props.tokenMethod || 'grapesjs'} tokenParams={tokenData}/>
             </div>
         );
     }

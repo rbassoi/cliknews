@@ -2,7 +2,11 @@
 
 const knex = require('../lib/knex');
 const dtHelpers = require('../lib/dt-helpers');
-const { getSubscriptionTableName } = require('./subscriptions');
+// Not destructured: subscriptions.js sits in a circular require chain (subscriptions ->
+// campaigns -> plan-limits -> contacts), and whichever module gets loaded first can end
+// up destructuring this before subscriptions.js has finished assigning its exports.
+// Accessing it as a property at call time (below) always sees the final export.
+const subscriptions = require('./subscriptions');
 const { requireAccountScope, requireAccountScopeOn } = require('../lib/tenant-scope');
 
 /** Lists the current user may view subscribers of. Used to build the cross-list contacts UNION. */
@@ -32,7 +36,7 @@ function buildContactsUnion(tx, permittedLists) {
     const bindings = [];
 
     for (const list of permittedLists) {
-        const table = getSubscriptionTableName(list.id);
+        const table = subscriptions.getSubscriptionTableName(list.id);
         parts.push('select `hash_email`, `email`, `status`, `created`, ? as `list_id`, ? as `list_name` from `' + table + '` where `email` is not null');
         bindings.push(list.id, list.name);
     }
@@ -90,5 +94,49 @@ async function getTotalCount(context) {
     });
 }
 
+/** Streams every distinct contact (by email) across every list the user may view, for CSV export. Keyset-paginated by hash_email, same convention as subscriptions.js:listIterator. */
+async function* contactsIterator(context, status) {
+    const permittedLists = await knex.transaction(tx => getPermittedListsTx(tx, context));
+    if (permittedLists.length === 0) {
+        return;
+    }
+
+    let lastHash = '';
+
+    while (true) {
+        const rows = await knex.transaction(async tx => {
+            const unionSource = buildContactsUnion(tx, permittedLists);
+
+            let query = tx.from(unionSource).where('u.hash_email', '>', lastHash);
+            if (status) {
+                query = query.where('u.status', status);
+            }
+
+            return await query
+                .groupBy('u.hash_email')
+                .orderBy('u.hash_email', 'asc')
+                .limit(500)
+                .select([
+                    tx.raw('u.hash_email as `hash_email`'),
+                    tx.raw('min(u.email) as `email`'),
+                    tx.raw('min(u.status) as `status`'),
+                    tx.raw('min(u.created) as `created`'),
+                    tx.raw('group_concat(distinct u.list_name separator \';\') as `lists`')
+                ]);
+        });
+
+        if (rows.length === 0) {
+            break;
+        }
+
+        for (const row of rows) {
+            yield row;
+        }
+
+        lastHash = rows[rows.length - 1].hash_email;
+    }
+}
+
 module.exports.listDTAjax = listDTAjax;
 module.exports.getTotalCount = getTotalCount;
+module.exports.contactsIterator = contactsIterator;

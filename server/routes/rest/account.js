@@ -2,6 +2,7 @@
 
 const passport = require('../../lib/passport');
 const users = require('../../models/users');
+const accounts = require('../../models/accounts');
 const contextHelpers = require('../../lib/context-helpers');
 
 const router = require('../../lib/router-async').create();
@@ -18,6 +19,17 @@ router.postAsync('/account', passport.loggedIn, passport.csrfProtection, async (
     data.id = req.user.id;
 
     await users.updateWithConsistencyCheck(contextHelpers.getAdminContext(), req.body, true);
+    return res.json();
+});
+
+router.getAsync('/account-company', passport.loggedIn, async (req, res) => {
+    const account = await accounts.getById(req.context.account.id);
+    account.hash = accounts.hash(account);
+    return res.json(account);
+});
+
+router.postAsync('/account-company', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    await accounts.updateOwnAccount(req.context, req.body);
     return res.json();
 });
 
