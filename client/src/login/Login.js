@@ -2,7 +2,7 @@
 
 import React, {Component} from 'react';
 import {withTranslation} from '../lib/i18n';
-import {Title, withPageHelpers} from '../lib/page'
+import {withPageHelpers} from '../lib/page'
 import {Link} from 'react-router-dom'
 import {
     Button,
@@ -20,6 +20,7 @@ import interoperableErrors from '../../../shared/interoperable-errors';
 import clikerConfig from 'clikerConfig';
 import {getUrl} from "../lib/urls";
 import {withComponentMixins} from "../lib/decorator-helpers";
+import AuthLayout from './AuthLayout';
 
 @withComponentMixins([
     withTranslation,
@@ -115,28 +116,25 @@ export default class Login extends Component {
         }
         if (clikerConfig.authMethod != 'cas') {
           return (
-            <div>
-                <Title>{t('signIn')}</Title>
-
+            <AuthLayout eyebrow={t('authWelcomeBackEyebrow')} title={t('signIn')} subtitle={t('authSignInSubtitle')}>
                 <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
-                    <InputField id="username" label={t('username')}/>
-                    <InputField id="password" label={t('password')} type="password" />
-                    <CheckBox id="remember" text={t('rememberMe')}/>
+                    <InputField format="wide" id="username" label={t('username')}/>
+                    <InputField format="wide" id="password" label={t('password')} type="password" />
+                    <CheckBox format="wide" id="remember" text={t('rememberMe')}/>
 
                     <ButtonRow>
-                        <Button type="submit" className="btn-primary" icon="check" label={t('signIn')}/>
+                        <Button type="submit" className="btn-primary cn-auth-submit" icon="check" label={t('signIn')}/>
                         {passwordResetLink}
                     </ButtonRow>
                 </Form>
-            </div>
+            </AuthLayout>
           );
         } else {
           return (
-            <div>
-              <Title>{t('signIn')} CAS</Title>
-              {<a href="/cas/login" class="btn btn-primary">{t('signIn')}</a>}
+            <AuthLayout eyebrow={t('authWelcomeBackEyebrow')} title={`${t('signIn')} CAS`}>
+              {<a href="/cas/login" className="btn btn-primary cn-auth-submit">{t('signIn')}</a>}
               {passwordResetLink}
-             </div>
+            </AuthLayout>
           );
         }
     }

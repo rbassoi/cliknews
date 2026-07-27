@@ -2,10 +2,11 @@
 
 import React, {Component} from 'react';
 import {withTranslation} from '../lib/i18n';
-import {Title, withPageHelpers} from '../lib/page'
+import {withPageHelpers} from '../lib/page'
 import {Button, ButtonRow, Form, FormSendMethod, InputField, withForm, withFormErrorHandlers} from '../lib/form';
 import {withErrorHandling} from '../lib/error-handling';
 import {withComponentMixins} from "../lib/decorator-helpers";
+import AuthLayout from './AuthLayout';
 
 @withComponentMixins([
     withTranslation,
@@ -62,21 +63,17 @@ export default class Forget extends Component {
         const t = this.props.t;
 
         return (
-            <div>
-                <Title>{t('passwordReset')}</Title>
-
-                <p>{t('pleaseProvideTheUsernameOrEmailAddress')}</p>
-
-                <p>{t('weWillSendYouAnEmailThatWillAllowYouTo')}</p>
+            <AuthLayout title={t('passwordReset')} subtitle={t('weWillSendYouAnEmailThatWillAllowYouTo')}>
+                <p className="cn-auth-hint">{t('pleaseProvideTheUsernameOrEmailAddress')}</p>
 
                 <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
-                    <InputField id="usernameOrEmail" label={t('usernameOrEmail')}/>
+                    <InputField format="wide" id="usernameOrEmail" label={t('usernameOrEmail')}/>
 
                     <ButtonRow>
-                        <Button type="submit" className="btn-primary" icon="check" label={t('sendEmail')}/>
+                        <Button type="submit" className="btn-primary cn-auth-submit" icon="check" label={t('sendEmail')}/>
                     </ButtonRow>
                 </Form>
-            </div>
+            </AuthLayout>
         );
     }
 }

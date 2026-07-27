@@ -15,14 +15,16 @@ function getMenus(t) {
             title: t('passwordReset-1'),
             extraParams: [':username?'],
             link: '/login/forgot',
-            panelComponent: Reset
+            panelComponent: Reset,
+            panelInFullScreen: true
         };
 
         subPaths.reset = {
             title: t('passwordReset-1'),
             extraParams: [':username', ':resetToken'],
             link: '/login/reset',
-            panelComponent: ResetLink
+            panelComponent: ResetLink,
+            panelInFullScreen: true
         };
     }
 
@@ -31,6 +33,7 @@ function getMenus(t) {
             title: t('signIn'),
             link: '/login',
             panelComponent: Login,
+            panelInFullScreen: true,
 
             children: subPaths
         }

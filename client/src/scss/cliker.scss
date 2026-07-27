@@ -502,6 +502,199 @@ body.cliker {
     font-size: 13px;
     max-width: 260px;
   }
+
+  // Full-bleed auth screens (login, forgot/reset password). Rendered via
+  // panelInFullScreen so none of the sidebar/breadcrumb chrome above applies;
+  // this owns the whole viewport on its own.
+  .cn-auth {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .cn-auth-hero {
+    position: relative;
+    flex: 1 1 46%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $cn-space-12;
+    overflow: hidden;
+    background: linear-gradient(160deg, oklch(0.4 0.16 250), $cn-accent 65%, oklch(0.62 0.16 235));
+    color: white;
+
+    &::before, &::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: oklch(1 0 0 / 0.08);
+      pointer-events: none;
+    }
+
+    &::before {
+      width: 480px;
+      height: 480px;
+      top: -160px;
+      right: -140px;
+    }
+
+    &::after {
+      width: 360px;
+      height: 360px;
+      bottom: -180px;
+      left: -120px;
+      background: oklch(1 0 0 / 0.06);
+    }
+  }
+
+  .cn-auth-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 440px;
+  }
+
+  .cn-auth-brand {
+    display: flex;
+    align-items: center;
+    gap: $cn-space-3;
+    color: white;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    margin-bottom: $cn-space-12;
+
+    &:hover {
+      color: white;
+      text-decoration: none;
+    }
+  }
+
+  .cn-auth-brand-mobile {
+    display: none;
+  }
+
+  .cn-auth-hero .cn-auth-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: $cn-radius-md;
+    background: oklch(1 0 0 / 0.9);
+    flex-shrink: 0;
+  }
+
+  .cn-auth-hero h1 {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin-bottom: $cn-space-6;
+  }
+
+  .cn-auth-hero p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: oklch(1 0 0 / 0.85);
+    margin-bottom: $cn-space-11;
+  }
+
+  .cn-auth-features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $cn-space-6;
+  }
+
+  .cn-auth-features li {
+    display: flex;
+    align-items: center;
+    gap: $cn-space-4;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .cn-auth-feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: $cn-radius-md;
+    background: oklch(1 0 0 / 0.14);
+  }
+
+  .cn-auth-panel {
+    flex: 1 1 54%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $cn-space-12;
+    background: $cn-bg-page;
+  }
+
+  .cn-auth-panel-inner {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .cn-auth-eyebrow {
+    color: $cn-accent-text;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: $cn-space-3;
+  }
+
+  .cn-auth-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: $cn-text-primary;
+    margin-bottom: $cn-space-3;
+  }
+
+  .cn-auth-subtitle, .cn-auth-hint {
+    color: $cn-text-secondary;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: $cn-space-9;
+  }
+
+  @media (max-width: 900px) {
+    .cn-auth-hero {
+      display: none;
+    }
+
+    .cn-auth-panel {
+      flex: 1 1 100%;
+      padding: $cn-space-8 $cn-space-6;
+    }
+
+    .cn-auth-brand-mobile {
+      display: flex;
+      align-items: center;
+      gap: $cn-space-3;
+      color: $cn-text-primary;
+      font-weight: 800;
+      font-size: 18px;
+      margin-bottom: $cn-space-9;
+
+      &:hover {
+        color: $cn-text-primary;
+        text-decoration: none;
+      }
+
+      .cn-auth-logo {
+        width: 28px;
+        height: 28px;
+        border-radius: $cn-radius-md;
+        background: $cn-accent;
+      }
+    }
+  }
 }
 
 .gpg-text {

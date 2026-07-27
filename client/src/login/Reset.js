@@ -2,7 +2,7 @@
 
 import React, {Component} from 'react';
 import {withTranslation} from '../lib/i18n';
-import {Title, withPageHelpers} from '../lib/page'
+import {withPageHelpers} from '../lib/page'
 import {Link} from 'react-router-dom'
 import {
     Button,
@@ -20,6 +20,7 @@ import axios from '../lib/axios';
 import interoperableErrors from '../../../shared/interoperable-errors';
 import {getUrl} from "../lib/urls";
 import {withComponentMixins} from "../lib/decorator-helpers";
+import AuthLayout from './AuthLayout';
 
 const ResetTokenValidationState = {
     PENDING: 0,
@@ -137,32 +138,30 @@ export default class Account extends Component {
 
         if (this.state.resetTokenValidationState === ResetTokenValidationState.PENDING) {
             return (
-                <p>{t('validatingPasswordResetToken')}</p>
+                <AuthLayout title={t('passwordReset-1')}>
+                    <p className="cn-auth-hint">{t('validatingPasswordResetToken')}</p>
+                </AuthLayout>
             );
 
         } else if (this.state.resetTokenValidationState === ResetTokenValidationState.INVALID) {
             return (
-                <div>
-                    <Title>{t('thePasswordCannotBeReset')}</Title>
-
-                    <p>{t('thePasswordResetTokenHasExpired')}{' '}<Link to={`/login/forgot/${this.getFormValue('username')}`}>{t('clickHereToRequestANewPasswordResetLink')}</Link></p>
-                </div>
+                <AuthLayout title={t('thePasswordCannotBeReset')}>
+                    <p className="cn-auth-hint">{t('thePasswordResetTokenHasExpired')}{' '}<Link to={`/login/forgot/${this.getFormValue('username')}`}>{t('clickHereToRequestANewPasswordResetLink')}</Link></p>
+                </AuthLayout>
             );
 
         } else {
             return (
-                <div>
-                    <Title>{t('setNewPasswordFor') + ' ' + this.getFormValue('username')}</Title>
-
+                <AuthLayout title={t('setNewPasswordFor') + ' ' + this.getFormValue('username')}>
                     <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
-                        <InputField id="password" label={t('newPassword')} type="password"/>
-                        <InputField id="password2" label={t('confirmPassword')} type="password"/>
+                        <InputField format="wide" id="password" label={t('newPassword')} type="password"/>
+                        <InputField format="wide" id="password2" label={t('confirmPassword')} type="password"/>
 
                         <ButtonRow>
-                            <Button type="submit" className="btn-primary" icon="check" label={t('resetPassword')}/>
+                            <Button type="submit" className="btn-primary cn-auth-submit" icon="check" label={t('resetPassword')}/>
                         </ButtonRow>
                     </Form>
-                </div>
+                </AuthLayout>
             );
         }
     }
