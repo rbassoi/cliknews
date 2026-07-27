@@ -1,7 +1,7 @@
-# ClikNews → SaaS Multi-Tenant — Detalhamento Completo
+# Cliker → SaaS Multi-Tenant — Detalhamento Completo
 ### Schema, código, infraestrutura e landing comercial
 
-Este documento assume a arquitetura padrão do ClikNews (derivada de Mailtrain): `server/models/*.js` para acesso a dados, `server/routes/rest/*.js` para API REST, `server/lib/*.js` para infra (mysql, mongo, redis, mailers), `client/src` para o app React/Vue do usuário logado, e Zone-MTA embutido para envio. Ajuste os caminhos exatos conforme a estrutura real do seu fork, mas a lógica abaixo se aplica diretamente.
+Este documento assume a arquitetura padrão do Cliker (derivada de Mailtrain): `server/models/*.js` para acesso a dados, `server/routes/rest/*.js` para API REST, `server/lib/*.js` para infra (mysql, mongo, redis, mailers), `client/src` para o app React/Vue do usuário logado, e Zone-MTA embutido para envio. Ajuste os caminhos exatos conforme a estrutura real do seu fork, mas a lógica abaixo se aplica diretamente.
 
 ---
 
@@ -489,7 +489,7 @@ A landing comercial **não deve morar dentro do client logado**. Ela é um site 
 
 1. **Hero**: proposta de valor em uma frase + CTA "Começar grátis" (leva ao signup) + CTA secundário "Ver planos"
 2. **Prova social**: logos de clientes (se houver) ou números (ex: "X milhões de e-mails entregues")
-3. **Features principais**: segmentação, automação, editor de templates (MJML), relatórios — puxar do que o ClikNews já faz bem
+3. **Features principais**: segmentação, automação, editor de templates (MJML), relatórios — puxar do que o Cliker já faz bem
 4. **Tabela de planos** (Free / Starter / Business / Enterprise) — mesma fonte de dados da tabela `plans` do banco, renderizada via API pública `/api/public/plans` para nunca ficar dessincronizada do que está realmente configurado no sistema de billing
 5. **Comparação com concorrentes** (opcional, mas a Brevo faz isso — "por que trocar")
 6. **FAQ** (perguntas sobre migração de outra plataforma, LGPD, suporte em português)
@@ -543,7 +543,7 @@ services:
       - "3005:3000"
 ```
 
-Nginx/reverse proxy: `www.suamarca.com` → serviço `landing`; `app.suamarca.com` → serviço `cliknews` (trusted); manter `sbox-` e endpoint público de listas como já estão hoje.
+Nginx/reverse proxy: `www.suamarca.com` → serviço `landing`; `app.suamarca.com` → serviço `cliker` (trusted); manter `sbox-` e endpoint público de listas como já estão hoje.
 
 ---
 
