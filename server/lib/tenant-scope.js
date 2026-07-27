@@ -58,7 +58,7 @@ function requireAccountScopeOn(tableName) {
 // migrated to per-account isolation in this pass (see docs/saas-plan.md).
 const ACCOUNT_SCOPED_ENTITY_TYPES = new Set([
     'namespace', 'list', 'campaign', 'template', 'sendConfiguration', 'user',
-    'channel', 'mosaicoTemplate', 'report', 'reportTemplate', 'customForm'
+    'channel', 'mosaicoTemplate', 'report', 'reportTemplate', 'customForm', 'company'
 ]);
 
 module.exports = {

@@ -121,6 +121,12 @@ const entityTypes = {
     user: {
         entitiesTable: 'users',
         clientLink: id => `/users/${id}`
+    },
+    company: {
+        entitiesTable: 'companies',
+        sharesTable: 'shares_company',
+        permissionsTable: 'permissions_company',
+        clientLink: id => `/companies/${id}`
     }
 };
 

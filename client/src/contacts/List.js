@@ -95,6 +95,19 @@ export default class List extends Component {
                 data: 3,
                 title: t('added'),
                 render: data => data ? moment(data).fromNow() : ''
+            },
+            {
+                data: 5,
+                title: t('company'),
+                // Inferred purely from the contact's email domain matching a Companies
+                // entry (server/models/contacts.js) — not a manual link, so this is
+                // just a plain label, not an editable/actionable field. Like the
+                // "lists" column above, it's a MIN()/aggregate alias, not a real
+                // column, so it can't be referenced in dt-helpers' generic WHERE-based
+                // search/sort (MySQL doesn't allow SELECT aliases in WHERE).
+                sortable: false,
+                searchable: false,
+                render: data => data || ''
             }
         ];
 

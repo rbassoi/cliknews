@@ -61,6 +61,7 @@ const editorsRest = require('./routes/rest/editors');
 const filesRest = require('./routes/rest/files');
 const settingsRest = require('./routes/rest/settings');
 const contactsRest = require('./routes/rest/contacts');
+const companiesRest = require('./routes/rest/companies');
 const dashboardRest = require('./routes/rest/dashboard');
 const sendingDomainsRest = require('./routes/rest/sending-domains');
 const apiKeysRest = require('./routes/rest/api-keys');
@@ -368,6 +369,7 @@ async function createApp(appType) {
         app.use('/rest', filesRest);
         app.use('/rest', settingsRest);
         app.use('/rest', contactsRest);
+        app.use('/rest', companiesRest);
         app.use('/rest', dashboardRest);
         app.use('/rest', sendingDomainsRest);
         app.use('/rest', apiKeysRest);

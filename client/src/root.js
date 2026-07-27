@@ -9,6 +9,7 @@ import account from './account/root';
 import login from './login/root';
 import blacklist from './blacklist/root';
 import contacts from './contacts/root';
+import companies from './companies/root';
 import lists from './lists/root';
 import namespaces from './namespaces/root';
 import reports from './reports/root';
@@ -29,7 +30,7 @@ import {getUrl} from "./lib/urls";
 import {withComponentMixins} from "./lib/decorator-helpers";
 import Update from "./settings/Update";
 
-const topLevelMenuKeys = ['contacts', 'lists', 'forms', 'channels', 'templates', 'campaigns'];
+const topLevelMenuKeys = ['contacts', 'companies', 'lists', 'forms', 'channels', 'templates', 'campaigns'];
 
 if (clikerConfig.reportsEnabled) {
     topLevelMenuKeys.push('reports');
@@ -128,6 +129,7 @@ class Root extends Component {
             children: {
                 ...login.getMenus(t),
                 ...contacts.getMenus(t),
+                ...companies.getMenus(t),
                 ...lists.getMenus(t),
                 ...reports.getMenus(t),
                 ...templates.getMenus(t),

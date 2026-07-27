@@ -63,7 +63,25 @@ async function listDTAjax(context, listId, status, params) {
             tx,
             params,
             builder => {
-                let query = builder.from(unionSource);
+                let query = builder.from(unionSource)
+                    // Contacts have no company_id of their own (they live in per-list
+                    // subscription__X tables, not a single contacts table), so a
+                    // company is inferred purely by matching the email's domain —
+                    // the account_id check lives in the ON clause (not a WHERE) so a
+                    // LEFT JOIN with no matching company still returns the contact row.
+                    // Joined as a derived table exposing only (domain, name, account_id)
+                    // rather than the raw `companies` table — the full table also has a
+                    // `created` column, which collides with the union's own `created`
+                    // and makes dt-helpers' generic unqualified search clause ambiguous.
+                    .leftJoin(
+                        tx('companies').select('domain', 'name', 'account_id').as('companies'),
+                        function () {
+                            this.on(knex.raw("SUBSTRING_INDEX(u.email, '@', -1)"), '=', 'companies.domain');
+                            if (context.account && context.account.id) {
+                                this.andOn('companies.account_id', '=', knex.raw('?', [context.account.id]));
+                            }
+                        }
+                    );
                 if (status) {
                     query = query.where('u.status', status);
                 }
@@ -74,7 +92,8 @@ async function listDTAjax(context, listId, status, params) {
                 { name: 'email', raw: 'min(u.email) as `email`' },
                 { name: 'status', raw: 'min(u.status) as `status`' },
                 { name: 'created', raw: 'min(u.created) as `created`' },
-                { name: 'lists', raw: 'group_concat(distinct u.list_name separator \';\') as `lists`' }
+                { name: 'lists', raw: 'group_concat(distinct u.list_name separator \';\') as `lists`' },
+                { name: 'company_name', raw: 'min(companies.name) as `company_name`' }
             ]
         );
     });
