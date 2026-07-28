@@ -127,6 +127,12 @@ export default class Login extends Component {
                         {passwordResetLink}
                     </ButtonRow>
                 </Form>
+
+                {clikerConfig.isAuthMethodLocal &&
+                    <p className="cn-auth-hint" style={{marginTop: 24, marginBottom: 0}}>
+                        {t('dontHaveAnAccount')} <Link to="/signup">{t('signUp')}</Link>
+                    </p>
+                }
             </AuthLayout>
           );
         } else {

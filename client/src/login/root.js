@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Login from './Login';
+import SignUp from './SignUp';
 import Reset from './Forgot';
 import ResetLink from './Reset';
 import clikerConfig from 'clikerConfig';
@@ -9,6 +10,7 @@ import clikerConfig from 'clikerConfig';
 
 function getMenus(t) {
     const subPaths = {}
+    const menus = {};
 
     if (clikerConfig.isAuthMethodLocal) {
         subPaths.forgot = {
@@ -26,18 +28,25 @@ function getMenus(t) {
             panelComponent: ResetLink,
             panelInFullScreen: true
         };
+
+        menus.signup = {
+            title: t('signUp'),
+            link: '/signup',
+            panelComponent: SignUp,
+            panelInFullScreen: true
+        };
     }
 
-    return {
-        'login': {
-            title: t('signIn'),
-            link: '/login',
-            panelComponent: Login,
-            panelInFullScreen: true,
+    menus.login = {
+        title: t('signIn'),
+        link: '/login',
+        panelComponent: Login,
+        panelInFullScreen: true,
 
-            children: subPaths
-        }
+        children: subPaths
     };
+
+    return menus;
 }
 
 export default {

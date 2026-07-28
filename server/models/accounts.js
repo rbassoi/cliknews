@@ -3,8 +3,15 @@
 const knex = require('../lib/knex');
 const hasher = require('node-object-hash')();
 const shares = require('./shares');
+const plans = require('./plans');
 const interoperableErrors = require('../../shared/interoperable-errors');
 const { enforce, filterObject } = require('../lib/helpers');
+const shortid = require('../lib/shortid');
+const tools = require('../lib/tools');
+const passwordValidator = require('../../shared/password-validator')();
+const bluebird = require('bluebird');
+const bcrypt = require('bcrypt-nodejs');
+const bcryptHash = bluebird.promisify(bcrypt.hash.bind(bcrypt));
 
 // This model is intentionally infrastructure-level (no `context`/ACL
 // parameter): it's what resolves *which* account a request belongs to
@@ -64,8 +71,90 @@ async function setStatus(id, status) {
     await knex('accounts').where('id', id).update({status});
 }
 
+function slugify(name) {
+    return (name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60) || 'account';
+}
+
+// Bootstraps a brand-new account + root namespace + master user together, all in
+// one shot — the one case where none of the usual context-scoped create() functions
+// apply, because there is no context (no account, no namespace, no user) yet for
+// them to be scoped by. See the file-level comment above for why this model is
+// infrastructure-level and takes no `context` param.
+async function signup(entity) {
+    enforce(await tools.validateEmail(entity.email) === 0, 'Invalid email');
+
+    const passwordResult = passwordValidator.test(entity.password);
+    enforce(passwordResult.errors.length === 0, 'Invalid password');
+
+    return await knex.transaction(async tx => {
+        if (await tx('users').where('email', entity.email).first()) {
+            throw new interoperableErrors.DuplicitEmailError();
+        }
+
+        const freePlan = await plans.getByCode('free');
+        enforce(freePlan, 'Free plan is not configured');
+
+        let slug = slugify(entity.companyName || entity.name);
+        while (await tx('accounts').where('slug', slug).first()) {
+            slug = slugify(entity.companyName || entity.name) + '-' + shortid.generate().slice(0, 6).toLowerCase();
+        }
+
+        const accountIds = await tx('accounts').insert({
+            name: entity.companyName || entity.name,
+            slug,
+            status: 'active',
+            plan_id: freePlan.id
+        });
+        const accountId = accountIds[0];
+
+        const namespaceIds = await tx('namespaces').insert({
+            name: 'Root',
+            namespace: null,
+            account_id: accountId
+        });
+        const namespaceId = namespaceIds[0];
+
+        let username = (entity.email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9._-]/g, '');
+        if (!username) {
+            username = 'user';
+        }
+        let suffix = 0;
+        let candidateUsername = username;
+        while (await tx('users').where('username', candidateUsername).first()) {
+            suffix += 1;
+            candidateUsername = username + suffix;
+        }
+
+        const hashedPassword = await bcryptHash(entity.password, null, null);
+
+        const userIds = await tx('users').insert({
+            username: candidateUsername,
+            name: entity.name,
+            email: entity.email,
+            password: hashedPassword,
+            // Not 'master' (Global Master) — that role carries rootNamespaceRole,
+            // a holdover from the pre-multi-tenant single-root-namespace design
+            // (see the comment on the rootNamespaceRole check in shares.js). This
+            // role grants full control of the new account's own namespace only.
+            role: 'accountOwner',
+            namespace: namespaceId,
+            account_id: accountId
+        });
+        const userId = userIds[0];
+
+        await shares.rebuildPermissionsTx(tx, { userId });
+
+        return userId;
+    });
+}
+
 module.exports.getById = getById;
 module.exports.getByIdWithPlan = getByIdWithPlan;
 module.exports.setStatus = setStatus;
 module.exports.hash = hash;
 module.exports.updateOwnAccount = updateOwnAccount;
+module.exports.signup = signup;

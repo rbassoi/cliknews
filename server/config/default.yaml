@@ -291,6 +291,11 @@ defaultRoles:
       description: All permissions
       permissions: [rebuildPermissions, createJavascriptWithROAccess, displayManageUsers, manageBlacklist, manageSettings, setupAutomation]
       rootNamespaceRole: master
+    accountOwner:
+      name: Account Owner
+      description: Full control over their own account's namespace (lists, campaigns, templates, users, etc.) and nothing outside it. Assigned to every self-service signup.
+      permissions: [setupAutomation]
+      ownNamespaceRole: master
     campaignsAdmin:
       name: Campaigns Admin
       description: Under the namespace in which the user is located, the user has all permissions for managing lists, templates and campaigns and the permission to send to send configurations.

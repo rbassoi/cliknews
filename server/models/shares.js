@@ -199,12 +199,32 @@ async function rebuildPermissionsTx(tx, restriction) {
                 desiredRoles.set(user.namespace, roleConf.ownNamespaceRole);
             }
 
-            if (roleConf.rootNamespaceRole) {
+            // SECURITY: rootNamespaceRole grants access to namespace 1 specifically
+            // (shared/namespaces.js:getGlobalNamespaceId() is hardcoded, a holdover
+            // from the pre-multi-tenant single-root-namespace design). Namespace 1
+            // belongs to one particular account. Before multi-tenancy this was safe
+            // because "role: master" only ever existed on the one true admin (user
+            // id 1) — but any account owner can pick "Global Master" for a new user
+            // they create in their own account (client/src/users/CUD.js's role
+            // picker offers every global role), and every self-service signup was
+            // assigning this role too, both of which would otherwise hand a
+            // same-named-role user in ANY account full read/write access to
+            // namespace 1's account — a cross-tenant leak. Restricting this grant to
+            // the actual hardcoded admin user keeps the "can't lock yourself out of
+            // your own root namespace" guarantee for that one user while closing the
+            // leak for everyone else with the same role name.
+            if (roleConf.rootNamespaceRole && user.id === getAdminId()) {
                 desiredRoles.set(getGlobalNamespaceId(), roleConf.rootNamespaceRole);
             }
 
+            // Full reconcile, not just additive grants: an auto share this user held
+            // previously (e.g. the rootNamespaceRole grant above, before the fix that
+            // restricted it to getAdminId()) but that's no longer in desiredRoles must
+            // be revoked here too, or it lingers forever since the loop below only
+            // ever inserts entries that ARE in desiredRoles.
+            await tx(namespaceEntityType.sharesTable).where({ user: user.id, auto: true }).del();
+
             for (const [nsId, role] of desiredRoles.entries()) {
-                await tx(namespaceEntityType.sharesTable).where({ user: user.id, entity: nsId }).del();
                 await tx(namespaceEntityType.sharesTable).insert({ user: user.id, entity: nsId, role: role, auto: true });
             }
         }

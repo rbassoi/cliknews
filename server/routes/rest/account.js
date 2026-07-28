@@ -52,6 +52,16 @@ router.postAsync('/access-token-reset', passport.loggedIn, passport.csrfProtecti
 });
 
 
+router.postAsync('/signup', passport.csrfProtection, async (req, res) => {
+    const userId = await accounts.signup(req.body);
+
+    await new Promise((resolve, reject) => {
+        req.logIn({id: userId}, err => err ? reject(err) : resolve());
+    });
+
+    return res.json();
+});
+
 router.post('/login', passport.csrfProtection, passport.restLogin);
 router.post('/logout', passport.csrfProtection, passport.restLogout);
 
