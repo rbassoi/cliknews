@@ -15,6 +15,7 @@ const namespaceHelpers = require('../lib/namespace-helpers');
 const { EntityActivityType } = require('../../shared/activity-log');
 const activityLog = require('../lib/activity-log');
 const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
+const { SubscriptionSource } = require('../../shared/lists');
 
 const allowedKeys = new Set(['name', 'email', 'company_id', 'custom_fields', 'namespace']);
 
@@ -54,7 +55,7 @@ function buildContactsUnion(tx, permittedLists) {
     return tx.raw(sql, bindings);
 }
 
-async function listDTAjax(context, status, params) {
+async function listDTAjax(context, status, excludeListId, params) {
     return await knex.transaction(async tx => {
         const permittedLists = await getPermittedListsTx(tx, context);
         const unionSource = permittedLists.length > 0 ? buildContactsUnion(tx, permittedLists) : null;
@@ -68,6 +69,16 @@ async function listDTAjax(context, status, params) {
                 let query = builder
                     .from('contacts')
                     .leftJoin('companies', 'companies.id', 'contacts.company_id');
+
+                if (excludeListId) {
+                    // excludeListId is castToInteger'd at the route layer before it ever
+                    // reaches here, so it's safe to interpolate into the table name —
+                    // same trust boundary buildContactsUnion already relies on above.
+                    const excludeTable = subscriptions.getSubscriptionTableName(excludeListId);
+                    query = query.whereNotExists(function () {
+                        this.select(1).from(excludeTable).whereRaw(`${excludeTable}.email = contacts.email`);
+                    });
+                }
 
                 if (unionSource) {
                     let subsBuilder = tx
@@ -134,6 +145,33 @@ async function getById(context, id, withPermissions = true) {
     return await knex.transaction(async tx => {
         return await getByIdTx(tx, context, id, withPermissions);
     });
+}
+
+/**
+ * Called from the list-import worker (server/services/importer.js) right after a row
+ * is successfully subscribed, so contacts uploaded via a list's own CSV import also
+ * show up in the global Contacts view — not just contacts created directly. Never
+ * clobbers an existing contact's name (only fills it in if currently empty), since the
+ * contact may have since been edited by hand.
+ */
+async function upsertFromEmailTx(tx, accountId, namespaceId, email, name) {
+    const existing = await tx('contacts').where({ account_id: accountId, email }).first();
+
+    if (!existing) {
+        const ids = await tx('contacts').insert({
+            account_id: accountId,
+            namespace: namespaceId,
+            email,
+            name: name || null
+        });
+
+        // Without this, the new contact has no permissions_contact rows at all and
+        // is invisible everywhere the datatable permission-filters on 'view' (i.e.
+        // everywhere) — the exact same step create() does after its own insert.
+        await shares.rebuildPermissionsTx(tx, { entityTypeId: 'contact', entityId: ids[0] });
+    } else if (name && !existing.name) {
+        await tx('contacts').where('id', existing.id).update({ name });
+    }
 }
 
 async function create(context, entity) {
@@ -208,6 +246,41 @@ async function remove(context, id) {
     });
 }
 
+/**
+ * Subscribes a batch of existing contacts (by id) to a list, reusing the same
+ * subscription-creation logic as the manual single-subscriber form
+ * (subscriptions.js:create, source ADMIN_FORM) — no bulk-specific list logic
+ * reinvented here. A contact already actively subscribed to the list is skipped
+ * (not an error for the batch as a whole); one already unsubscribed is left alone
+ * rather than silently re-subscribed, same reasoning.
+ */
+async function addToList(context, listId, contactIds) {
+    const rows = await knex('contacts').whereIn('id', contactIds).modify(requireAccountScope, context).select(['id', 'email']);
+
+    const addedEmails = [];
+    const alreadySubscribedEmails = [];
+
+    for (const row of rows) {
+        try {
+            await subscriptions.create(context, listId, { email: row.email }, SubscriptionSource.ADMIN_FORM, { subscribeIfNoExisting: true });
+            addedEmails.push(row.email);
+        } catch (err) {
+            if (err instanceof interoperableErrors.DuplicitEmailError) {
+                alreadySubscribedEmails.push(row.email);
+            } else {
+                throw err;
+            }
+        }
+    }
+
+    return {
+        added: addedEmails.length,
+        alreadySubscribed: alreadySubscribedEmails.length,
+        addedEmails,
+        alreadySubscribedEmails
+    };
+}
+
 /** Total number of contacts visible to the given context (their own account's contacts table). */
 async function getTotalCount(context) {
     const row = await knex('contacts').modify(requireAccountScope, context).count('id as cnt').first();
@@ -269,11 +342,13 @@ async function* contactsIterator(context, status) {
 }
 
 module.exports.hash = hash;
+module.exports.upsertFromEmailTx = upsertFromEmailTx;
 module.exports.listDTAjax = listDTAjax;
 module.exports.getByIdTx = getByIdTx;
 module.exports.getById = getById;
 module.exports.create = create;
 module.exports.updateWithConsistencyCheck = updateWithConsistencyCheck;
 module.exports.remove = remove;
+module.exports.addToList = addToList;
 module.exports.getTotalCount = getTotalCount;
 module.exports.contactsIterator = contactsIterator;

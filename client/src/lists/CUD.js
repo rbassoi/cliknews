@@ -27,6 +27,10 @@ import {FieldWizard, UnsubscriptionMode} from '../../../shared/lists';
 import styles from "../lib/styles.scss";
 import {getMailerTypes} from "../send-configurations/helpers";
 import {withComponentMixins} from "../lib/decorator-helpers";
+import {TableSelectMode} from '../lib/table';
+import axios from '../lib/axios';
+import {getUrl} from '../lib/urls';
+import {formatAddToListResult} from '../contacts/helpers';
 
 @withComponentMixins([
     withTranslation,
@@ -90,7 +94,8 @@ export default class CUD extends Component {
                 to_name: '',
                 fieldWizard: FieldWizard.FIRST_LAST_NAME,
                 send_configuration: null,
-                listunsubscribe_disabled: false
+                listunsubscribe_disabled: false,
+                contacts: []
             });
         }
     }
@@ -147,10 +152,18 @@ export default class CUD extends Component {
                     this.setFormStatusMessage('success', t('listUpdated'));
                 }
             } else {
+                let flashMsg = t('listCreated');
+
+                const contactIds = this.getFormValue('contacts') || [];
+                if (contactIds.length > 0) {
+                    const addResp = await axios.post(getUrl(`rest/contacts-add-to-list/${submitResult}`), {contactIds});
+                    flashMsg += ' ' + formatAddToListResult(t, addResp.data);
+                }
+
                 if (submitAndLeave) {
-                    this.navigateToWithFlashMessage('/lists', 'success', t('listCreated'));
+                    this.navigateToWithFlashMessage('/lists', 'success', flashMsg);
                 } else {
-                    this.navigateToWithFlashMessage(`/lists/${submitResult}/edit`, 'success', t('listCreated'));
+                    this.navigateToWithFlashMessage(`/lists/${submitResult}/edit`, 'success', flashMsg);
                 }
             }
         } else {
@@ -196,6 +209,12 @@ export default class CUD extends Component {
                 key: 'custom',
                 label: t('customFormsSelectFormBelow')
             }
+        ];
+
+        const contactsColumns = [
+            {data: 1, title: t('email')},
+            {data: 2, title: t('name')},
+            {data: 6, title: t('company')}
         ];
 
         const customFormsColumns = [
@@ -264,6 +283,10 @@ export default class CUD extends Component {
                     }
 
                     <TextArea id="description" label={t('description')}/>
+
+                    {!isEdit &&
+                        <TableSelect id="contacts" format="wide" label={t('contacts')} selectionAsArray withHeader dropdown selectMode={TableSelectMode.MULTI} dataUrl="rest/contacts-table" columns={contactsColumns} selectionLabelIndex={1} help={t('optionallySelectContactsToSubscribeToThisNewList')}/>
+                    }
 
                     <InputField id="contact_email" label={t('contactEmail')} help={t('contactEmailUsedInSubscriptionFormsAnd')}/>
                     <InputField id="homepage" label={t('homepage')} help={t('homepageUrlUsedInSubscriptionFormsAnd')}/>

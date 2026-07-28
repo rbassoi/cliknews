@@ -3,7 +3,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {withTranslation} from '../../lib/i18n';
-import {LinkButton, requiresAuthenticatedUser, Title, Toolbar, withPageHelpers} from '../../lib/page';
+import {requiresAuthenticatedUser, Title, Toolbar, withPageHelpers} from '../../lib/page';
 import {withErrorHandling} from '../../lib/error-handling';
 import {Table} from '../../lib/table';
 import {SubscriptionStatus} from '../../../../shared/lists';
@@ -21,6 +21,8 @@ import {
 } from "../../lib/modals";
 import listStyles from "../styles.scss";
 import {withComponentMixins} from "../../lib/decorator-helpers";
+import AddFromContactsModal from './AddFromContactsModal';
+import {formatAddToListResult} from '../../contacts/helpers';
 
 @withComponentMixins([
     withTranslation,
@@ -35,7 +37,9 @@ export default class List extends Component {
 
         const t = props.t;
 
-        this.state = {};
+        this.state = {
+            isAddFromContactsModalOpen: false
+        };
         tableRestActionDialogInit(this);
 
         this.subscriptionStatusLabels = getSubscriptionStatusLabels(t);
@@ -167,8 +171,27 @@ export default class List extends Component {
                 <Toolbar>
                     <a href={getPublicUrl(`subscription/${this.props.list.cid}`, {withLocale: true})}><Button label={t('subscriptionForm-1')} className="btn-secondary"/></a>
                     <a href={getUrl(`subscriptions/export/${this.props.list.id}/`+ (this.props.segmentId || 0))}><Button label={t('exportAsCsv')} className="btn-primary"/></a>
-                    <LinkButton to={`/lists/${this.props.list.id}/subscriptions/create`} className="btn-primary" icon="plus" label={t('addSubscriber')}/>
+                    {list.permissions.includes('manageSubscriptions') &&
+                        <Button
+                            className="btn-primary"
+                            icon="plus"
+                            label={t('addSubscriber')}
+                            onClickAsync={() => this.setState({isAddFromContactsModalOpen: true})}
+                        />
+                    }
                 </Toolbar>
+
+                {this.state.isAddFromContactsModalOpen &&
+                    <AddFromContactsModal
+                        listId={list.id}
+                        onClose={() => this.setState({isAddFromContactsModalOpen: false})}
+                        onDone={result => {
+                            this.setState({isAddFromContactsModalOpen: false});
+                            this.table.refresh();
+                            this.setFlashMessage('success', formatAddToListResult(t, result));
+                        }}
+                    />
+                }
 
                 <Title>{t('subscribers')}</Title>
 

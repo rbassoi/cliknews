@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import {withTranslation} from '../lib/i18n';
 import {LinkButton, requiresAuthenticatedUser, Toolbar, withPageHelpers} from '../lib/page';
 import {withErrorHandling} from '../lib/error-handling';
-import {Table} from '../lib/table';
+import {Table, TableSelectMode} from '../lib/table';
 import {Button, Icon, Pill} from '../lib/bootstrap-components';
 import {Dropdown, Form, withForm} from '../lib/form';
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from '../lib/modals';
@@ -15,6 +15,8 @@ import {getUrl} from '../lib/urls';
 import moment from 'moment';
 import {withComponentMixins} from "../lib/decorator-helpers";
 import ImportListPickerModal from './ImportListPickerModal';
+import AddToListModal from './AddToListModal';
+import {formatAddToListResult} from './helpers';
 
 const statusPillColors = {
     [SubscriptionStatus.SUBSCRIBED]: 'green',
@@ -36,7 +38,9 @@ export default class List extends Component {
 
         const t = props.t;
         this.state = {
-            isImportModalOpen: false
+            isImportModalOpen: false,
+            isAddToListModalOpen: false,
+            selection: []
         };
         this.statusLabels = getSubscriptionStatusLabels(t);
         tableRestActionDialogInit(this);
@@ -161,6 +165,14 @@ export default class List extends Component {
                         <h1 className="cn-page-title">{t('contacts')}</h1>
                     </div>
                     <Toolbar>
+                        {this.state.selection.length > 0 &&
+                            <Button
+                                label={t('addToListCount', {count: this.state.selection.length})}
+                                className="cn-btn cn-btn-secondary"
+                                icon="list"
+                                onClickAsync={() => this.setState({isAddToListModalOpen: true})}
+                            />
+                        }
                         <a href={getUrl('contacts-export' + (this.props.status ? '?status=' + this.props.status : ''))}>
                             <Button label={t('exportAsCsv')} className="cn-btn cn-btn-secondary"/>
                         </a>
@@ -180,13 +192,33 @@ export default class List extends Component {
                     <ImportListPickerModal onClose={() => this.setState({isImportModalOpen: false})}/>
                 }
 
+                {this.state.isAddToListModalOpen &&
+                    <AddToListModal
+                        contactIds={this.state.selection}
+                        onClose={() => this.setState({isAddToListModalOpen: false})}
+                        onDone={result => {
+                            this.setState({isAddToListModalOpen: false, selection: []});
+                            this.table.refresh();
+                            this.setFlashMessage('success', formatAddToListResult(t, result));
+                        }}
+                    />
+                }
+
                 <div className="cn-card" style={{padding: '10px 14px', marginBottom: 14, display: 'inline-block'}}>
                     <Form format="inline" stateOwner={this}>
                         <Dropdown format="inline" id="status" label={t('status')} options={statusOptions}/>
                     </Form>
                 </div>
 
-                <Table ref={node => this.table = node} withHeader dataUrl={dataUrl} columns={columns}/>
+                <Table
+                    ref={node => this.table = node}
+                    withHeader
+                    dataUrl={dataUrl}
+                    columns={columns}
+                    selectMode={TableSelectMode.MULTI}
+                    selection={this.state.selection}
+                    onSelectionChangedAsync={async sel => this.setState({selection: sel})}
+                />
             </div>
         );
     }

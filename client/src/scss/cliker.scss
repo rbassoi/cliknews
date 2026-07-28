@@ -884,6 +884,13 @@ body.cliker {
     tbody tr:hover {
       background-color: var(--cn-bg-hover);
     }
+
+    // Row-click selection (Table's selectMode={MULTI}, e.g. bulk "add to list" on
+    // Contacts) — DataTables' own default .selected style is too subtle to read
+    // against the dark theme, so give it an explicit accent tint.
+    tbody tr.selected, tbody tr.selected:hover {
+      background-color: var(--cn-accent-tint);
+    }
   }
 
   .dataTables_wrapper {

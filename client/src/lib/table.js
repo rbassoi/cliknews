@@ -111,22 +111,66 @@ class Table extends Component {
         return selMap;
     }
 
+    getPageRowKeys() {
+        const self = this;
+        const keys = [];
+        this.table.rows({ page: 'current' }).every(function () {
+            keys.push(this.data()[self.props.selectionKeyIndex]);
+        });
+        return keys;
+    }
+
+    updateHeaderCheckbox() {
+        if (!this.jqHeaderCheckbox) {
+            return;
+        }
+
+        const pageKeys = this.getPageRowKeys();
+        const selectedOnPage = pageKeys.filter(key => this.selectionMap.has(key)).length;
+
+        this.jqHeaderCheckbox.prop('checked', pageKeys.length > 0 && selectedOnPage === pageKeys.length);
+        this.jqHeaderCheckbox.prop('indeterminate', selectedOnPage > 0 && selectedOnPage < pageKeys.length);
+    }
+
     updateSelectInfo() {
         if (!this.jqSelectInfo) {
             return; // If the table is updated very quickly after mounting, the datatable may not be initialized yet.
         }
 
+        if (this.props.selectMode !== TableSelectMode.MULTI) {
+            return;
+        }
+
+        this.updateHeaderCheckbox();
+
         const t = this.props.t;
 
-        const count = this.selectionMap.size;
-        if (this.selectionMap.size > 0) {
-            const jqInfo = jQuery('<span>' + t('countEntriesSelected', { count }) + ' </span>');
-            const jqDeselectLink = jQuery('<a href="">Deselect all.</a>').on('click', ::this.deselectAll);
+        this.jqSelectInfo.empty();
 
-            this.jqSelectInfo.empty().append(jqInfo).append(jqDeselectLink);
-        } else {
-            this.jqSelectInfo.empty();
+        const count = this.selectionMap.size;
+        if (count === 0) {
+            return;
         }
+
+        const pageInfo = this.table.page.info();
+        const recordsDisplay = pageInfo.recordsDisplay;
+
+        if (recordsDisplay > 0 && count >= recordsDisplay) {
+            this.jqSelectInfo.append(jQuery('<span>' + t('allMatchingRecordsSelected', { count }) + ' </span>'));
+        } else {
+            this.jqSelectInfo.append(jQuery('<span>' + t('countEntriesSelected', { count }) + ' </span>'));
+
+            const pageKeys = this.getPageRowKeys();
+            const pageAllSelected = pageKeys.length > 0 && pageKeys.every(key => this.selectionMap.has(key));
+
+            if (pageAllSelected && recordsDisplay > pageKeys.length) {
+                const jqSelectAllLink = jQuery('<a href="">' + t('selectAllMatchingRecords', { count: recordsDisplay }) + '</a>').on('click', ::this.selectAllMatching);
+                this.jqSelectInfo.append(jqSelectAllLink).append(jQuery('<span> &middot; </span>'));
+            }
+        }
+
+        const jqDeselectLink = jQuery('<a href="">' + t('deselectAll') + '</a>').on('click', ::this.deselectAll);
+        this.jqSelectInfo.append(jqDeselectLink);
     }
 
     @withAsyncErrorHandler
@@ -155,7 +199,12 @@ class Table extends Component {
                     });
 
                     const oldSelectionMap = this.selectionMap;
-                    this.selectionMap = new Map();
+                    // Start from the existing map (which already holds full row data
+                    // for any key resolved earlier, e.g. rows on the current page) and
+                    // only fill in the ones that were missing it — replacing the map
+                    // outright here would silently drop those already-resolved keys
+                    // from the selection.
+                    this.selectionMap = new Map(oldSelectionMap);
                     for (const row of response.data) {
                         const key = row[this.props.selectionKeyIndex];
                         if (oldSelectionMap.has(key)) {
@@ -199,9 +248,30 @@ class Table extends Component {
 
         const columns = this.props.columns.slice();
 
+        if (this.props.selectMode === TableSelectMode.MULTI) {
+            columns.unshift({ isSelectionCheckbox: true, title: '' });
+        }
+
         // XSS protection and actions rendering
         for (const column of columns) {
-            if (column.actions) {
+            if (column.isSelectionCheckbox) {
+                const self = this;
+                column.type = 'html';
+                column.data = null;
+                column.orderable = false;
+                column.searchable = false;
+                column.render = () => '';
+                column.createdCell = (td, cellData, rowData) => {
+                    const key = rowData[self.props.selectionKeyIndex];
+                    const checked = self.selectionMap.has(key);
+                    jQuery(td).html(`<input type="checkbox"${checked ? ' checked' : ''}>`);
+                    // The row itself already has a click handler (below) that toggles
+                    // selection — the checkbox is a visual reflection of that same
+                    // state, not a second independent control, so its own default
+                    // toggle-on-click is suppressed to avoid a double-toggle.
+                    jQuery(td).find('input').on('click', evt => evt.preventDefault());
+                };
+            } else if (column.actions) {
                 const createdCellFn = (td, data, rowData) => {
                     const linksContainer = jQuery(`<span class="${styles.actionLinks}"/>`);
 
@@ -280,9 +350,18 @@ class Table extends Component {
             column.title = ReactDOMServer.renderToStaticMarkup(<div>{column.title}</div>);
         }
 
+        // The checkbox column above is a display-only, client-side addition the
+        // server's own column list (server/lib/dt-helpers.js) knows nothing about —
+        // it's always orderable:false/searchable:false, but its mere presence shifts
+        // every real column's *position* in the columns[] array by one. "order"/
+        // "searchCols" are positional (they say "column N"), so they need the same
+        // +1 shift or the server ends up looking up the wrong column (e.g. sorting
+        // by the checkbox column itself, which has data:null → `ORDER BY undefined`).
+        const columnIndexOffset = this.props.selectMode === TableSelectMode.MULTI ? 1 : 0;
+
         const dtOptions = {
             columns,
-            order: [...this.props.order],
+            order: this.props.order.map(([col, dir]) => [col + columnIndexOffset, dir]),
             autoWidth: false,
             pageLength: this.props.pageLength,
             dom: // This overrides Bootstrap 4 settings. It may need to be updated if there are updates in the DataTables Bootstrap 4 plugin.
@@ -293,7 +372,8 @@ class Table extends Component {
         if (this.props.search)
             dtOptions.search = { search: this.props.search };
         if (this.props.searchCols) {
-            dtOptions.searchCols = this.props.searchCols.map(value => value !== null ? ({
+            const searchCols = columnIndexOffset ? [null, ...this.props.searchCols] : this.props.searchCols;
+            dtOptions.searchCols = searchCols.map(value => value !== null ? ({
                 search: value,
             }) : null)
         }
@@ -360,6 +440,17 @@ class Table extends Component {
             const jqWrapper = jQuery(self.domTable).parents('.dataTables_wrapper');
             jQuery('.dataTables_info', jqWrapper).after(self.jqSelectInfo);
 
+            if (self.props.selectMode === TableSelectMode.MULTI) {
+                // The checkbox column is always the first one (see the `unshift` above),
+                // so its header cell is the first <th>. A header checkbox toggling
+                // selection of the whole current page is a standard, more discoverable
+                // pattern than a text link alone.
+                const jqHeaderCell = jQuery(self.domTable).find('thead th').eq(0);
+                self.jqHeaderCheckbox = jQuery('<input type="checkbox">');
+                jqHeaderCell.empty().append(self.jqHeaderCheckbox);
+                self.jqHeaderCheckbox.on('click', evt => self.toggleSelectPage(evt));
+            }
+
             self.updateSelectInfo();
         };
 
@@ -371,6 +462,12 @@ class Table extends Component {
         }
 
         this.table = jQuery(this.domTable).DataTable(dtOptions);
+
+        // Selection state (which rows on the newly-drawn page are selected) can
+        // change on any draw, not just ones triggered by a React prop change
+        // (e.g. the user paginating, searching or sorting), so the info line and
+        // header checkbox need to be refreshed on every draw too.
+        this.table.on('draw.dt', () => self.updateSelectInfo());
 
         if (this.props.refreshInterval) {
             this.refreshIntervalId = setInterval(() => this.refresh(), this.props.refreshInterval);
@@ -397,10 +494,10 @@ class Table extends Component {
         const self = this;
         this.table.rows().every(function() {
             const key = this.data()[self.props.selectionKeyIndex];
-            if (self.selectionMap.has(key)) {
-                jQuery(this.node()).addClass('selected');
-            } else {
-                jQuery(this.node()).removeClass('selected');
+            const isSelected = self.selectionMap.has(key);
+            jQuery(this.node()).toggleClass('selected', isSelected);
+            if (self.props.selectMode === TableSelectMode.MULTI) {
+                jQuery(this.node()).find('input[type="checkbox"]').prop('checked', isSelected);
             }
         });
 
@@ -442,6 +539,60 @@ class Table extends Component {
 
         // noinspection JSIgnoredPromiseFromCall
         this.notifySelection(this.props.onSelectionChangedAsync, new Map());
+    }
+
+    // Bound to the header checkbox. Selects every row on the currently displayed
+    // page if not all of them are already selected, otherwise deselects just this
+    // page's rows (leaving any selection made on other pages untouched).
+    async toggleSelectPage(evt) {
+        evt.preventDefault();
+
+        const self = this;
+        const pageKeys = this.getPageRowKeys();
+        const allSelected = pageKeys.length > 0 && pageKeys.every(key => this.selectionMap.has(key));
+
+        const newSelectionMap = new Map(this.selectionMap);
+        this.table.rows({ page: 'current' }).every(function() {
+            const rowData = this.data();
+            const key = rowData[self.props.selectionKeyIndex];
+            if (allSelected) {
+                newSelectionMap.delete(key);
+            } else {
+                newSelectionMap.set(key, rowData);
+            }
+        });
+
+        // noinspection JSIgnoredPromiseFromCall
+        this.notifySelection(this.props.onSelectionChangedAsync, newSelectionMap);
+    }
+
+    // Fetches every row matching the current search/filter across all pages (not
+    // just the currently loaded one) and adds them all to the selection. Used by
+    // the "select all N matching records" link that appears once a whole page is
+    // already selected and more matching rows exist elsewhere.
+    @withAsyncErrorHandler
+    async selectAllMatching(evt) {
+        evt.preventDefault();
+
+        const recordsDisplay = this.table.page.info().recordsDisplay;
+
+        const MAX_SELECT_ALL_MATCHING = 20000;
+        if (recordsDisplay > MAX_SELECT_ALL_MATCHING) {
+            this.setFlashMessage('danger', this.props.t('tooManyRecordsToSelectAll', { count: MAX_SELECT_ALL_MATCHING }));
+            return;
+        }
+
+        const params = Object.assign({}, this.table.ajax.params(), { start: 0, length: -1 });
+        const response = await axios.post(getUrl(this.props.dataUrl), params);
+
+        const newSelectionMap = new Map(this.selectionMap);
+        for (const rowData of response.data.data) {
+            const key = rowData[this.props.selectionKeyIndex];
+            newSelectionMap.set(key, rowData);
+        }
+
+        // noinspection JSIgnoredPromiseFromCall
+        this.notifySelection(this.props.onSelectionChangedAsync, newSelectionMap);
     }
 
     render() {

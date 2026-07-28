@@ -9,6 +9,7 @@ const {ImportSource, MappingType, ImportStatus, RunStatus} = require('../../shar
 const imports = require('../models/imports');
 const fields = require('../models/fields');
 const subscriptions = require('../models/subscriptions');
+const contacts = require('../models/contacts');
 const { Writable } = require('stream');
 const { cleanupFromPost, enforce } = require('../lib/helpers');
 const contextHelpers = require('../lib/context-helpers');
@@ -154,6 +155,15 @@ function prepareCsv(impt) {
 
 async function _execImportRun(impt, handlers) {
     try {
+        // Resolved once per run (not per row) so successfully-subscribed rows also
+        // show up in the account's global Contacts view — see contacts.js:upsertFromEmailTx.
+        // A missing account/namespace here just means an older/orphaned list; skip the
+        // contacts sync rather than fail the import over it.
+        const importList = await knex('lists').where('id', impt.list).first();
+        const importNamespace = importList
+            ? await knex('namespaces').where({ account_id: importList.account_id, namespace: null }).first()
+            : null;
+
         let imptRun;
 
         // It should not really happen that we have more than one run to be processed for an import. However, to be on the safe side, we process it in a while.
@@ -208,6 +218,16 @@ async function _execImportRun(impt, handlers) {
                                 await subscriptions.createTxWithGroupedFieldsMap(tx, contextHelpers.getAdminContext(), impt.list, groupedFieldsMap, subscr, impt.id, meta);
                                 if (!meta.existing) {
                                     newRows += 1;
+                                }
+
+                                if (importNamespace) {
+                                    try {
+                                        await contacts.upsertFromEmailTx(tx, importList.account_id, importNamespace.id, subscr.email, null);
+                                    } catch (contactErr) {
+                                        // Never let a Contacts sync hiccup fail or roll back a real,
+                                        // successfully-processed import row.
+                                        log.error('Importer', `Failed to sync contact for ${subscr.email}: ${contactErr.message}`);
+                                    }
                                 }
 
                             } catch (err) {
