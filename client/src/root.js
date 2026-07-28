@@ -29,11 +29,19 @@ import axios from './lib/axios';
 import {getUrl} from "./lib/urls";
 import {withComponentMixins} from "./lib/decorator-helpers";
 import Update from "./settings/Update";
+import {getTheme, toggleTheme} from "./lib/theme";
 
-const topLevelMenuKeys = ['contacts', 'companies', 'lists', 'forms', 'channels', 'templates', 'campaigns'];
+// Flat, icon + label sidebar entries (no sub-items in this app's real menu tree —
+// unlike the design handoff's example tree, most of these only ever have one real
+// destination, so a collapsible group would just be empty ceremony around one link).
+const flatMenuKeys = ['contacts', 'companies', 'lists', 'forms', 'channels', 'campaigns'];
+const flatMenuIcons = {
+    contacts: 'user', companies: 'building', lists: 'list', forms: 'clipboard-list',
+    channels: 'broadcast-tower', campaigns: 'paper-plane', reports: 'chart-bar'
+};
 
 if (clikerConfig.reportsEnabled) {
-    topLevelMenuKeys.push('reports');
+    flatMenuKeys.push('reports');
 }
 
 
@@ -55,11 +63,18 @@ class Root extends Component {
         class MainMenu extends Component {
             constructor(props) {
                 super(props);
+                this.state = {
+                    theme: getTheme()
+                };
             }
 
             async logout() {
                 await axios.post(getUrl('rest/logout'));
                 window.location = getUrl();
+            }
+
+            handleToggleTheme() {
+                this.setState({ theme: toggleTheme() });
             }
 
             render() {
@@ -68,25 +83,36 @@ class Root extends Component {
                 const topLevelItems = structure.children;
                 const activeClass = link => (link && path.startsWith(link) && (link !== '/' || path === '/')) ? 'active' : '';
 
-                const topLevelMenu = [];
-
-                for (const entryKey of topLevelMenuKeys) {
+                const flatMenu = [];
+                for (const entryKey of flatMenuKeys) {
                     const entry = topLevelItems[entryKey];
                     const link = entry.link || entry.externalLink;
-                    topLevelMenu.push(<NavLink key={entryKey} className={activeClass(link)} to={link}>{entry.title}</NavLink>);
+                    flatMenu.push(<NavLink key={entryKey} icon={flatMenuIcons[entryKey]} className={activeClass(link)} to={link}>{entry.title}</NavLink>);
                 }
+
+                const templatesEntry = topLevelItems.templates;
+                const mosaicoEntry = templatesEntry.children.mosaico;
+                const isModelosActive = path.startsWith('/templates');
 
                 const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api'];
                 const isAdminActive = adminLinks.some(link => path.startsWith(link));
+
+                const isDark = this.state.theme !== 'light';
 
                 if (clikerConfig.isAuthenticated) {
                     return (
                         <>
                             <ul className="cn-nav-list">
-                                <NavLink className={activeClass('/')} to="/">{t('dashboard')}</NavLink>
-                                {topLevelMenu}
+                                <NavLink icon="th-large" className={activeClass('/')} to="/">{t('dashboard')}</NavLink>
                             </ul>
-                            <NavGroup label={t('administration')} startOpen={isAdminActive}>
+                            {flatMenu.slice(0, 3)}
+                            <NavGroup label={t('templates')} icon="file-alt" startOpen={isModelosActive}>
+                                <NavLink className={activeClass('/templates') && !path.startsWith('/templates/mosaico') ? 'active' : ''} to={templatesEntry.link}>{t('email')}</NavLink>
+                                <NavLink className={activeClass('/templates/mosaico')} to={mosaicoEntry.link}>{t('landingPages')}</NavLink>
+                            </NavGroup>
+                            {flatMenu.slice(3)}
+
+                            <NavGroup className="cn-nav-group-admin" label={t('administration')} startOpen={isAdminActive}>
                                 {clikerConfig.globalPermissions.displayManageUsers && <NavLink className={activeClass('/users')} to="/users">{t('users')}</NavLink>}
                                 <NavLink className={activeClass('/namespaces')} to="/namespaces">{t('namespaces')}</NavLink>
                                 {clikerConfig.globalPermissions.manageSettings && <NavLink className={activeClass('/settings')} to="/settings">{t('globalSettings')}</NavLink>}
@@ -96,6 +122,7 @@ class Root extends Component {
                                 {clikerConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
                                 <NavLink className={activeClass('/account/api')} to="/account/api">{t('api')}</NavLink>
                             </NavGroup>
+
                             <div className="cn-sidebar-footer">
                                 <ul className="cn-sidebar-user navbar-nav">
                                     {getLanguageChooser(t)}
@@ -105,6 +132,18 @@ class Root extends Component {
                                         {clikerConfig.authMethod != 'cas' && <DropdownActionLink onClickAsync={::this.logout}><Icon icon='sign-out-alt'/> {t('logOut')}</DropdownActionLink>}
                                     </NavDropdown>
                                 </ul>
+                                <div className="cn-sidebar-footer-actions">
+                                    <button type="button" className="btn btn-ghost cn-theme-toggle" onClick={::this.handleToggleTheme}>
+                                        <Icon icon={isDark ? 'moon' : 'sun'}/>
+                                        <span>{isDark ? t('dark') : t('light')}</span>
+                                    </button>
+                                    {clikerConfig.authMethod != 'cas' &&
+                                        <button type="button" className="btn btn-ghost" onClick={::this.logout}>
+                                            <Icon icon="sign-out-alt"/>
+                                            <span>{t('logOut')}</span>
+                                        </button>
+                                    }
+                                </div>
                                 <div className="cn-sidebar-copyright">&copy; 2026 Cliker. <a href="https://github.com/rbassoi/cliker">{t('sourceOnGitHub')}</a></div>
                             </div>
                         </>

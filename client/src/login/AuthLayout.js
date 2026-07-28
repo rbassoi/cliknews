@@ -5,6 +5,7 @@ import {Link} from 'react-router-dom';
 import {Icon} from '../lib/bootstrap-components';
 import {withTranslation} from '../lib/i18n';
 import {withComponentMixins} from '../lib/decorator-helpers';
+import {getUrl} from '../lib/urls';
 
 const features = [
     {icon: 'paper-plane', key: 'authFeatureSending'},
@@ -24,8 +25,8 @@ class AuthLayout extends React.Component {
                 <div className="cn-auth-hero">
                     <div className="cn-auth-hero-inner">
                         <Link className="cn-auth-brand" to="/">
-                            <div className="cn-auth-logo"/>
-                            <span>Cliker</span>
+                            <img className="cn-auth-logo" src={getUrl('static/cliker-icon.png')} alt="Cliker"/>
+                            <span>cliker</span>
                         </Link>
 
                         <h1>{t('authHeroTitle')}</h1>
@@ -45,8 +46,8 @@ class AuthLayout extends React.Component {
                 <div className="cn-auth-panel">
                     <div className="cn-auth-panel-inner">
                         <Link className="cn-auth-brand cn-auth-brand-mobile" to="/">
-                            <div className="cn-auth-logo"/>
-                            <span>Cliker</span>
+                            <img className="cn-auth-logo" src={getUrl('static/cliker-icon.png')} alt="Cliker"/>
+                            <span>cliker</span>
                         </Link>
 
                         {this.props.eyebrow && <div className="cn-auth-eyebrow">{this.props.eyebrow}</div>}

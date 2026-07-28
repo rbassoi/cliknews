@@ -17,9 +17,15 @@ $enable-print-styles: false;
   -webkit-appearance: none; // This is a fix for Chrome
 }
 
+// Phosphor icons are inline SVGs (unlike the old FontAwesome icon-font <i> tags), so
+// they default to baseline alignment — this nudges them back in line with adjacent text.
+.cn-icon {
+  vertical-align: -0.125em;
+}
+
 body.cliker {
-  background-color: $cn-bg-page;
-  color: $cn-text-primary;
+  background-color: var(--cn-bg-page);
+  color: var(--cn-text-primary);
 
   &.sandbox {
     overflow-x: hidden;
@@ -44,7 +50,7 @@ body.cliker {
     @include border-radius($breadcrumb-border-radius);
     @include borders($breadcrumb-borders);
     background-color: $breadcrumb-bg;
-    border: 1px solid $cn-border;
+    border: 1px solid var(--cn-border);
 
     .breadcrumb {
       border: 0px none;
@@ -72,25 +78,25 @@ body.cliker {
   }
 
   .cn-sidebar {
-    width: $cn-sidebar-width;
+    width: var(--cn-sidebar-width);
     flex-shrink: 0;
-    background: $cn-bg-sidebar;
-    border-right: 1px solid $cn-sidebar-border;
+    background: var(--cn-bg-sidebar);
+    border-right: 1px solid var(--cn-sidebar-border);
     display: flex;
     flex-direction: column;
-    padding: $cn-space-9 $cn-space-6;
-    gap: $cn-space-9;
+    padding: var(--cn-space-9) var(--cn-space-6);
+    gap: var(--cn-space-9);
   }
 
   .cn-sidebar-brand {
     display: flex;
     align-items: center;
-    gap: $cn-space-3;
-    padding: 0 $cn-space-2;
-    color: $cn-text-primary;
+    gap: var(--cn-space-3);
+    padding: 0 var(--cn-space-2);
+    color: var(--cn-text-primary);
 
     &:hover, &:focus {
-      color: $cn-text-primary;
+      color: var(--cn-text-primary);
       text-decoration: none;
     }
   }
@@ -98,15 +104,16 @@ body.cliker {
   .cn-sidebar-logo {
     width: 28px;
     height: 28px;
-    border-radius: $cn-radius-md;
-    background: $cn-accent;
+    border-radius: var(--cn-radius-md);
     flex-shrink: 0;
+    object-fit: contain;
   }
 
   .cn-sidebar-wordmark {
     font-weight: 800;
     font-size: 17px;
     letter-spacing: -0.01em;
+    color: var(--cn-accent);
   }
 
   .cn-sidebar-nav {
@@ -115,7 +122,7 @@ body.cliker {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: $cn-space-9;
+    gap: var(--cn-space-9);
   }
 
   .cn-nav-list {
@@ -133,27 +140,27 @@ body.cliker {
     .nav-link {
       display: flex;
       align-items: center;
-      gap: $cn-space-3;
-      padding: 9px $cn-space-4;
-      border-radius: $cn-radius-md;
+      gap: var(--cn-space-3);
+      padding: 9px var(--cn-space-4);
+      border-radius: var(--cn-radius-md);
       font-size: 14px;
       font-weight: 500;
-      color: $cn-nav-inactive;
+      color: var(--cn-nav-inactive);
 
       &:hover {
-        background: $cn-bg-hover;
-        color: $cn-nav-inactive;
+        background: var(--cn-bg-hover);
+        color: var(--cn-nav-inactive);
         text-decoration: none;
       }
     }
 
     .nav-item.active .nav-link {
-      background: $cn-accent-tint;
-      color: $cn-accent-text;
+      background: var(--cn-accent-tint);
+      color: var(--cn-accent-text);
       font-weight: 700;
 
       &:hover {
-        background: $cn-accent-tint;
+        background: var(--cn-accent-tint);
       }
 
       &::before {
@@ -162,7 +169,7 @@ body.cliker {
         width: 6px;
         height: 6px;
         border-radius: 2px;
-        background: $cn-accent;
+        background: var(--cn-accent);
         flex-shrink: 0;
       }
     }
@@ -176,25 +183,36 @@ body.cliker {
     .cn-nav-group-toggle {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: $cn-space-3;
-      padding: 9px $cn-space-4;
-      border-radius: $cn-radius-md;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-      color: $cn-text-muted;
+      gap: var(--cn-space-3);
+      padding: 9px var(--cn-space-4);
+      border-radius: var(--cn-radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--cn-nav-inactive);
       cursor: pointer;
       user-select: none;
 
       &:hover {
-        background: $cn-bg-hover;
+        background: var(--cn-bg-hover);
+        color: var(--cn-text-primary);
+      }
+
+      .cn-nav-group-icon {
+        flex-shrink: 0;
+        opacity: 0.85;
+        width: 18px;
+        text-align: center;
+      }
+
+      .cn-nav-group-label {
+        flex: 1;
       }
 
       .cn-nav-group-chevron {
         transition: transform 0.15s ease;
-        font-size: 10px;
+        font-size: 11px;
+        flex-shrink: 0;
+        opacity: 0.7;
       }
 
       &.cn-nav-group-open .cn-nav-group-chevron {
@@ -206,6 +224,31 @@ body.cliker {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      margin: 2px 0 2px var(--cn-space-6);
+
+      .nav-link {
+        font-size: 13px;
+      }
+    }
+
+    // Administração: the one uppercase, muted, label-only group (no icon) —
+    // matches the design's distinct treatment for the admin section specifically.
+    &.cn-nav-group-admin {
+      margin-top: var(--cn-space-6);
+      padding-top: var(--cn-space-4);
+      border-top: 1px solid var(--cn-sidebar-border);
+
+      .cn-nav-group-toggle {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--cn-text-muted);
+      }
+
+      .cn-nav-group-items {
+        margin-left: 0;
+      }
     }
   }
 
@@ -213,18 +256,18 @@ body.cliker {
     margin-top: auto;
     display: flex;
     flex-direction: column;
-    gap: $cn-space-3;
-    padding-top: $cn-space-6;
-    border-top: 1px solid $cn-sidebar-border;
+    gap: var(--cn-space-3);
+    padding-top: var(--cn-space-6);
+    border-top: 1px solid var(--cn-sidebar-border);
   }
 
   .cn-sidebar-user {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $cn-space-3;
-    padding: $cn-space-2;
-    border-radius: $cn-radius-md;
+    gap: var(--cn-space-3);
+    padding: var(--cn-space-2);
+    border-radius: var(--cn-radius-md);
 
     .nav-item.dropdown {
       list-style: none;
@@ -234,27 +277,47 @@ body.cliker {
       padding: 4px 6px;
       font-size: 13px;
       font-weight: 600;
-      color: $cn-text-secondary;
-      border-radius: $cn-radius-sm;
+      color: var(--cn-text-secondary);
+      border-radius: var(--cn-radius-sm);
 
       &:hover {
-        background: $cn-bg-hover;
+        background: var(--cn-bg-hover);
         text-decoration: none;
       }
     }
   }
 
+  .cn-sidebar-footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: var(--cn-space-3);
+      justify-content: flex-start;
+      padding: 7px var(--cn-space-3);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .cn-theme-toggle svg, .cn-theme-toggle i {
+      flex-shrink: 0;
+    }
+  }
+
   .cn-sidebar-copyright {
     font-size: 11px;
-    color: $cn-text-muted;
-    padding: 0 $cn-space-2;
+    color: var(--cn-text-muted);
+    padding: 0 var(--cn-space-2);
 
     a {
-      color: $cn-text-muted;
+      color: var(--cn-text-muted);
       text-decoration: underline;
 
       &:hover {
-        color: $cn-text-secondary;
+        color: var(--cn-text-secondary);
       }
     }
   }
@@ -272,10 +335,10 @@ body.cliker {
   }
 
   .main .container-fluid {
-    padding: $cn-space-11 $cn-space-12;
+    padding: var(--cn-space-11) var(--cn-space-12);
 
     @include media-breakpoint-down(md) {
-      padding: $cn-space-6 $cn-space-6;
+      padding: var(--cn-space-6) var(--cn-space-6);
     }
   }
 
@@ -288,15 +351,15 @@ body.cliker {
       width: 100%;
       flex-direction: row;
       align-items: center;
-      padding: $cn-space-4 $cn-space-6;
-      gap: $cn-space-6;
+      padding: var(--cn-space-4) var(--cn-space-6);
+      gap: var(--cn-space-6);
       overflow-x: auto;
     }
 
     .cn-sidebar-nav {
       flex-direction: row;
       overflow-x: auto;
-      gap: $cn-space-6;
+      gap: var(--cn-space-6);
     }
 
     .cn-nav-list {
@@ -323,17 +386,17 @@ body.cliker {
   // ---------------------------------------------------------------------
 
   .cn-card {
-    background: $cn-bg-card;
-    border: 1px solid $cn-border;
-    border-radius: $cn-radius-lg;
+    background: var(--cn-bg-card);
+    border: 1px solid var(--cn-border);
+    border-radius: var(--cn-radius-lg);
   }
 
   .cn-page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: $cn-space-9;
-    gap: $cn-space-6;
+    margin-bottom: var(--cn-space-9);
+    gap: var(--cn-space-6);
   }
 
   .cn-page-title {
@@ -345,18 +408,18 @@ body.cliker {
 
   .cn-page-subtitle {
     font-size: 14px;
-    color: $cn-text-muted;
+    color: var(--cn-text-muted);
     margin-top: 4px;
   }
 
   .cn-btn {
     display: inline-flex;
     align-items: center;
-    gap: $cn-space-2;
+    gap: var(--cn-space-2);
     font-size: 14px;
     font-weight: 600;
-    padding: 10px $cn-space-8;
-    border-radius: $cn-radius-md;
+    padding: 10px var(--cn-space-8);
+    border-radius: var(--cn-radius-md);
     border: 1px solid transparent;
     cursor: pointer;
 
@@ -366,23 +429,23 @@ body.cliker {
   }
 
   .cn-btn-primary {
-    background: $cn-accent;
+    background: var(--cn-accent);
     color: white;
 
     &:hover, &:focus {
-      background: $cn-accent-hover;
+      background: var(--cn-accent-hover);
       color: white;
     }
   }
 
   .cn-btn-outline {
-    background: $cn-bg-card;
-    border-color: $cn-border-strong;
-    color: $cn-text-primary;
+    background: var(--cn-bg-card);
+    border-color: var(--cn-border-strong);
+    color: var(--cn-text-primary);
 
     &:hover, &:focus {
-      background: $cn-bg-subtle;
-      color: $cn-text-primary;
+      background: var(--cn-bg-subtle);
+      color: var(--cn-text-primary);
     }
   }
 
@@ -391,29 +454,29 @@ body.cliker {
     align-items: center;
     font-size: 11px;
     font-weight: 600;
-    padding: 3px $cn-space-4;
-    border-radius: $cn-radius-pill;
+    padding: 3px var(--cn-space-4);
+    border-radius: var(--cn-radius-pill);
     white-space: nowrap;
   }
 
-  .cn-pill-green { background: $cn-status-green-bg; color: $cn-status-green-text; }
-  .cn-pill-gray { background: $cn-status-gray-bg; color: $cn-status-gray-text; }
-  .cn-pill-amber { background: $cn-status-amber-bg; color: $cn-status-amber-text; }
-  .cn-pill-blue { background: $cn-status-blue-bg; color: $cn-status-blue-text; }
+  .cn-pill-green { background: var(--cn-status-green-bg); color: var(--cn-status-green-text); }
+  .cn-pill-gray { background: var(--cn-status-gray-bg); color: var(--cn-status-gray-text); }
+  .cn-pill-amber { background: var(--cn-status-amber-bg); color: var(--cn-status-amber-text); }
+  .cn-pill-blue { background: var(--cn-status-blue-bg); color: var(--cn-status-blue-text); }
 
   .cn-stat-card {
-    background: $cn-bg-card;
-    border: 1px solid $cn-border;
-    border-radius: $cn-radius-lg;
-    padding: $cn-space-7 $cn-space-8;
+    background: var(--cn-bg-card);
+    border: 1px solid var(--cn-border);
+    border-radius: var(--cn-radius-lg);
+    padding: var(--cn-space-7) var(--cn-space-8);
     display: flex;
     flex-direction: column;
-    gap: $cn-space-1;
+    gap: var(--cn-space-1);
   }
 
   .cn-stat-label {
     font-size: 13px;
-    color: $cn-text-muted;
+    color: var(--cn-text-muted);
     font-weight: 500;
   }
 
@@ -421,23 +484,23 @@ body.cliker {
     font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.02em;
-    color: $cn-text-primary;
+    color: var(--cn-text-primary);
   }
 
   .cn-stat-delta {
     font-size: 12px;
     font-weight: 600;
-    color: $cn-text-muted;
+    color: var(--cn-text-muted);
 
     &.cn-stat-delta-positive {
-      color: $cn-positive;
+      color: var(--cn-positive);
     }
   }
 
   .cn-grid-4 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: $cn-space-6;
+    gap: var(--cn-space-6);
 
     @include media-breakpoint-down(md) {
       grid-template-columns: repeat(2, 1fr);
@@ -451,7 +514,7 @@ body.cliker {
   .cn-editor-layout {
     display: flex;
     align-items: flex-start;
-    gap: $cn-space-8;
+    gap: var(--cn-space-8);
 
     @include media-breakpoint-down(md) {
       flex-direction: column;
@@ -461,18 +524,18 @@ body.cliker {
   .cn-editor-settings {
     flex: 1 1 480px;
     min-width: 0;
-    padding: $cn-space-9;
+    padding: var(--cn-space-9);
   }
 
   .cn-editor-preview {
     flex: 1 1 480px;
     min-width: 0;
     position: sticky;
-    top: $cn-space-8;
-    background: $cn-bg-subtle;
-    border: 1px solid $cn-border;
-    border-radius: $cn-radius-lg;
-    padding: $cn-space-8;
+    top: var(--cn-space-8);
+    background: var(--cn-bg-subtle);
+    border: 1px solid var(--cn-border);
+    border-radius: var(--cn-radius-lg);
+    padding: var(--cn-space-8);
     min-height: 480px;
     display: flex;
     flex-direction: column;
@@ -481,7 +544,7 @@ body.cliker {
 
   .cn-editor-preview-picker {
     width: 100%;
-    margin-bottom: $cn-space-6;
+    margin-bottom: var(--cn-space-6);
   }
 
   .cn-editor-preview-frame {
@@ -489,16 +552,16 @@ body.cliker {
     max-width: 600px;
     height: 70vh;
     min-height: 420px;
-    border: 1px solid $cn-border;
-    border-radius: $cn-radius-md;
+    border: 1px solid var(--cn-border);
+    border-radius: var(--cn-radius-md);
     background: white;
-    box-shadow: $cn-shadow-card;
+    box-shadow: var(--cn-shadow-card);
   }
 
   .cn-editor-preview-empty {
     margin: auto;
     text-align: center;
-    color: $cn-text-muted;
+    color: var(--cn-text-muted);
     font-size: 13px;
     max-width: 260px;
   }
@@ -518,9 +581,9 @@ body.cliker {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: $cn-space-12;
+    padding: var(--cn-space-12);
     overflow: hidden;
-    background: linear-gradient(160deg, oklch(0.4 0.16 250), $cn-accent 65%, oklch(0.62 0.16 235));
+    background: linear-gradient(160deg, var(--cn-accent-800), var(--cn-accent) 65%, var(--cn-accent-400));
     color: white;
 
     &::before, &::after {
@@ -556,12 +619,12 @@ body.cliker {
   .cn-auth-brand {
     display: flex;
     align-items: center;
-    gap: $cn-space-3;
+    gap: var(--cn-space-3);
     color: white;
     font-weight: 800;
     font-size: 20px;
     letter-spacing: -0.01em;
-    margin-bottom: $cn-space-12;
+    margin-bottom: var(--cn-space-12);
 
     &:hover {
       color: white;
@@ -576,9 +639,9 @@ body.cliker {
   .cn-auth-hero .cn-auth-logo {
     width: 36px;
     height: 36px;
-    border-radius: $cn-radius-md;
-    background: oklch(1 0 0 / 0.9);
+    border-radius: var(--cn-radius-md);
     flex-shrink: 0;
+    object-fit: contain;
   }
 
   .cn-auth-hero h1 {
@@ -587,14 +650,14 @@ body.cliker {
     line-height: 1.2;
     letter-spacing: -0.015em;
     text-wrap: balance;
-    margin-bottom: $cn-space-6;
+    margin-bottom: var(--cn-space-6);
   }
 
   .cn-auth-hero p {
     font-size: 16px;
     line-height: 1.6;
     color: oklch(1 0 0 / 0.85);
-    margin-bottom: $cn-space-11;
+    margin-bottom: var(--cn-space-11);
   }
 
   .cn-auth-features {
@@ -603,13 +666,13 @@ body.cliker {
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: $cn-space-6;
+    gap: var(--cn-space-6);
   }
 
   .cn-auth-features li {
     display: flex;
     align-items: center;
-    gap: $cn-space-4;
+    gap: var(--cn-space-4);
     font-size: 15px;
     font-weight: 500;
   }
@@ -621,7 +684,7 @@ body.cliker {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
-    border-radius: $cn-radius-md;
+    border-radius: var(--cn-radius-md);
     background: oklch(1 0 0 / 0.14);
   }
 
@@ -630,8 +693,8 @@ body.cliker {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: $cn-space-12;
-    background: $cn-bg-page;
+    padding: var(--cn-space-12);
+    background: var(--cn-bg-page);
   }
 
   .cn-auth-panel-inner {
@@ -640,27 +703,27 @@ body.cliker {
   }
 
   .cn-auth-eyebrow {
-    color: $cn-accent-text;
+    color: var(--cn-accent-text);
     font-weight: 700;
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    margin-bottom: $cn-space-3;
+    margin-bottom: var(--cn-space-3);
   }
 
   .cn-auth-title {
     font-size: 28px;
     font-weight: 800;
     letter-spacing: -0.01em;
-    color: $cn-text-primary;
-    margin-bottom: $cn-space-3;
+    color: var(--cn-text-primary);
+    margin-bottom: var(--cn-space-3);
   }
 
   .cn-auth-subtitle, .cn-auth-hint {
-    color: $cn-text-secondary;
+    color: var(--cn-text-secondary);
     font-size: 15px;
     line-height: 1.5;
-    margin-bottom: $cn-space-9;
+    margin-bottom: var(--cn-space-9);
   }
 
   @media (max-width: 900px) {
@@ -670,28 +733,272 @@ body.cliker {
 
     .cn-auth-panel {
       flex: 1 1 100%;
-      padding: $cn-space-8 $cn-space-6;
+      padding: var(--cn-space-8) var(--cn-space-6);
     }
 
     .cn-auth-brand-mobile {
       display: flex;
       align-items: center;
-      gap: $cn-space-3;
-      color: $cn-text-primary;
+      gap: var(--cn-space-3);
+      color: var(--cn-text-primary);
       font-weight: 800;
       font-size: 18px;
-      margin-bottom: $cn-space-9;
+      margin-bottom: var(--cn-space-9);
 
       &:hover {
-        color: $cn-text-primary;
+        color: var(--cn-text-primary);
         text-decoration: none;
       }
 
       .cn-auth-logo {
         width: 28px;
         height: 28px;
-        border-radius: $cn-radius-md;
-        background: $cn-accent;
+        border-radius: var(--cn-radius-md);
+        object-fit: contain;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Theme-aware overrides for Bootstrap/CoreUI's own compiled components.
+  // variables.scss feeds Bootstrap plain hex (Sass color math can't resolve
+  // var()), so its compiled output is a static dark-mode snapshot — these
+  // rules re-declare the same properties in plain CSS using var(--cn-*), so
+  // buttons/forms/tables/modals/dropdowns actually respond to the light/dark
+  // toggle instead of only this file's own .cn-* classes doing so.
+  // ---------------------------------------------------------------------
+
+  .btn {
+    border-radius: var(--cn-radius-md);
+  }
+
+  .btn-primary {
+    background-color: var(--cn-accent);
+    border-color: var(--cn-accent);
+    color: white;
+
+    &:hover, &:focus, &:active {
+      background-color: var(--cn-accent-hover) !important;
+      border-color: var(--cn-accent-hover) !important;
+      color: white;
+    }
+  }
+
+  .btn-secondary {
+    background-color: var(--cn-bg-card);
+    border-color: var(--cn-border-strong);
+    color: var(--cn-text-primary);
+
+    &:hover, &:focus, &:active {
+      background-color: var(--cn-bg-hover) !important;
+      border-color: var(--cn-border-strong) !important;
+      color: var(--cn-text-primary) !important;
+    }
+  }
+
+  .btn-danger {
+    background-color: #c4453c;
+    border-color: #c4453c;
+
+    &:hover, &:focus, &:active {
+      background-color: #a53a32 !important;
+      border-color: #a53a32 !important;
+    }
+  }
+
+  .btn-outline-secondary {
+    border-color: var(--cn-border-strong);
+    color: var(--cn-text-primary);
+
+    &:hover {
+      background-color: var(--cn-bg-hover);
+      color: var(--cn-text-primary);
+    }
+  }
+
+  .btn-ghost, a.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--cn-border);
+    color: var(--cn-text-secondary);
+
+    &:hover, &:focus {
+      background: var(--cn-bg-hover);
+      color: var(--cn-text-primary);
+      text-decoration: none;
+    }
+  }
+
+  .form-control, .custom-select, select.form-control {
+    background-color: var(--cn-bg-card);
+    border-color: var(--cn-border-strong);
+    color: var(--cn-text-primary);
+
+    &:focus {
+      background-color: var(--cn-bg-card);
+      border-color: var(--cn-accent);
+      color: var(--cn-text-primary);
+      box-shadow: 0 0 0 3px var(--cn-accent-tint-light);
+    }
+
+    &::placeholder {
+      color: var(--cn-text-faint);
+    }
+
+    &:disabled, &[readonly] {
+      background-color: var(--cn-bg-subtle);
+      color: var(--cn-text-muted);
+    }
+  }
+
+  label, .col-form-label {
+    color: var(--cn-text-secondary);
+  }
+
+  .form-text.text-muted, small.text-muted {
+    color: var(--cn-text-muted) !important;
+  }
+
+  .card {
+    background-color: var(--cn-bg-card);
+    border-color: var(--cn-border);
+    color: var(--cn-text-primary);
+  }
+
+  .table {
+    color: var(--cn-text-primary);
+
+    th, td {
+      border-color: var(--cn-border);
+    }
+
+    thead th {
+      color: var(--cn-text-secondary);
+      border-bottom-color: var(--cn-border-strong);
+    }
+
+    tbody tr:hover {
+      background-color: var(--cn-bg-hover);
+    }
+  }
+
+  .dataTables_wrapper {
+    color: var(--cn-text-primary);
+
+    .dataTables_info, .dataTables_length, .dataTables_filter {
+      color: var(--cn-text-secondary);
+    }
+
+    .pagination .page-link {
+      background-color: var(--cn-bg-card);
+      border-color: var(--cn-border);
+      color: var(--cn-text-primary);
+    }
+
+    .pagination .page-item.active .page-link {
+      background-color: var(--cn-accent);
+      border-color: var(--cn-accent);
+      color: white;
+    }
+
+    .pagination .page-item.disabled .page-link {
+      background-color: var(--cn-bg-subtle);
+      color: var(--cn-text-faint);
+    }
+  }
+
+  .modal-content {
+    background-color: var(--cn-bg-card);
+    border-color: var(--cn-border);
+    color: var(--cn-text-primary);
+  }
+
+  .modal-header, .modal-footer {
+    border-color: var(--cn-border);
+  }
+
+  .dropdown-menu {
+    background-color: var(--cn-bg-card);
+    border-color: var(--cn-border);
+    box-shadow: var(--cn-shadow-card);
+
+    .dropdown-item {
+      color: var(--cn-text-primary);
+
+      &:hover, &:focus {
+        background-color: var(--cn-bg-hover);
+        color: var(--cn-text-primary);
+      }
+    }
+
+    .dropdown-divider {
+      border-color: var(--cn-border);
+    }
+  }
+
+  // Wins over the compiled Sass rule at the top of this file (same selector,
+  // later in cascade) — $breadcrumb-bg is a build-time hex that can't respond
+  // to the runtime theme toggle, unlike this var().
+  .mt-breadcrumb-and-tertiary-navbar {
+    background-color: var(--cn-bg-subtle);
+  }
+
+  .breadcrumb {
+    background-color: var(--cn-bg-subtle);
+  }
+
+  .alert-danger {
+    background-color: color-mix(in oklch, #c4453c 18%, transparent);
+    border-color: color-mix(in oklch, #c4453c 40%, transparent);
+    color: #ff9d94;
+  }
+
+  .alert-warning {
+    background-color: var(--cn-status-amber-bg);
+    border-color: color-mix(in oklch, var(--cn-status-amber-text) 40%, transparent);
+    color: var(--cn-status-amber-text);
+  }
+
+  .alert-success {
+    background-color: var(--cn-status-green-bg);
+    border-color: color-mix(in oklch, var(--cn-status-green-text) 40%, transparent);
+    color: var(--cn-status-green-text);
+  }
+
+  .alert-info {
+    background-color: var(--cn-status-blue-bg);
+    border-color: color-mix(in oklch, var(--cn-status-blue-text) 40%, transparent);
+    color: var(--cn-status-blue-text);
+  }
+
+  .badge-secondary {
+    background-color: var(--cn-bg-hover);
+    color: var(--cn-text-primary);
+  }
+
+  code {
+    background-color: var(--cn-bg-subtle);
+    color: var(--cn-accent-text-light);
+  }
+
+  hr {
+    border-color: var(--cn-border);
+  }
+
+  .nav-tabs {
+    border-bottom-color: var(--cn-border);
+
+    .nav-link {
+      color: var(--cn-text-secondary);
+      border-color: transparent;
+
+      &.active {
+        background-color: var(--cn-bg-card);
+        border-color: var(--cn-border) var(--cn-border) var(--cn-bg-card);
+        color: var(--cn-text-primary);
+      }
+
+      &:hover {
+        border-color: var(--cn-border);
       }
     }
   }

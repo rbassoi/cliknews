@@ -1,25 +1,30 @@
 @import "./tokens";
 
-// NOTE: oklch() tokens from _tokens.scss must NOT be assigned to Bootstrap/CoreUI
-// variables below — LibSass's darken()/lighten()/mix() (used internally all over
-// Bootstrap, e.g. $link-hover-color: darken($link-color, 15%)) cannot parse oklch()
-// and the build fails. Bootstrap-consumed variables here use plain hex approximations
-// of the token palette instead; the real oklch design language is applied directly as
-// plain CSS in cliker.scss's .cn-* classes, which never run through Sass color math.
+// NOTE: _tokens.scss's tokens are CSS custom properties (var(--cn-x)), not Sass
+// variables — LibSass's darken()/lighten()/mix() (used internally all over Bootstrap,
+// e.g. $link-hover-color: darken($link-color, 15%)) cannot resolve a var() at compile
+// time and the build fails. Bootstrap-consumed variables here use plain hex
+// approximations of the *dark* (default) token palette instead, so Bootstrap's own
+// compiled component CSS (buttons, forms, tables, modals — anything not one of this
+// app's own .cn-* classes) has a correct dark-mode baseline out of the box. Runtime
+// light/dark switching for these Bootstrap-native components is handled separately,
+// by the CSS-custom-property override block near the bottom of cliker.scss (Bootstrap's
+// own compiled output can't respond to var() changes for values it ran through Sass
+// color math, so those specific properties are re-declared in plain CSS there instead).
 $table-cell-padding: .5rem;
-$input-border-color: #d8d5cf; // ~= $cn-border-strong
-$input-border-radius: $cn-radius-sm;
+$input-border-color: #595d6c; // ~= --cn-border-strong (dark)
+$input-border-radius: 4px; // ~= --cn-radius-sm
 
-$breadcrumb-bg: #f6f6f4; // ~= $cn-bg-subtle
-$breadcrumb-border-radius: $cn-radius-md;
+$breadcrumb-bg: #1d1f2c; // ~= --cn-bg-subtle (dark)
+$breadcrumb-border-radius: 8px; // ~= --cn-radius-md
 
-$body-bg: #fbfbfa; // ~= $cn-bg-page
-$border-radius: $cn-radius-md;
-$border-radius-sm: $cn-radius-sm;
-$border-radius-lg: $cn-radius-lg;
+$body-bg: #161826; // ~= --cn-bg-page (dark)
+$border-radius: 8px; // ~= --cn-radius-md
+$border-radius-sm: 4px; // ~= --cn-radius-sm
+$border-radius-lg: 14px; // ~= --cn-radius-lg
 
-$primary: #3d63d9; // ~= $cn-accent
-$link-color: #3d63d9; // ~= $cn-accent
+$primary: #2ba98a; // ~= --cn-accent (dark)
+$link-color: #2ba98a; // ~= --cn-accent (dark)
 
 $navbar-dark-color: rgba(#fff, .75) !default;
 $navbar-dark-hover-color: #fff !default;

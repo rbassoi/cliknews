@@ -1,50 +1,58 @@
-const features = [
+const rows = [
     {
-        title: 'Segmentação avançada',
-        description: 'Crie segmentos por comportamento, campos customizados ou histórico de abertura/clique — sem depender de planilhas.'
+        n: '01',
+        title: 'Contatos & Listas',
+        body: 'Organize contatos em listas e segmentos, importe sua base existente e mantenha tudo sincronizado em um só painel.'
     },
     {
-        title: 'Automação de campanhas',
-        description: 'Dispare campanhas recorrentes por RSS ou acionadas por evento (triggered), sem precisar reenviar manualmente.'
+        n: '02',
+        title: 'Campanhas & Automação',
+        body: 'Monte campanhas com modelos reutilizáveis, agende envios e acompanhe taxas de abertura em tempo real.'
     },
     {
-        title: 'Editor de templates arrasta-e-solta',
-        description: 'Monte o e-mail visualmente (GrapesJS, Mosaico) ou direto no código, com preview em tempo real.'
-    },
-    {
-        title: 'Relatórios detalhados',
-        description: 'Abertura, cliques, descadastros e bounces por campanha, com exportação para análise externa.'
-    },
-    {
-        title: 'Listas e contatos unificados',
-        description: 'Veja todos os seus contatos across listas num único painel, com filtro por status de inscrição.'
-    },
-    {
-        title: 'Importação simples',
-        description: 'Suba um CSV, mapeie as colunas e pronto — sem escrever nenhuma linha de código.'
+        n: '03',
+        title: 'Formulários & Canais',
+        body: 'Capture novos contatos com formulários incorporáveis e envie por múltiplos canais além do e-mail.'
     }
 ];
 
+const rowGrid = {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(64px,160px) minmax(0,420px) minmax(0,1fr)',
+    gap: '28px clamp(24px,4vw,72px)',
+    alignItems: 'baseline' as const,
+    padding: '42px 0'
+};
+
+const divider = {
+    height: 1,
+    background: 'linear-gradient(to right, transparent, var(--color-neutral-700) 48px calc(100% - 48px), transparent)'
+};
+
 export default function Features() {
     return (
-        <section id="recursos">
-            <div className="cn-container">
-                <div style={{textAlign: 'center', maxWidth: 620, margin: '0 auto 48px'}}>
-                    <h2 style={{fontSize: 32, fontWeight: 800}}>Tudo que você precisa para crescer por e-mail</h2>
-                    <p style={{color: 'var(--cn-text-muted)', marginTop: 12, fontSize: 16}}>
-                        O mesmo motor de envio que já roda suas campanhas hoje, com uma interface pensada para o dia a dia.
-                    </p>
+        <div className="cn-container">
+            <section id="produto" style={{padding: '98px 0 70px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20}}>
+                    <span style={{width: 32, height: 1, background: 'var(--color-accent)', flex: 'none'}} />
+                    <span style={{fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-accent)'}}>
+                        O que o Cliker faz
+                    </span>
                 </div>
 
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20}}>
-                    {features.map(f => (
-                        <div key={f.title} className="cn-card" style={{padding: '24px 22px'}}>
-                            <h3 style={{fontSize: 16, fontWeight: 700, marginBottom: 8}}>{f.title}</h3>
-                            <p style={{fontSize: 14, color: 'var(--cn-text-muted)', lineHeight: 1.55, margin: 0}}>{f.description}</p>
+                {rows.map((r, i) => (
+                    <div key={r.n}>
+                        <div style={rowGrid}>
+                            <p style={{fontSize: 15, color: 'var(--color-accent)', margin: 0}}>{r.n}</p>
+                            <h2 style={{fontSize: 24, letterSpacing: '-0.01em', margin: 0}}>{r.title}</h2>
+                            <p style={{fontSize: '15.5px', lineHeight: '28px', margin: 0, maxWidth: '52ch', color: 'color-mix(in srgb, var(--color-text) 78%, transparent)'}}>
+                                {r.body}
+                            </p>
                         </div>
-                    ))}
-                </div>
-            </div>
-        </section>
+                        {i < rows.length - 1 && <div style={divider} />}
+                    </div>
+                ))}
+            </section>
+        </div>
     );
 }

@@ -16,6 +16,19 @@
 
     <link rel="stylesheet" href="{{publicPath}}client/cliker.css">
 
+    <script>
+        // Applied before first paint so there's no flash of the wrong theme —
+        // see client/src/lib/theme.js, which owns this same key/logic at runtime.
+        (function () {
+            try {
+                var t = localStorage.getItem('cliker-theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
     <script src="{{publicPath}}static-npm/jquery.min.js"></script>
     <script src="{{publicPath}}static-npm/popper.min.js"></script>
     <script src="{{publicPath}}static-npm/bootstrap.min.js"></script>

@@ -181,8 +181,8 @@ function renderFrameWithContent(t, panelInFullScreen, showSidebar, primaryMenu, 
             <div key="app" className="app cn-app">
                 <div key="cnSidebar" className="cn-sidebar">
                     <Link className="cn-sidebar-brand" to="/">
-                        <div className="cn-sidebar-logo"/>
-                        <div className="cn-sidebar-wordmark">Cliker</div>
+                        <img className="cn-sidebar-logo" src={getUrl('static/cliker-icon.png')} alt="Cliker"/>
+                        <div className="cn-sidebar-wordmark">cliker</div>
                     </Link>
 
                     <nav className="cn-sidebar-nav">
@@ -697,6 +697,7 @@ export class NavDropdown extends Component {
 export class NavGroup extends Component {
     static propTypes = {
         label: PropTypes.string,
+        icon: PropTypes.string,
         className: PropTypes.string,
         startOpen: PropTypes.bool,
         children: PropTypes.node
@@ -723,7 +724,8 @@ export class NavGroup extends Component {
         return (
             <div className={className}>
                 <div className={toggleClassName} onClick={::this.toggle}>
-                    <span>{props.label}</span>
+                    {props.icon && <Icon icon={props.icon} className="cn-nav-group-icon"/>}
+                    <span className="cn-nav-group-label">{props.label}</span>
                     <Icon icon="chevron-right" className="cn-nav-group-chevron"/>
                 </div>
                 {open &&

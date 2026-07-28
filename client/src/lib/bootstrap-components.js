@@ -5,6 +5,7 @@ import {withTranslation} from './i18n';
 import PropTypes from 'prop-types';
 import {withAsyncErrorHandler, withErrorHandling} from './error-handling';
 import {withComponentMixins} from "./decorator-helpers";
+import {iconMap} from "./icon-map";
 
 @withComponentMixins([
     withTranslation,
@@ -80,24 +81,20 @@ export class StatCard extends Component {
 export class Icon extends Component {
     static propTypes = {
         icon: PropTypes.string.isRequired,
-        family: PropTypes.string,
         title: PropTypes.string,
         className: PropTypes.string
-    }
-
-    static defaultProps = {
-        family: 'fas'
     }
 
     render() {
         const props = this.props;
 
-        if (props.family === 'fas' || props.family === 'far') {
-            return <i className={`${props.family} fa-${props.icon} ${props.className || ''}`} title={props.title}/>;
-        } else {
-            console.error(`Icon font family ${props.family} not supported. (icon: ${props.icon}, title: ${props.title})`)
+        const IconComponent = iconMap[props.icon];
+        if (!IconComponent) {
+            console.error(`Icon "${props.icon}" not found in icon-map. (title: ${props.title})`);
             return null;
         }
+
+        return <IconComponent weight="regular" className={`cn-icon ${props.className || ''}`} title={props.title}/>;
     }
 }
 

@@ -1,77 +1,169 @@
-// Design tokens for the Cliker UI, matching design_handoff_contacts_newsletter.
-// LibSass passes unrecognised functions like oklch() straight through to the
-// compiled CSS, so these can be used directly as SCSS variable values.
+// Design tokens for the Cliker UI, matching design_handoff_cliker (the "Nocturne"
+// design system, re-hued to the Cliker teal/orange brand). Dark is the default theme;
+// :root[data-theme="light"] below overrides the subset of tokens the handoff specifies
+// for light mode. Everything is a CSS custom property (not a Sass variable) so the
+// theme can be switched at runtime via a data-theme attribute — see client/src/lib/theme.js.
+//
+// Token *names* are unchanged from the previous (light-only) token set so cliker.scss's
+// component rules didn't need to be rewritten, only re-pointed from $cn-x to var(--cn-x).
 
-// Backgrounds
-$cn-bg-page: oklch(0.985 0.004 90);
-$cn-bg-card: white;
-$cn-bg-sidebar: oklch(0.975 0.004 90);
-$cn-bg-subtle: oklch(0.97 0.004 90);
-$cn-bg-hover: oklch(0.94 0.006 90);
+:root {
+  // Backgrounds
+  --cn-bg-page: #161826;
+  --cn-bg-card: #232532;
+  --cn-bg-sidebar: #292b31; // gradient start (neutral-900); sidebar itself blends to bg-page
+  --cn-bg-subtle: #1d1f2c;
+  --cn-bg-hover: #3f424d; // neutral-800
 
-// Borders
-$cn-border: oklch(0.91 0.005 90);
-$cn-border-strong: oklch(0.85 0.005 90);
-$cn-border-subtle: oklch(0.94 0.004 90);
-$cn-sidebar-border: oklch(0.9 0.005 90);
+  // Borders
+  --cn-border: color-mix(in srgb, #e9e9ed 16%, transparent);
+  --cn-border-strong: #595d6c; // neutral-700
+  --cn-border-subtle: color-mix(in srgb, #e9e9ed 10%, transparent);
+  --cn-sidebar-border: #3f424d; // neutral-800
 
-// Text
-$cn-text-primary: oklch(0.22 0.01 90);
-$cn-text-secondary: oklch(0.4 0.01 90);
-$cn-text-muted: oklch(0.5 0.01 90);
-$cn-text-faint: oklch(0.6 0.01 90);
-$cn-nav-inactive: oklch(0.3 0.01 90);
+  // Text
+  --cn-text-primary: #e9e9ed;
+  --cn-text-secondary: #9397ab; // neutral-500
+  --cn-text-muted: #75798c; // neutral-600
+  --cn-text-faint: #595d6c; // neutral-700
+  --cn-nav-inactive: #e4e7f5; // neutral-200
 
-// Accent (primary blue)
-$cn-accent: oklch(0.55 0.18 250);
-$cn-accent-hover: oklch(0.48 0.18 250);
-$cn-accent-tint: oklch(0.94 0.03 250);
-$cn-accent-tint-light: oklch(0.95 0.02 250);
-$cn-accent-text: oklch(0.4 0.15 250);
-$cn-accent-text-light: oklch(0.45 0.15 250);
+  // Neutral ramp 100->900 (dark-ground tuned)
+  --cn-neutral-100: #f3f5fe;
+  --cn-neutral-200: #e4e7f5;
+  --cn-neutral-300: #cfd3e5;
+  --cn-neutral-400: #b2b6ca;
+  --cn-neutral-500: #9397ab;
+  --cn-neutral-600: #75798c;
+  --cn-neutral-700: #595d6c;
+  --cn-neutral-800: #3f424d;
+  --cn-neutral-900: #292b31;
 
-// List category colors
-$cn-list-blue: oklch(0.55 0.18 250);
-$cn-list-green: oklch(0.55 0.18 150);
-$cn-list-orange: oklch(0.55 0.18 40);
-$cn-list-pink: oklch(0.55 0.18 320);
+  // Accent (brand teal)
+  --cn-accent: #2ba98a;
+  --cn-accent-hover: #239478;
+  --cn-accent-tint: color-mix(in oklch, #2ba98a 16%, transparent);
+  --cn-accent-tint-light: color-mix(in oklch, #2ba98a 10%, transparent);
+  --cn-accent-text: #eafaf4; // accent-100: legible accent text on a DARK tinted bg
+  --cn-accent-text-light: #cdf0e2; // accent-200
+  --cn-accent-100: #eafaf4;
+  --cn-accent-200: #cdf0e2;
+  --cn-accent-300: #a3e2c9;
+  --cn-accent-400: #6cc9a8;
+  --cn-accent-500: #239478;
+  --cn-accent-600: #1c7d65;
+  --cn-accent-700: #15654f;
+  --cn-accent-800: #124f3f;
+  --cn-accent-900: #0c3529;
 
-// Status pills
-$cn-status-green-bg: oklch(0.94 0.05 150);
-$cn-status-green-text: oklch(0.4 0.12 150);
-$cn-status-gray-bg: oklch(0.95 0.01 90);
-$cn-status-gray-text: oklch(0.5 0.01 90);
-$cn-status-amber-bg: oklch(0.95 0.05 80);
-$cn-status-amber-text: oklch(0.5 0.13 80);
-$cn-status-blue-bg: oklch(0.95 0.03 250);
-$cn-status-blue-text: oklch(0.45 0.15 250);
+  // Accent-2 (brand orange, secondary — used sparingly, per design system rule)
+  --cn-accent-2: #e0703b;
+  --cn-accent-2-100: #fdece2;
+  --cn-accent-2-200: #fad1b8;
+  --cn-accent-2-300: #f4ac81;
+  --cn-accent-2-400: #ea8452;
+  --cn-accent-2-500: #e0703b;
+  --cn-accent-2-600: #bf5a2c;
+  --cn-accent-2-700: #984522;
+  --cn-accent-2-800: #6e3119;
+  --cn-accent-2-900: #452010;
 
-// Deltas
-$cn-positive: oklch(0.5 0.15 150);
+  // Section (saturated deck/landing ground)
+  --cn-section: #262a60;
+  --cn-section-glow: #353b80;
+  --cn-section-ghost: #4c5397;
 
-// Radius
-$cn-radius-sm: 6px;
-$cn-radius-md: 8px;
-$cn-radius-lg: 10px;
-$cn-radius-xl: 14px;
-$cn-radius-pill: 20px;
+  // List category colors (dots/badges) — dark-tuned, same hues as before
+  --cn-list-blue: #6cc9a8;
+  --cn-list-green: #8fd18a;
+  --cn-list-orange: #f4ac81;
+  --cn-list-pink: #e79bd6;
 
-// Spacing scale
-$cn-space-1: 6px;
-$cn-space-2: 8px;
-$cn-space-3: 10px;
-$cn-space-4: 12px;
-$cn-space-5: 14px;
-$cn-space-6: 16px;
-$cn-space-7: 18px;
-$cn-space-8: 20px;
-$cn-space-9: 24px;
-$cn-space-10: 28px;
-$cn-space-11: 32px;
-$cn-space-12: 40px;
+  // Status pills — translucent tint bg + bright text, dark-ground legible
+  --cn-status-green-bg: color-mix(in oklch, #3fbf72 20%, transparent);
+  --cn-status-green-text: #7be0a0;
+  --cn-status-gray-bg: color-mix(in oklch, #9397ab 18%, transparent);
+  --cn-status-gray-text: #cfd3e5;
+  --cn-status-amber-bg: color-mix(in oklch, #e0a83b 20%, transparent);
+  --cn-status-amber-text: #f2c766;
+  --cn-status-blue-bg: color-mix(in oklch, #2ba98a 20%, transparent);
+  --cn-status-blue-text: #6cc9a8;
 
-// Sidebar
-$cn-sidebar-width: 240px;
+  // Deltas
+  --cn-positive: #7be0a0;
 
-// Shadow
-$cn-shadow-card: 0 1px 3px oklch(0.2 0.01 90 / 0.08);
+  // Radius
+  --cn-radius-sm: 4px;
+  --cn-radius-md: 8px;
+  --cn-radius-lg: 14px;
+  --cn-radius-xl: 14px;
+  --cn-radius-pill: 999px;
+
+  // Spacing scale (0.7x density: N * 2.8px)
+  --cn-space-1: 2.8px;
+  --cn-space-2: 5.6px;
+  --cn-space-3: 8.4px;
+  --cn-space-4: 11.2px;
+  --cn-space-5: 14px;
+  --cn-space-6: 16.8px;
+  --cn-space-7: 19.6px;
+  --cn-space-8: 22.4px;
+  --cn-space-9: 25.2px;
+  --cn-space-10: 28px;
+  --cn-space-11: 30.8px;
+  --cn-space-12: 33.6px;
+
+  // Sidebar
+  --cn-sidebar-width: 248px;
+
+  // Shadow (hairline edge + ambient darkness, tuned for dark ground)
+  --cn-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.32), 0 0 0 1px color-mix(in srgb, #e9e9ed 6%, transparent);
+
+  // Font
+  --cn-font-heading: "Inter", system-ui, sans-serif;
+  --cn-font-body: "Inter", system-ui, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --cn-bg-page: #eef0f8;
+  --cn-bg-card: #f8f9fc;
+  --cn-bg-sidebar: #e4e7f5;
+  --cn-bg-subtle: #e7e9f3;
+  --cn-bg-hover: #dfe2ef;
+
+  --cn-border: color-mix(in srgb, #242631 16%, transparent);
+  --cn-border-strong: #a9adc0;
+  --cn-border-subtle: color-mix(in srgb, #242631 10%, transparent);
+  --cn-sidebar-border: #dfe2ef;
+
+  --cn-text-primary: #242631;
+  --cn-text-secondary: #585c6d; // neutral-400 override
+  --cn-text-muted: #6b6f80; // neutral-500 override
+  --cn-text-faint: #6b6f80;
+  --cn-nav-inactive: #3a3d4a; // neutral-200 override
+
+  --cn-neutral-200: #3a3d4a;
+  --cn-neutral-400: #585c6d;
+  --cn-neutral-500: #6b6f80;
+  --cn-neutral-800: #dfe2ef;
+  --cn-neutral-900: #e4e7f5;
+
+  --cn-accent: #15654f;
+  --cn-accent-hover: #124f3f;
+  --cn-accent-100: #15654f;
+  --cn-accent-text: #15654f;
+  --cn-accent-text-light: #124f3f;
+
+  --cn-status-green-bg: color-mix(in oklch, #15654f 12%, transparent);
+  --cn-status-green-text: #15654f;
+  --cn-status-gray-bg: color-mix(in oklch, #585c6d 10%, transparent);
+  --cn-status-gray-text: #3a3d4a;
+  --cn-status-amber-bg: color-mix(in oklch, #984522 12%, transparent);
+  --cn-status-amber-text: #984522;
+  --cn-status-blue-bg: color-mix(in oklch, #15654f 12%, transparent);
+  --cn-status-blue-text: #15654f;
+
+  --cn-shadow-card: 0 1px 3px rgba(36, 38, 49, 0.08), 0 0 0 1px color-mix(in srgb, #242631 6%, transparent);
+
+  color: var(--cn-text-primary);
+}

@@ -1,27 +1,31 @@
-import Link from 'next/link';
-import {LOGIN_URL} from '@/lib/config';
+import {SIGNUP_URL} from '@/lib/config';
 
 export default function Header() {
     return (
-        <header style={{borderBottom: '1px solid var(--cn-border)', background: 'var(--cn-bg-card)'}}>
-            <div className="cn-container" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 72}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
-                    <div style={{width: 28, height: 28, borderRadius: 8, background: 'var(--cn-accent)'}} />
-                    <span style={{fontWeight: 800, fontSize: 17}}>Cliker</span>
-                </div>
-
-                <nav style={{display: 'flex', alignItems: 'center', gap: 28, fontSize: 14, fontWeight: 500}}>
-                    <Link href="/#recursos">Recursos</Link>
-                    <Link href="/#planos">Planos</Link>
-                    <Link href="/#faq">Perguntas frequentes</Link>
-                    <Link href="/developers">Desenvolvedores</Link>
-                </nav>
-
-                <div style={{display: 'flex', gap: 10}}>
-                    <a className="cn-btn cn-btn-outline" href={LOGIN_URL}>Entrar</a>
-                    <a className="cn-btn cn-btn-primary" href={LOGIN_URL}>Começar grátis</a>
-                </div>
-            </div>
-        </header>
+        <nav
+            style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 50,
+                padding: '12px clamp(20px, 5vw, 72px)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 24,
+                background: 'color-mix(in srgb, var(--color-bg) 84%, transparent)',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                borderBottom: '1px solid var(--color-divider)'
+            }}
+        >
+            <span style={{display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 17, color: 'var(--color-text)'}}>
+                <img src="/cliker-icon.png" alt="Cliker" style={{width: 24, height: 24, borderRadius: 4, display: 'block'}} />
+                cliker
+            </span>
+            <a href="#produto" style={{fontSize: 14}}>Produto</a>
+            <a href="#recursos" style={{fontSize: 14}}>Recursos</a>
+            <a href="#comecar" style={{fontSize: 14}}>Começar</a>
+            <div style={{flex: 1}} />
+            <a className="btn btn-primary" href={SIGNUP_URL}>Começar agora</a>
+        </nav>
     );
 }

@@ -1,37 +1,75 @@
-/* Same design tokens as client/src/scss/_tokens.scss, so the marketing site
-   and the logged-in app read as one product. */
+/* Same design tokens as client/src/scss/_tokens.scss (dark "Nocturne" palette), so the
+   marketing site and the logged-in app read as one product. Unlike the app, the landing
+   page in the design handoff has no light-mode toggle — it's dark-only by design. */
 :root {
-  --cn-bg-page: oklch(0.985 0.004 90);
-  --cn-bg-card: white;
-  --cn-bg-subtle: oklch(0.97 0.004 90);
-  --cn-bg-hover: oklch(0.94 0.006 90);
+  --color-bg: #161826;
+  --color-surface: #1d1f2c;
+  --color-text: #e9e9ed;
+  --color-divider: color-mix(in srgb, #e9e9ed 16%, transparent);
 
-  --cn-border: oklch(0.91 0.005 90);
-  --cn-border-strong: oklch(0.85 0.005 90);
-  --cn-border-subtle: oklch(0.94 0.004 90);
+  --color-neutral-700: #3f424d;
+  --color-neutral-900: #292b31;
 
-  --cn-text-primary: oklch(0.22 0.01 90);
-  --cn-text-secondary: oklch(0.4 0.01 90);
-  --cn-text-muted: oklch(0.5 0.01 90);
-  --cn-text-faint: oklch(0.6 0.01 90);
+  --color-accent: #2ba98a;
+  --color-accent-100: #eafaf4;
+  --color-accent-200: #cdf0e2;
+  --color-accent-300: #a3e2c9;
+  --color-accent-400: #6cc9a8;
+  --color-accent-500: #239478;
+  --color-accent-600: #1c7d65;
+  --color-accent-700: #15654f;
+  --color-accent-800: #124f3f;
+  --color-accent-900: #0c3529;
 
-  --cn-accent: oklch(0.55 0.18 250);
-  --cn-accent-hover: oklch(0.48 0.18 250);
-  --cn-accent-tint: oklch(0.94 0.03 250);
-  --cn-accent-tint-light: oklch(0.95 0.02 250);
-  --cn-accent-text: oklch(0.4 0.15 250);
+  --color-accent-2: #e0703b;
+  --color-accent-2-100: #fdece2;
+  --color-accent-2-200: #fad1b8;
+  --color-accent-2-300: #f4ac81;
+  --color-accent-2-400: #ea8452;
+  --color-accent-2-500: #e0703b;
+  --color-accent-2-600: #bf5a2c;
+  --color-accent-2-700: #984522;
+  --color-accent-2-800: #6e3119;
+  --color-accent-2-900: #452010;
 
-  --cn-status-green-bg: oklch(0.94 0.05 150);
-  --cn-status-green-text: oklch(0.4 0.12 150);
-  --cn-positive: oklch(0.5 0.15 150);
+  --font-heading: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --cn-radius-sm: 6px;
-  --cn-radius-md: 8px;
-  --cn-radius-lg: 10px;
-  --cn-radius-xl: 14px;
-  --cn-radius-pill: 20px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
 
-  --cn-shadow-card: 0 1px 3px oklch(0.2 0.01 90 / 0.08);
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-8: 32px;
+
+  /* Legacy --cn-* aliases kept for the sections that predate this redesign
+     (PlansTable, Comparison, FAQ) so they inherit the new palette unchanged. */
+  --cn-bg-page: var(--color-bg);
+  --cn-bg-card: var(--color-surface);
+  --cn-bg-subtle: #1a1c29;
+  --cn-border: var(--color-divider);
+  --cn-border-strong: color-mix(in srgb, var(--color-text) 24%, transparent);
+  --cn-text-primary: var(--color-text);
+  --cn-text-secondary: color-mix(in srgb, var(--color-text) 78%, transparent);
+  --cn-text-muted: color-mix(in srgb, var(--color-text) 60%, transparent);
+  --cn-text-faint: color-mix(in srgb, var(--color-text) 45%, transparent);
+  --cn-accent: var(--color-accent);
+  --cn-accent-hover: var(--color-accent-600);
+  --cn-accent-tint: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  --cn-accent-tint-light: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --cn-accent-text: var(--color-accent-300);
+  --cn-positive: var(--color-accent-400);
+  --cn-radius-sm: var(--radius-sm);
+  --cn-radius-md: var(--radius-md);
+  --cn-radius-lg: var(--radius-lg);
+  --cn-radius-xl: 18px;
+  --cn-radius-pill: var(--radius-pill);
+  --cn-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
 * { box-sizing: border-box; }
@@ -39,49 +77,64 @@
 html, body {
   padding: 0;
   margin: 0;
-  background: var(--cn-bg-page);
-  color: var(--cn-text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; text-decoration: none; }
+html { scroll-behavior: smooth; }
+
+a { color: var(--color-accent-300); text-decoration: none; }
+a:hover { color: var(--color-accent); }
 
 .cn-container {
-  max-width: 1120px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(20px, 5vw, 72px);
 }
 
-.cn-btn {
+.btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
   padding: 12px 22px;
-  border-radius: var(--cn-radius-md);
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   cursor: pointer;
+  font-family: var(--font-body);
 }
 
-.cn-btn-primary {
-  background: var(--cn-accent);
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
   color: white;
 }
-.cn-btn-primary:hover { background: var(--cn-accent-hover); }
+.btn-primary:hover { background: var(--color-accent-600); border-color: var(--color-accent-600); color: white; }
 
-.cn-btn-outline {
-  background: var(--cn-bg-card);
-  border-color: var(--cn-border-strong);
-  color: var(--cn-text-primary);
+.btn-ghost {
+  background: transparent;
+  border-color: var(--color-divider);
+  color: var(--color-text);
 }
+.btn-ghost:hover {
+  background: color-mix(in srgb, var(--color-accent-2) 14%, transparent);
+  border-color: var(--color-accent-2);
+  color: var(--color-accent-2);
+}
+
+.cn-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; padding: 12px 22px; border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; }
+.cn-btn-primary { background: var(--color-accent); color: white; }
+.cn-btn-primary:hover { background: var(--color-accent-600); }
+.cn-btn-outline { background: transparent; border-color: var(--color-divider); color: var(--color-text); }
 .cn-btn-outline:hover { background: var(--cn-bg-subtle); }
 
 .cn-card {
-  background: var(--cn-bg-card);
-  border: 1px solid var(--cn-border);
-  border-radius: var(--cn-radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
   box-shadow: var(--cn-shadow-card);
 }
 
@@ -93,9 +146,25 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.03em;
   text-transform: uppercase;
   padding: 4px 12px;
-  border-radius: var(--cn-radius-pill);
+  border-radius: var(--radius-pill);
   background: var(--cn-accent-tint);
-  color: var(--cn-accent-text);
+  color: var(--color-accent-300);
+}
+
+.input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 0 14px;
+}
+.input::placeholder { color: var(--cn-text-faint); }
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--cn-accent-tint-light);
 }
 
 section { padding: 88px 0; }
@@ -103,4 +172,7 @@ section { padding: 88px 0; }
   section { padding: 56px 0; }
 }
 
-h1, h2, h3 { letter-spacing: -0.02em; margin: 0; }
+h1, h2, h3 { letter-spacing: -0.02em; margin: 0; font-family: var(--font-heading); font-weight: 500; }
+
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
