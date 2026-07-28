@@ -20,11 +20,11 @@ import users from './users/root';
 import sendConfigurations from './send-configurations/root';
 import settings from './settings/root';
 
-import {DropdownLink, getLanguageChooser, NavDropdown, NavGroup, NavLink, Section} from "./lib/page";
+import {getLanguageChooser, NavGroup, NavLink, Section} from "./lib/page";
 
 import clikerConfig from 'clikerConfig';
 import Home from "./Home";
-import {DropdownActionLink, Icon} from "./lib/bootstrap-components";
+import {Icon} from "./lib/bootstrap-components";
 import axios from './lib/axios';
 import {getUrl} from "./lib/urls";
 import {withComponentMixins} from "./lib/decorator-helpers";
@@ -126,17 +126,19 @@ class Root extends Component {
                             <div className="cn-sidebar-footer">
                                 <ul className="cn-sidebar-user navbar-nav">
                                     {getLanguageChooser(t)}
-                                    <NavDropdown menuClassName="dropdown-menu-right" label={clikerConfig.user.username} icon="user">
-                                        <DropdownLink to="/account"><Icon icon='user'/> {t('account')}</DropdownLink>
-                                        {clikerConfig.authMethod == 'cas' && <DropdownLink to="/cas/logout" forceReload><Icon icon="sign-out-alt"/> {t('logOut')}</DropdownLink>}
-                                        {clikerConfig.authMethod != 'cas' && <DropdownActionLink onClickAsync={::this.logout}><Icon icon='sign-out-alt'/> {t('logOut')}</DropdownActionLink>}
-                                    </NavDropdown>
+                                    <NavLink className={activeClass('/account')} icon="user" to="/account">{clikerConfig.user.username}</NavLink>
                                 </ul>
                                 <div className="cn-sidebar-footer-actions">
                                     <button type="button" className="btn btn-ghost cn-theme-toggle" onClick={::this.handleToggleTheme}>
                                         <Icon icon={isDark ? 'moon' : 'sun'}/>
                                         <span>{isDark ? t('dark') : t('light')}</span>
                                     </button>
+                                    {clikerConfig.authMethod == 'cas' &&
+                                        <a href={getUrl('cas/logout')} className="btn btn-ghost">
+                                            <Icon icon="sign-out-alt"/>
+                                            <span>{t('logOut')}</span>
+                                        </a>
+                                    }
                                     {clikerConfig.authMethod != 'cas' &&
                                         <button type="button" className="btn btn-ghost" onClick={::this.logout}>
                                             <Icon icon="sign-out-alt"/>

@@ -118,6 +118,15 @@ async function signup(entity) {
         });
         const namespaceId = namespaceIds[0];
 
+        // Seed the two contact fields the Contacts CRM feature ships with by default
+        // (server/setup/knex/migrations/20260728120000_contacts.js does the same for
+        // pre-existing accounts) so a fresh account isn't starting from an empty
+        // fields list.
+        await tx('contact_fields').insert([
+            { account_id: accountId, namespace: namespaceId, name: 'Telefone', key: 'telefone', type: 'text' },
+            { account_id: accountId, namespace: namespaceId, name: 'WhatsApp', key: 'whatsapp', type: 'text' }
+        ]);
+
         let username = (entity.email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9._-]/g, '');
         if (!username) {
             username = 'user';

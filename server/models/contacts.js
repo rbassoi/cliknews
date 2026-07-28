@@ -1,21 +1,30 @@
 'use strict';
 
 const knex = require('../lib/knex');
+const hasher = require('node-object-hash')();
 const dtHelpers = require('../lib/dt-helpers');
 // Not destructured: subscriptions.js sits in a circular require chain (subscriptions ->
 // campaigns -> plan-limits -> contacts), and whichever module gets loaded first can end
 // up destructuring this before subscriptions.js has finished assigning its exports.
 // Accessing it as a property at call time (below) always sees the final export.
 const subscriptions = require('./subscriptions');
-const { requireAccountScope, requireAccountScopeOn } = require('../lib/tenant-scope');
+const interoperableErrors = require('../../shared/interoperable-errors');
+const { filterObject } = require('../lib/helpers');
+const shares = require('./shares');
+const namespaceHelpers = require('../lib/namespace-helpers');
+const { EntityActivityType } = require('../../shared/activity-log');
+const activityLog = require('../lib/activity-log');
+const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
 
-/** Lists the current user may view subscribers of. Used to build the cross-list contacts UNION. */
+const allowedKeys = new Set(['name', 'email', 'company_id', 'custom_fields', 'namespace']);
+
+function hash(entity) {
+    return hasher.hash(filterObject(entity, allowedKeys));
+}
+
+/** Lists the current user may view subscribers of. Used only to build the informational "which lists" / status columns below — contact rows themselves are now permission-controlled via shares_contact/permissions_contact, same as companies. */
 async function getPermittedListsTx(tx, context) {
     if (context.user.admin) {
-        // A "scoped admin" context (account present, e.g. an API-key request —
-        // see server/lib/middleware/api-key-auth.js) still gets filtered by
-        // that account; a true admin context (no account, background jobs)
-        // is unaffected, same as requireAccountScope's bypass everywhere else.
         return await tx('lists').select('id', 'name').modify(requireAccountScope, context);
     }
 
@@ -37,110 +46,213 @@ function buildContactsUnion(tx, permittedLists) {
 
     for (const list of permittedLists) {
         const table = subscriptions.getSubscriptionTableName(list.id);
-        parts.push('select `hash_email`, `email`, `status`, `created`, ? as `list_id`, ? as `list_name` from `' + table + '` where `email` is not null');
-        bindings.push(list.id, list.name);
+        parts.push('select `email`, `status`, ? as `list_name` from `' + table + '` where `email` is not null');
+        bindings.push(list.name);
     }
 
     const sql = '(' + parts.join(' union all ') + ') as u';
     return tx.raw(sql, bindings);
 }
 
-async function listDTAjax(context, listId, status, params) {
+async function listDTAjax(context, status, params) {
     return await knex.transaction(async tx => {
-        let permittedLists = await getPermittedListsTx(tx, context);
+        const permittedLists = await getPermittedListsTx(tx, context);
+        const unionSource = permittedLists.length > 0 ? buildContactsUnion(tx, permittedLists) : null;
 
-        if (listId) {
-            permittedLists = permittedLists.filter(list => list.id === listId);
-        }
-
-        if (permittedLists.length === 0) {
-            return { draw: params.draw, recordsTotal: 0, recordsFiltered: 0, data: [] };
-        }
-
-        const unionSource = buildContactsUnion(tx, permittedLists);
-
-        return await dtHelpers.ajaxListTx(
+        return await dtHelpers.ajaxListWithPermissionsTx(
             tx,
+            context,
+            [{ entityTypeId: 'contact', requiredOperations: ['view'] }],
             params,
             builder => {
-                let query = builder.from(unionSource)
-                    // Contacts have no company_id of their own (they live in per-list
-                    // subscription__X tables, not a single contacts table), so a
-                    // company is inferred purely by matching the email's domain —
-                    // the account_id check lives in the ON clause (not a WHERE) so a
-                    // LEFT JOIN with no matching company still returns the contact row.
-                    // Joined as a derived table exposing only (domain, name, account_id)
-                    // rather than the raw `companies` table — the full table also has a
-                    // `created` column, which collides with the union's own `created`
-                    // and makes dt-helpers' generic unqualified search clause ambiguous.
-                    .leftJoin(
-                        tx('companies').select('domain', 'name', 'account_id').as('companies'),
-                        function () {
-                            this.on(knex.raw("SUBSTRING_INDEX(u.email, '@', -1)"), '=', 'companies.domain');
-                            if (context.account && context.account.id) {
-                                this.andOn('companies.account_id', '=', knex.raw('?', [context.account.id]));
-                            }
-                        }
-                    );
-                if (status) {
-                    query = query.where('u.status', status);
+                let query = builder
+                    .from('contacts')
+                    .leftJoin('companies', 'companies.id', 'contacts.company_id');
+
+                if (unionSource) {
+                    let subsBuilder = tx
+                        .select([
+                            'u.email as email',
+                            knex.raw('group_concat(distinct u.list_name separator \';\') as list_names'),
+                            knex.raw('min(u.status) as min_status')
+                        ])
+                        .from(unionSource);
+
+                    if (status) {
+                        subsBuilder = subsBuilder.where('u.status', status);
+                    }
+
+                    subsBuilder = subsBuilder.groupBy('u.email').as('subs');
+
+                    query = status
+                        ? query.innerJoin(subsBuilder, 'subs.email', 'contacts.email')
+                        : query.leftJoin(subsBuilder, 'subs.email', 'contacts.email');
+                } else if (status) {
+                    query = query.whereRaw('FALSE');
                 }
-                return query.groupBy('u.hash_email');
+
+                return query;
             },
             [
-                { name: 'hash_email', raw: 'u.hash_email' },
-                { name: 'email', raw: 'min(u.email) as `email`' },
-                { name: 'status', raw: 'min(u.status) as `status`' },
-                { name: 'created', raw: 'min(u.created) as `created`' },
-                { name: 'lists', raw: 'group_concat(distinct u.list_name separator \';\') as `lists`' },
-                { name: 'company_name', raw: 'min(companies.name) as `company_name`' }
+                'contacts.id',
+                'contacts.email',
+                'contacts.name',
+                'contacts.created',
+                unionSource ? { name: 'lists', raw: 'subs.list_names' } : { name: 'lists', raw: 'NULL' },
+                unionSource ? { name: 'status', raw: 'subs.min_status' } : { name: 'status', raw: 'NULL' },
+                'companies.name'
             ]
         );
     });
 }
 
-/** Total number of distinct contacts (by email) across every list the user may view. */
-async function getTotalCount(context) {
-    return await knex.transaction(async tx => {
-        const permittedLists = await getPermittedListsTx(tx, context);
-        if (permittedLists.length === 0) {
-            return 0;
-        }
+async function _getByTx(tx, context, id, withPermissions = true) {
+    const entity = await tx('contacts').where('contacts.id', id)
+        .modify(requireAccountScope, context)
+        .select(['contacts.id', 'contacts.email', 'contacts.name', 'contacts.company_id', 'contacts.custom_fields', 'contacts.namespace'])
+        .first();
 
-        const unionSource = buildContactsUnion(tx, permittedLists);
-        const row = await tx.from(unionSource).countDistinct('u.hash_email as cnt').first();
-        return Number(row.cnt) || 0;
+    if (!entity) {
+        shares.throwPermissionDenied();
+    }
+
+    entity.custom_fields = entity.custom_fields ? JSON.parse(entity.custom_fields) : {};
+
+    if (withPermissions) {
+        entity.permissions = await shares.getPermissionsTx(tx, context, 'contact', id);
+    }
+
+    return entity;
+}
+
+async function getByIdTx(tx, context, id, withPermissions = true) {
+    await shares.enforceEntityPermissionTx(tx, context, 'contact', id, 'view');
+    return await _getByTx(tx, context, id, withPermissions);
+}
+
+async function getById(context, id, withPermissions = true) {
+    return await knex.transaction(async tx => {
+        return await getByIdTx(tx, context, id, withPermissions);
     });
 }
 
-/** Streams every distinct contact (by email) across every list the user may view, for CSV export. Keyset-paginated by hash_email, same convention as subscriptions.js:listIterator. */
-async function* contactsIterator(context, status) {
-    const permittedLists = await knex.transaction(tx => getPermittedListsTx(tx, context));
-    if (permittedLists.length === 0) {
-        return;
-    }
+async function create(context, entity) {
+    return await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'namespace', entity.namespace, 'createContact');
 
-    let lastHash = '';
+        await namespaceHelpers.validateEntity(tx, entity);
+
+        const accountId = requireAccountId(context);
+        if (await tx('contacts').where({ account_id: accountId, email: entity.email }).first()) {
+            throw new interoperableErrors.DuplicitEmailError();
+        }
+
+        const filteredEntity = filterObject(entity, allowedKeys);
+        filteredEntity.account_id = accountId;
+        if (filteredEntity.custom_fields) {
+            filteredEntity.custom_fields = JSON.stringify(filteredEntity.custom_fields);
+        }
+
+        const ids = await tx('contacts').insert(filteredEntity);
+        const id = ids[0];
+
+        await shares.rebuildPermissionsTx(tx, { entityTypeId: 'contact', entityId: id });
+
+        await activityLog.logEntityActivity('contact', EntityActivityType.CREATE, id);
+
+        return id;
+    });
+}
+
+async function updateWithConsistencyCheck(context, entity) {
+    await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'contact', entity.id, 'edit');
+
+        const existing = await _getByTx(tx, context, entity.id, false);
+
+        const existingHash = hash(existing);
+        if (existingHash !== entity.originalHash) {
+            throw new interoperableErrors.ChangedError();
+        }
+
+        await namespaceHelpers.validateEntity(tx, entity);
+        await namespaceHelpers.validateMoveTx(tx, context, entity, existing, 'contact', 'createContact', 'delete');
+
+        if (entity.email !== existing.email) {
+            const accountId = requireAccountId(context);
+            if (await tx('contacts').where({ account_id: accountId, email: entity.email }).whereNot('id', entity.id).first()) {
+                throw new interoperableErrors.DuplicitEmailError();
+            }
+        }
+
+        const filteredEntity = filterObject(entity, allowedKeys);
+        if (filteredEntity.custom_fields) {
+            filteredEntity.custom_fields = JSON.stringify(filteredEntity.custom_fields);
+        }
+
+        await tx('contacts').where('id', entity.id).modify(requireAccountScope, context).update(filteredEntity);
+
+        await shares.rebuildPermissionsTx(tx, { entityTypeId: 'contact', entityId: entity.id });
+
+        await activityLog.logEntityActivity('contact', EntityActivityType.UPDATE, entity.id);
+    });
+}
+
+async function remove(context, id) {
+    await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'contact', id, 'delete');
+
+        await tx('contacts').where('id', id).modify(requireAccountScope, context).del();
+
+        await activityLog.logEntityActivity('contact', EntityActivityType.REMOVE, id);
+    });
+}
+
+/** Total number of contacts visible to the given context (their own account's contacts table). */
+async function getTotalCount(context) {
+    const row = await knex('contacts').modify(requireAccountScope, context).count('id as cnt').first();
+    return Number(row.cnt) || 0;
+}
+
+/** Streams every contact for the account, joined with its list subscriptions, for CSV export. Keyset-paginated by id. */
+async function* contactsIterator(context, status) {
+    let lastId = 0;
 
     while (true) {
         const rows = await knex.transaction(async tx => {
-            const unionSource = buildContactsUnion(tx, permittedLists);
+            const permittedLists = await getPermittedListsTx(tx, context);
+            const unionSource = permittedLists.length > 0 ? buildContactsUnion(tx, permittedLists) : null;
 
-            let query = tx.from(unionSource).where('u.hash_email', '>', lastHash);
-            if (status) {
-                query = query.where('u.status', status);
+            let query = tx.from('contacts').modify(requireAccountScope, context).where('contacts.id', '>', lastId);
+
+            if (unionSource) {
+                let subsBuilder = tx
+                    .select(['u.email as email', knex.raw('group_concat(distinct u.list_name separator \';\') as list_names'), knex.raw('min(u.status) as min_status')])
+                    .from(unionSource);
+
+                if (status) {
+                    subsBuilder = subsBuilder.where('u.status', status);
+                }
+
+                subsBuilder = subsBuilder.groupBy('u.email').as('subs');
+
+                query = status
+                    ? query.innerJoin(subsBuilder, 'subs.email', 'contacts.email')
+                    : query.leftJoin(subsBuilder, 'subs.email', 'contacts.email');
+            } else if (status) {
+                query = query.whereRaw('FALSE');
             }
 
             return await query
-                .groupBy('u.hash_email')
-                .orderBy('u.hash_email', 'asc')
+                .orderBy('contacts.id', 'asc')
                 .limit(500)
                 .select([
-                    tx.raw('u.hash_email as `hash_email`'),
-                    tx.raw('min(u.email) as `email`'),
-                    tx.raw('min(u.status) as `status`'),
-                    tx.raw('min(u.created) as `created`'),
-                    tx.raw('group_concat(distinct u.list_name separator \';\') as `lists`')
+                    'contacts.id as id',
+                    'contacts.email as email',
+                    'contacts.name as name',
+                    'contacts.created as created',
+                    unionSource ? knex.raw('subs.list_names as `lists`') : knex.raw('NULL as `lists`'),
+                    unionSource ? knex.raw('subs.min_status as `status`') : knex.raw('NULL as `status`')
                 ]);
         });
 
@@ -152,10 +264,16 @@ async function* contactsIterator(context, status) {
             yield row;
         }
 
-        lastHash = rows[rows.length - 1].hash_email;
+        lastId = rows[rows.length - 1].id;
     }
 }
 
+module.exports.hash = hash;
 module.exports.listDTAjax = listDTAjax;
+module.exports.getByIdTx = getByIdTx;
+module.exports.getById = getById;
+module.exports.create = create;
+module.exports.updateWithConsistencyCheck = updateWithConsistencyCheck;
+module.exports.remove = remove;
 module.exports.getTotalCount = getTotalCount;
 module.exports.contactsIterator = contactsIterator;

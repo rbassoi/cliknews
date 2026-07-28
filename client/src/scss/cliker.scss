@@ -122,7 +122,12 @@ body.cliker {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--cn-space-9);
+    // Tight, uniform gap so flat NavLinks and NavGroups (rendered as direct siblings
+    // here, not all wrapped in one <ul>) read as one continuous list — matches
+    // .cn-nav-list's own item gap below. The Administração group's own
+    // margin-top/border-top (see .cn-nav-group-admin) is what visually separates it,
+    // not this gap.
+    gap: 2px;
   }
 
   .cn-nav-list {
