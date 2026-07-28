@@ -6,6 +6,10 @@ RUN set -ex; \
     apk add --update --no-cache \
     make gcc g++ git python
 
+# Some transitive deps are pinned to git:// URLs, whose port (9418) is firewalled on
+# some hosts; rewrite to https:// so npm install doesn't hang on those clones.
+RUN git config --global url."https://github.com/".insteadOf git://github.com/
+
 # Copy package.json dependencies
 COPY server/package.json /app/server/package.json
 COPY server/package-lock.json /app/server/package-lock.json
