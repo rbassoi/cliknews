@@ -222,7 +222,7 @@ async function _execImportRun(impt, handlers) {
 
                                 if (importNamespace) {
                                     try {
-                                        await contacts.upsertFromEmailTx(tx, importList.account_id, importNamespace.id, subscr.email, null);
+                                        await contacts.upsertFromEmailTx(tx, importList.account_id, importNamespace.id, subscr.email, null, null);
                                     } catch (contactErr) {
                                         // Never let a Contacts sync hiccup fail or roll back a real,
                                         // successfully-processed import row.

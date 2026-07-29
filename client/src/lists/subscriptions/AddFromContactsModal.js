@@ -66,8 +66,9 @@ export default class AddFromContactsModal extends Component {
 
         const contactsColumns = [
             {data: 1, title: t('email')},
-            {data: 2, title: t('name')},
-            {data: 6, title: t('company')}
+            {data: 2, title: t('firstName')},
+            {data: 3, title: t('lastName')},
+            {data: 7, title: t('company')}
         ];
 
         return (

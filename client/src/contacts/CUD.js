@@ -50,7 +50,7 @@ export default class CUD extends Component {
     }
 
     submitFormValuesMutator(data) {
-        const result = filterData(data, ['name', 'email', 'company_id', 'namespace']);
+        const result = filterData(data, ['first_name', 'last_name', 'email', 'company_id', 'namespace']);
 
         const customFields = {};
         for (const field of this.state.fields) {
@@ -68,12 +68,13 @@ export default class CUD extends Component {
         this._isMounted = true;
 
         // Populated synchronously (before the fields fetch below resolves) so InputField
-        // never renders uncontrolled-then-controlled for name/email/company_id.
+        // never renders uncontrolled-then-controlled for first_name/last_name/email/company_id.
         if (this.props.entity) {
             this.getFormValuesFromEntity(this.props.entity);
         } else {
             this.populateFormValues({
-                name: '',
+                first_name: '',
+                last_name: '',
                 email: '',
                 company_id: null,
                 namespace: getDefaultNamespace(this.props.permissions)
@@ -186,7 +187,8 @@ export default class CUD extends Component {
                 <Title>{isEdit ? t('editContact') : t('createContact')}</Title>
 
                 <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
-                    <InputField id="name" label={t('name')}/>
+                    <InputField id="first_name" label={t('firstName')}/>
+                    <InputField id="last_name" label={t('lastName')}/>
                     <InputField id="email" label={t('email')}/>
                     <TableSelect id="company_id" label={t('company')} withHeader withClear dropdown dataUrl="rest/companies-table" columns={companiesColumns} selectionLabelIndex={1}/>
 

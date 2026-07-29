@@ -119,6 +119,8 @@
   "apiResponseIsAJsonStructureWithErrorAnd": "API response is a JSON structure with <1>error</1> and <3>data</3> properties. If the response <5>error</5> has a value set then the request failed.",
   "youNeedToDefineProperContentTypeWhen": "You need to define proper <1>Content-Type</1> when making a request. You can either use <3>application/x-www-form-urlencoded</3> for normal form data or <5>application/json</5> for a JSON payload. Using <7>multipart/form-data</7> is not supported.",
   "emailMustNotBeEmpty": "Email must not be empty.",
+  "firstName": "First name",
+  "lastName": "Last name",
   "invalidEmailAddress": "Invalid email address.",
   "theEmailIsAlreadyAssociatedWithAnother": "The email is already associated with another user in the system.",
   "validationIsInProgress": "Validation is in progress...",

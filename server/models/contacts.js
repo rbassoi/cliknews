@@ -8,6 +8,7 @@ const dtHelpers = require('../lib/dt-helpers');
 // up destructuring this before subscriptions.js has finished assigning its exports.
 // Accessing it as a property at call time (below) always sees the final export.
 const subscriptions = require('./subscriptions');
+const fields = require('./fields');
 const interoperableErrors = require('../../shared/interoperable-errors');
 const { filterObject } = require('../lib/helpers');
 const shares = require('./shares');
@@ -17,7 +18,7 @@ const activityLog = require('../lib/activity-log');
 const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
 const { SubscriptionSource } = require('../../shared/lists');
 
-const allowedKeys = new Set(['name', 'email', 'company_id', 'custom_fields', 'namespace']);
+const allowedKeys = new Set(['first_name', 'last_name', 'email', 'company_id', 'custom_fields', 'namespace']);
 
 function hash(entity) {
     return hasher.hash(filterObject(entity, allowedKeys));
@@ -107,7 +108,8 @@ async function listDTAjax(context, status, excludeListId, params) {
             [
                 'contacts.id',
                 'contacts.email',
-                'contacts.name',
+                'contacts.first_name',
+                'contacts.last_name',
                 'contacts.created',
                 unionSource ? { name: 'lists', raw: 'subs.list_names' } : { name: 'lists', raw: 'NULL' },
                 unionSource ? { name: 'status', raw: 'subs.min_status' } : { name: 'status', raw: 'NULL' },
@@ -120,7 +122,7 @@ async function listDTAjax(context, status, excludeListId, params) {
 async function _getByTx(tx, context, id, withPermissions = true) {
     const entity = await tx('contacts').where('contacts.id', id)
         .modify(requireAccountScope, context)
-        .select(['contacts.id', 'contacts.email', 'contacts.name', 'contacts.company_id', 'contacts.custom_fields', 'contacts.namespace'])
+        .select(['contacts.id', 'contacts.email', 'contacts.first_name', 'contacts.last_name', 'contacts.company_id', 'contacts.custom_fields', 'contacts.namespace'])
         .first();
 
     if (!entity) {
@@ -151,10 +153,10 @@ async function getById(context, id, withPermissions = true) {
  * Called from the list-import worker (server/services/importer.js) right after a row
  * is successfully subscribed, so contacts uploaded via a list's own CSV import also
  * show up in the global Contacts view — not just contacts created directly. Never
- * clobbers an existing contact's name (only fills it in if currently empty), since the
- * contact may have since been edited by hand.
+ * clobbers an existing contact's first/last name (only fills them in if currently
+ * empty), since the contact may have since been edited by hand.
  */
-async function upsertFromEmailTx(tx, accountId, namespaceId, email, name) {
+async function upsertFromEmailTx(tx, accountId, namespaceId, email, firstName, lastName) {
     const existing = await tx('contacts').where({ account_id: accountId, email }).first();
 
     if (!existing) {
@@ -162,15 +164,25 @@ async function upsertFromEmailTx(tx, accountId, namespaceId, email, name) {
             account_id: accountId,
             namespace: namespaceId,
             email,
-            name: name || null
+            first_name: firstName || null,
+            last_name: lastName || null
         });
 
         // Without this, the new contact has no permissions_contact rows at all and
         // is invisible everywhere the datatable permission-filters on 'view' (i.e.
         // everywhere) — the exact same step create() does after its own insert.
         await shares.rebuildPermissionsTx(tx, { entityTypeId: 'contact', entityId: ids[0] });
-    } else if (name && !existing.name) {
-        await tx('contacts').where('id', existing.id).update({ name });
+    } else {
+        const patch = {};
+        if (firstName && !existing.first_name) {
+            patch.first_name = firstName;
+        }
+        if (lastName && !existing.last_name) {
+            patch.last_name = lastName;
+        }
+        if (Object.keys(patch).length > 0) {
+            await tx('contacts').where('id', existing.id).update(patch);
+        }
     }
 }
 
@@ -255,14 +267,34 @@ async function remove(context, id) {
  * rather than silently re-subscribed, same reasoning.
  */
 async function addToList(context, listId, contactIds) {
-    const rows = await knex('contacts').whereIn('id', contactIds).modify(requireAccountScope, context).select(['id', 'email']);
+    const rows = await knex('contacts').whereIn('id', contactIds).modify(requireAccountScope, context).select(['id', 'email', 'first_name', 'last_name']);
 
     const addedEmails = [];
     const alreadySubscribedEmails = [];
 
     for (const row of rows) {
         try {
-            await subscriptions.create(context, listId, { email: row.email }, SubscriptionSource.ADMIN_FORM, { subscribeIfNoExisting: true });
+            // The list's own fields are keyed by merge tag (MERGE_FIRST_NAME/
+            // MERGE_LAST_NAME if it uses the two-field wizard, MERGE_NAME if it
+            // uses the single combined-name one, or neither) — fields.fromAPI
+            // resolves whichever of those actually exist on this list into their
+            // real (list-specific, randomly-suffixed) column names, so a contact's
+            // name isn't silently dropped on subscribe like it used to be.
+            const mergeData = {};
+            if (row.first_name) {
+                mergeData.MERGE_FIRST_NAME = row.first_name;
+            }
+            if (row.last_name) {
+                mergeData.MERGE_LAST_NAME = row.last_name;
+            }
+            const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ');
+            if (fullName) {
+                mergeData.MERGE_NAME = fullName;
+            }
+
+            const mappedFields = await fields.fromAPI(context, listId, mergeData);
+
+            await subscriptions.create(context, listId, { email: row.email, ...mappedFields }, SubscriptionSource.ADMIN_FORM, { subscribeIfNoExisting: true });
             addedEmails.push(row.email);
         } catch (err) {
             if (err instanceof interoperableErrors.DuplicitEmailError) {
@@ -322,7 +354,8 @@ async function* contactsIterator(context, status) {
                 .select([
                     'contacts.id as id',
                     'contacts.email as email',
-                    'contacts.name as name',
+                    'contacts.first_name as first_name',
+                    'contacts.last_name as last_name',
                     'contacts.created as created',
                     unionSource ? knex.raw('subs.list_names as `lists`') : knex.raw('NULL as `lists`'),
                     unionSource ? knex.raw('subs.min_status as `status`') : knex.raw('NULL as `status`')

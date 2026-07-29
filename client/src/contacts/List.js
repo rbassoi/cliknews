@@ -83,9 +83,10 @@ export default class List extends Component {
                 title: t('email'),
                 render: data => <span style={{fontWeight: 600}}>{data}</span>
             },
-            { data: 2, title: t('name') },
+            { data: 2, title: t('firstName') },
+            { data: 3, title: t('lastName') },
             {
-                data: 4,
+                data: 5,
                 title: t('lists'),
                 sortable: false,
                 searchable: false,
@@ -96,7 +97,7 @@ export default class List extends Component {
                 )
             },
             {
-                data: 5,
+                data: 6,
                 title: t('status'),
                 // Aggregate alias (min(u.status) from the lists-union subquery), same as
                 // "lists"/"company" below — dt-helpers' generic search/sort is WHERE-based
@@ -106,12 +107,12 @@ export default class List extends Component {
                 render: data => data !== null ? <Pill color={statusPillColors[data] || 'gray'}>{this.statusLabels[data]}</Pill> : ''
             },
             {
-                data: 3,
+                data: 4,
                 title: t('added'),
                 render: data => data ? moment(data).fromNow() : ''
             },
             {
-                data: 6,
+                data: 7,
                 title: t('company'),
                 sortable: false,
                 searchable: false,
@@ -120,7 +121,7 @@ export default class List extends Component {
             {
                 actions: data => {
                     const actions = [];
-                    const perms = data[7];
+                    const perms = data[8];
 
                     if (perms.includes('view') || perms.includes('edit')) {
                         actions.push({
