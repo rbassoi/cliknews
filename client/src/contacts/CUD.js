@@ -21,6 +21,7 @@ import {DeleteModalDialog} from '../lib/modals';
 import {withComponentMixins} from '../lib/decorator-helpers';
 import axios from '../lib/axios';
 import {getUrl} from '../lib/urls';
+import CreateCompanyModal from '../companies/CreateCompanyModal';
 
 function fieldFormId(field) {
     return 'cf_' + field.key;
@@ -38,7 +39,8 @@ export default class CUD extends Component {
         super(props);
 
         this.state = {
-            fields: []
+            fields: [],
+            isCreateCompanyModalOpen: false
         };
         this.initForm();
     }
@@ -186,11 +188,34 @@ export default class CUD extends Component {
 
                 <Title>{isEdit ? t('editContact') : t('createContact')}</Title>
 
+                {this.state.isCreateCompanyModalOpen &&
+                    <CreateCompanyModal
+                        permissions={this.props.permissions}
+                        onClose={() => this.setState({isCreateCompanyModalOpen: false})}
+                        onDone={company => {
+                            this.setState({isCreateCompanyModalOpen: false});
+                            this.updateFormValue('company_id', company.id);
+                        }}
+                    />
+                }
+
                 <Form stateOwner={this} onSubmitAsync={::this.submitHandler}>
                     <InputField id="first_name" label={t('firstName')}/>
                     <InputField id="last_name" label={t('lastName')}/>
                     <InputField id="email" label={t('email')}/>
-                    <TableSelect id="company_id" label={t('company')} withHeader withClear dropdown dataUrl="rest/companies-table" columns={companiesColumns} selectionLabelIndex={1}/>
+                    <TableSelect
+                        id="company_id"
+                        label={t('company')}
+                        withHeader
+                        withClear
+                        dropdown
+                        dataUrl="rest/companies-table"
+                        columns={companiesColumns}
+                        selectionLabelIndex={1}
+                        extraButtons={[
+                            <Button key="create" icon="plus" title={t('createCompany')} className="btn-secondary" onClickAsync={() => this.setState({isCreateCompanyModalOpen: true})}/>
+                        ]}
+                    />
 
                     {this.state.fields.map(field => (
                         <InputField key={field.key} id={fieldFormId(field)} label={field.name}/>

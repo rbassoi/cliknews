@@ -19,6 +19,8 @@ router.getAsync('/', passport.loggedIn, async (req, res) => {
 
     const columns = [
         {key: 'email', header: 'EMAIL'},
+        {key: 'first_name', header: 'FIRST_NAME'},
+        {key: 'last_name', header: 'LAST_NAME'},
         {key: 'status', header: 'STATUS'},
         {key: 'lists', header: 'LISTS'},
         {key: 'created', header: 'CREATED'}

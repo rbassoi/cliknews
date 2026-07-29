@@ -153,6 +153,39 @@ function prepareCsv(impt) {
     inputStream.pipe(parser);
 }
 
+// A grouped subscription row is keyed by the list's own (randomly-suffixed)
+// column names, not by merge tag — so first/last name have to be located via
+// whichever field in groupedFieldsMap actually carries the MERGE_FIRST_NAME/
+// MERGE_LAST_NAME/MERGE_NAME key, same lookup contacts.js:addToList does in
+// the other direction (contact -> list) when subscribing an existing contact.
+function extractNameFromGroupedSubscription(groupedFieldsMap, subscr) {
+    let firstName = null;
+    let lastName = null;
+    let fullName = null;
+
+    for (const col in groupedFieldsMap) {
+        const key = groupedFieldsMap[col].key;
+        if (key === 'MERGE_FIRST_NAME') {
+            firstName = subscr[col] || null;
+        } else if (key === 'MERGE_LAST_NAME') {
+            lastName = subscr[col] || null;
+        } else if (key === 'MERGE_NAME') {
+            fullName = subscr[col] || null;
+        }
+    }
+
+    if (!firstName && !lastName && fullName) {
+        const trimmed = fullName.trim();
+        if (trimmed) {
+            const spaceIdx = trimmed.indexOf(' ');
+            firstName = spaceIdx === -1 ? trimmed : trimmed.slice(0, spaceIdx);
+            lastName = spaceIdx === -1 ? null : (trimmed.slice(spaceIdx + 1).trim() || null);
+        }
+    }
+
+    return { firstName, lastName };
+}
+
 async function _execImportRun(impt, handlers) {
     try {
         // Resolved once per run (not per row) so successfully-subscribed rows also
@@ -222,7 +255,8 @@ async function _execImportRun(impt, handlers) {
 
                                 if (importNamespace) {
                                     try {
-                                        await contacts.upsertFromEmailTx(tx, importList.account_id, importNamespace.id, subscr.email, null, null);
+                                        const { firstName, lastName } = extractNameFromGroupedSubscription(groupedFieldsMap, subscr);
+                                        await contacts.upsertFromEmailTx(tx, importList.account_id, importNamespace.id, subscr.email, firstName, lastName);
                                     } catch (contactErr) {
                                         // Never let a Contacts sync hiccup fail or roll back a real,
                                         // successfully-processed import row.
