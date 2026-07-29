@@ -58,7 +58,10 @@ export default class Home extends Component {
                         <h1 className="cn-page-title">{t('dashboard')}</h1>
                         <div className="cn-page-subtitle">{t('dashboardSubtitle')}</div>
                     </div>
-                    <Link className="cn-btn cn-btn-primary" to="/campaigns/create-regular"><Icon icon="plus"/> {t('newCampaignShort')}</Link>
+                    <div style={{display: 'flex', gap: 10}}>
+                        <Link className="cn-btn cn-btn-outline" to="/account/api"><Icon icon="file-code"/> {t('forDevelopers')}</Link>
+                        <Link className="cn-btn cn-btn-primary" to="/campaigns/create-regular"><Icon icon="plus"/> {t('newCampaignShort')}</Link>
+                    </div>
                 </div>
 
                 {stats &&

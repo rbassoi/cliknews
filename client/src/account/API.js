@@ -3,6 +3,7 @@
 import React, {Component} from 'react';
 import {withTranslation} from '../lib/i18n';
 import {Trans} from 'react-i18next';
+import {Link} from 'react-router-dom';
 import {requiresAuthenticatedUser, Title, withPageHelpers} from '../lib/page'
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import axios from '../lib/axios';
@@ -71,18 +72,139 @@ export default class API extends Component {
                     </div>
                 </div>
 
-                <div className="card mb-3">
+                <div className="card mb-3" style={{borderColor: 'var(--cn-accent, #3d63d9)'}}>
                     <div className="card-body">
-                        <h4 className="card-title">{t('notesAboutTheApi')}</h4>
+                        <h4 className="card-title">{t('accountApiTitle')}</h4>
 
-                        <ul className="card-text">
-                            <li>
-                                <Trans i18nKey="apiResponseIsAJsonStructureWithErrorAnd">API response is a JSON structure with <code>error</code> and <code>data</code> properties. If the response <code>error</code> has a value set then the request failed.</Trans>
-                            </li>
-                            <li>
-                                <Trans i18nKey="youNeedToDefineProperContentTypeWhen">You need to define proper <code>Content-Type</code> when making a request. You can either use <code>application/x-www-form-urlencoded</code> for normal form data or <code>application/json</code> for a JSON payload. Using <code>multipart/form-data</code> is not supported.</Trans>
-                            </li>
-                        </ul>
+                        <p>{t('accountApiIntro')}</p>
+
+                        <div className="alert alert-info" role="alert">
+                            {t('accountApiWhichKeyNote')} <Link to="/api-keys">{t('apiKeys')}</Link>{t('accountApiWhichKeyNote2')}
+                        </div>
+
+                        <p>
+                            {t('accountApiAuthHeader')} <code>{getUrl('api-v1')}</code>
+                        </p>
+                    </div>
+                </div>
+
+                <div className="accordion" id="apicallsv2">
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2lists"><h4>GET /api-v1/lists – {t('accountApiListLists')}</h4></button>
+                        </div>
+                        <div id="v2lists" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiListListsDesc')}</p>
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -H 'api-key: SUA_CHAVE_DE_API' \<br/>{`  '${getUrl('api-v1/lists')}'`}</pre>
+                                <p>{t('responseExample')}:</p>
+                                <pre>{`{"data": [{"id": 12, "name": "CLIKDROPS", "subscribers": 1202}]}`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2sendconfigs"><h4>GET /api-v1/send-configurations – {t('accountApiListSendConfigs')}</h4></button>
+                        </div>
+                        <div id="v2sendconfigs" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiListSendConfigsDesc')}</p>
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -H 'api-key: SUA_CHAVE_DE_API' \<br/>{`  '${getUrl('api-v1/send-configurations')}'`}</pre>
+                                <p>{t('responseExample')}:</p>
+                                <pre>{`{"data": [{"id": 1, "name": "System"}]}`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2createcampaign"><h4>POST /api-v1/campaigns – {t('accountApiCreateCampaign')}</h4></button>
+                        </div>
+                        <div id="v2createcampaign" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiCreateCampaignDesc')}</p>
+
+                                <p><strong>{t('arguments')}</strong> (JSON body)</p>
+                                <ul>
+                                    <li><strong>name</strong> – {t('accountApiArgName')} (<em>{t('required')}</em>)</li>
+                                    <li><strong>subject</strong> – {t('accountApiArgSubject')} (<em>{t('required')}</em>)</li>
+                                    <li><strong>html</strong> – {t('accountApiArgHtml')} (<em>{t('required')}</em>)</li>
+                                    <li><strong>list_id</strong> – {t('accountApiArgListId')} (<em>{t('required')}</em>, {t('accountApiSeeGetLists')})</li>
+                                    <li><strong>send_configuration_id</strong> – {t('accountApiArgSendConfigId')} (<em>{t('required')}</em>, {t('accountApiSeeGetSendConfigs')})</li>
+                                    <li><strong>sender</strong> – {t('accountApiArgSender')} <code>{`{"name": "...", "email": "..."}`}</code> (<em>{t('optional')}</em>)</li>
+                                    <li><strong>text</strong> – {t('accountApiArgText')} (<em>{t('optional')}</em>)</li>
+                                </ul>
+
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -X POST -H 'api-key: SUA_CHAVE_DE_API' -H 'Content-Type: application/json' \<br/>
+{`  -d '{"name": "Clickdata Drops #1", "subject": "Clickdata Drops #1", "sender": {"name": "Clickdata Drops", "email": "drops@seudominio.com.br"}, "html": "<html>...</html>", "list_id": 12, "send_configuration_id": 1}' \\`}<br/>
+{`  '${getUrl('api-v1/campaigns')}'`}</pre>
+                                <p>{t('responseExample')}:</p>
+                                <pre>{`{"id": 42}`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2sendcampaign"><h4>POST /api-v1/campaigns/:id/send – {t('accountApiSendCampaign')}</h4></button>
+                        </div>
+                        <div id="v2sendcampaign" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiSendCampaignDesc')}</p>
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -X POST -H 'api-key: SUA_CHAVE_DE_API' \<br/>{`  '${getUrl('api-v1/campaigns/42/send')}'`}</pre>
+                                <p>{t('responseExample')}:</p>
+                                <pre>{`{"status": 2}`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2listcampaigns"><h4>GET /api-v1/campaigns – {t('accountApiListCampaigns')}</h4></button>
+                        </div>
+                        <div id="v2listcampaigns" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiListCampaignsDesc')}</p>
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -H 'api-key: SUA_CHAVE_DE_API' \<br/>{`  '${getUrl('api-v1/campaigns?limit=10')}'`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2contacts"><h4>GET/POST /api-v1/contacts – {t('accountApiContacts')}</h4></button>
+                        </div>
+                        <div id="v2contacts" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiContactsDesc')}</p>
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -X POST -H 'api-key: SUA_CHAVE_DE_API' -H 'Content-Type: application/json' \<br/>
+{`  -d '{"email": "pessoa@example.com", "list_id": 12}' \\`}<br/>
+{`  '${getUrl('api-v1/contacts')}'`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="card">
+                        <div className="card-header">
+                            <button type="button" className="btn btn-link" data-toggle="collapse" data-target="#v2transactional"><h4>POST /api-v1/transactional/send – {t('accountApiTransactional')}</h4></button>
+                        </div>
+                        <div id="v2transactional" className="collapse" data-parent="#apicallsv2">
+                            <div className="card-body">
+                                <p>{t('accountApiTransactionalDesc')}</p>
+                                <p><strong>{t('example')}</strong></p>
+                                <pre>curl -X POST -H 'api-key: SUA_CHAVE_DE_API' -H 'Content-Type: application/json' \<br/>
+{`  -d '{"send_configuration_id": 1, "to": "pessoa@example.com", "subject": "Olá", "html": "<p>Oi!</p>"}' \\`}<br/>
+{`  '${getUrl('api-v1/transactional/send')}'`}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card mb-3 mt-3">
+                    <div className="card-body">
+                        <h4 className="card-title">{t('legacyApiTitle')}</h4>
+                        <p>{t('legacyApiIntro')}</p>
                     </div>
                 </div>
 

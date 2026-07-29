@@ -6,4 +6,20 @@
   h4 {
     margin-top: 45px;
   }
+
+  // Bootstrap's own `pre`/`code` styling hardcodes a near-black color meant
+  // for a light background; the collapsed accordion body here is dark, so
+  // without this override the example curl/response blocks render as
+  // dark-on-dark and are effectively invisible.
+  :global pre {
+    color: var(--cn-text-primary, #e5e7eb);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 10px 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+
+  :global code {
+    color: var(--cn-text-primary, #e5e7eb);
+  }
 }
