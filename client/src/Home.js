@@ -69,7 +69,7 @@ export default class Home extends Component {
                             <StatCard label={t('newslettersSent')} value={stats.newslettersSent.toLocaleString()}
                                       delta={stats.newslettersSentThisMonth > 0 ? `+${stats.newslettersSentThisMonth} ${t('thisMonth')}` : null}
                                       deltaPositive={stats.newslettersSentThisMonth > 0}/>
-                            <StatCard label={t('avgOpenRateLabel')} value={`${stats.avgOpenRate.toFixed(0)}%`}/>
+                            <StatCard label={t('avgOpenRateLabel')} value={`${(stats.avgOpenRate || 0).toFixed(0)}%`}/>
                         </div>
 
                         <div style={{marginBottom: 28}}>

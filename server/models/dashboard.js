@@ -47,7 +47,11 @@ async function getStats(context) {
         listsBaseQuery(context).count('lists.id as cnt').first(),
         campaignsBaseQuery(context).where('campaigns.status', CampaignStatus.FINISHED).where('campaigns.created', '>=', startOfMonth).count('campaigns.id as cnt').first(),
         campaignsBaseQuery(context).where('campaigns.status', CampaignStatus.FINISHED).count('campaigns.id as cnt').first(),
-        campaignsBaseQuery(context).where('campaigns.status', CampaignStatus.FINISHED).sum({ delivered: 'campaigns.delivered', opened: 'campaigns.opened' }).first(),
+        // knex 0.16's `.sum({a: col1, b: col2})` only sums the first key and
+        // silently drops the rest, so this needs two explicit SUMs instead.
+        campaignsBaseQuery(context).where('campaigns.status', CampaignStatus.FINISHED)
+            .select([knex.raw('SUM(campaigns.delivered) as delivered'), knex.raw('SUM(campaigns.opened) as opened')])
+            .first(),
         listsBaseQuery(context).orderBy('lists.id', 'desc').limit(4).select('lists.id', 'lists.name', 'lists.subscribers'),
         campaignsBaseQuery(context)
             .leftJoin('campaign_lists', 'campaign_lists.campaign', 'campaigns.id')
