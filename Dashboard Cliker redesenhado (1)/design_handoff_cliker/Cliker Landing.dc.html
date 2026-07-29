@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/nocturne-a6f60d6f-7f3c-4745-91bd-990412b80345/styles.css">
+  <script src="_ds/nocturne-a6f60d6f-7f3c-4745-91bd-990412b80345/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
+    a { color: var(--color-accent-300); }
+    a:hover { color: var(--color-accent); }
+    html { scroll-behavior: smooth; }
+  </style>
+</helmet>
+
+<div style="--color-accent:#2ba98a; --color-accent-100:#eafaf4; --color-accent-200:#cdf0e2; --color-accent-300:#a3e2c9; --color-accent-400:#6cc9a8; --color-accent-500:#239478; --color-accent-600:#1c7d65; --color-accent-700:#15654f; --color-accent-800:#124f3f; --color-accent-900:#0c3529; --color-accent-2:#e0703b; --color-accent-2-100:#fdece2; --color-accent-2-200:#fad1b8; --color-accent-2-300:#f4ac81; --color-accent-2-400:#ea8452; --color-accent-2-500:#e0703b; --color-accent-2-600:#bf5a2c; --color-accent-2-700:#984522; --color-accent-2-800:#6e3119; --color-accent-2-900:#452010; background: radial-gradient(1200px 720px at 82% -160px, color-mix(in srgb, var(--color-accent-900) 75%, transparent), transparent 60%), radial-gradient(1100px 800px at -10% 900px, color-mix(in srgb, black 30%, transparent), transparent 55%), var(--color-bg); color: var(--color-text);">
+
+  <nav class="nav" style="position:sticky; top:0; z-index:50; padding: var(--space-4) clamp(20px, 5vw, 72px); display:flex; align-items:center; gap: var(--space-6); background: color-mix(in srgb, var(--color-bg) 84%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--color-divider);">
+    <span class="nav-brand" style="display:flex; align-items:center; gap: var(--space-2);"><img src="assets/cliker-icon.png" alt="Cliker" style="width:24px; height:24px; border-radius: var(--radius-sm); display:block;">Cliker</span>
+    <a href="#produto" style="font-size:14px;">Produto</a>
+    <a href="#recursos" style="font-size:14px;">Recursos</a>
+    <a href="#comecar" style="font-size:14px;">Começar</a>
+    <div style="flex:1;"></div>
+    <button type="button" class="btn btn-primary">Começar agora</button>
+  </nav>
+
+  <div style="max-width:1200px; margin:0 auto; padding: 0 clamp(20px, 5vw, 72px);">
+
+    <section style="display:grid; grid-template-columns: minmax(0,6fr) minmax(0,6fr); gap: clamp(32px,5vw,80px); align-items:center; padding: 88px 0 96px;">
+      <div>
+        <div style="display:flex; align-items:center; gap: var(--space-3); margin-bottom: var(--space-5);">
+          <span style="width:32px; height:1px; background: var(--color-accent); flex:none;"></span>
+          <span style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: var(--color-accent);">E-mail marketing open source</span>
+        </div>
+        <h1 style="font-family: var(--font-heading); font-weight:500; font-size:clamp(38px, 5vw, 64px); line-height:1.12; letter-spacing:-0.015em; margin:0;">
+          <span style="display:block;">E-mail marketing sem letra miúda.</span>
+          <span style="display:block;">Seus contatos, sob seu controle.</span>
+        </h1>
+        <p style="font-size:17px; line-height:28px; max-width:52ch; margin: var(--space-6) 0 0; color: color-mix(in srgb, var(--color-text) 82%, transparent);">
+          Cliker reúne contatos, listas, formulários e campanhas em um só painel — open source, sem taxa por contato e sem prender seus dados.
+        </p>
+        <div style="display:flex; gap: var(--space-3); flex-wrap:wrap; margin-top: var(--space-6);">
+          <button type="button" class="btn btn-primary" style-hover="{{ ctaHoverStyle }}">{{ ctaLabel }}</button>
+          <button type="button" class="btn btn-ghost">Ver no GitHub</button>
+        </div>
+        <p style="font-size:13px; color: color-mix(in srgb, var(--color-text) 55%, transparent); margin: var(--space-4) 0 0;">Grátis para sempre até 500 contatos · Sem cartão de crédito</p>
+      </div>
+      <div style="position:relative;">
+        <div style="position:absolute; inset:-32px; background: radial-gradient(60% 60% at 60% 20%, color-mix(in srgb, var(--color-accent-800) 55%, transparent), transparent 70%); pointer-events:none;"></div>
+        <figure class="lighten elev-lg" style="position:relative; margin:0; border-radius: var(--radius-lg); overflow:hidden; border:1px solid var(--color-divider);">
+          <image-slot id="hero-photo" shape="rect" placeholder="Captura do painel do Cliker" style="width:100%; aspect-ratio: 4/3;"></image-slot>
+        </figure>
+      </div>
+    </section>
+
+  </div>
+
+  <section style="padding: 70px 0; background-color: #2F816DEB">
+    <div style="max-width:1200px; margin:0 auto; padding: 0 clamp(20px, 5vw, 72px); display:grid; grid-template-columns: repeat(4, auto); justify-content:space-between; gap: 40px 28px;">
+      <div>
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:clamp(36px, 3.6vw, 52px); line-height:56px; margin:0; color: var(--color-text);">100%</p>
+        <p style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: color-mix(in srgb, var(--color-text) 64%, transparent); margin: var(--space-2) 0 0;">Seus dados, seu servidor</p>
+      </div>
+      <div>
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:clamp(36px, 3.6vw, 52px); line-height:56px; margin:0; color: var(--color-text);">6</p>
+        <p style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: color-mix(in srgb, var(--color-text) 64%, transparent); margin: var(--space-2) 0 0;">Canais de envio integrados</p>
+      </div>
+      <div>
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:clamp(36px, 3.6vw, 52px); line-height:56px; margin:0; color: var(--color-text);">R$0</p>
+        <p style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: color-mix(in srgb, var(--color-text) 64%, transparent); margin: var(--space-2) 0 0;">Taxa por contato</p>
+      </div>
+      <div>
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:clamp(36px, 3.6vw, 52px); line-height:56px; margin:0; color: var(--color-text);">Tempo real</p>
+        <p style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: color-mix(in srgb, var(--color-text) 64%, transparent); margin: var(--space-2) 0 0;">Aberturas e cliques</p>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1200px; margin:0 auto; padding: 0 clamp(20px, 5vw, 72px);">
+
+    <section id="produto" style="padding: 98px 0 70px;">
+      <div style="display:flex; align-items:center; gap: var(--space-3); margin-bottom: var(--space-6);">
+        <span style="width:32px; height:1px; background: var(--color-accent); flex:none;"></span>
+        <span style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: var(--color-accent);">O que o Cliker faz</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: minmax(64px,160px) minmax(0,420px) minmax(0,1fr); gap: 28px clamp(24px,4vw,72px); align-items:baseline; padding: 42px 0;">
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:15px; color: var(--color-accent); margin:0;">01</p>
+        <h2 style="font-family: var(--font-heading); font-weight:500; font-size:24px; letter-spacing:-0.01em; margin:0;">Contatos &amp; Listas</h2>
+        <p style="font-size:15.5px; line-height:28px; margin:0; max-width:52ch; color: color-mix(in srgb, var(--color-text) 78%, transparent);">Organize contatos em listas e segmentos, importe sua base existente e mantenha tudo sincronizado em um só painel.</p>
+      </div>
+      <div style="height:1px; background: linear-gradient(to right, transparent, var(--color-neutral-700) 48px calc(100% - 48px), transparent);"></div>
+
+      <div style="display:grid; grid-template-columns: minmax(64px,160px) minmax(0,420px) minmax(0,1fr); gap: 28px clamp(24px,4vw,72px); align-items:baseline; padding: 42px 0;">
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:15px; color: var(--color-accent); margin:0;">02</p>
+        <h2 style="font-family: var(--font-heading); font-weight:500; font-size:24px; letter-spacing:-0.01em; margin:0;">Campanhas &amp; Automação</h2>
+        <p style="font-size:15.5px; line-height:28px; margin:0; max-width:52ch; color: color-mix(in srgb, var(--color-text) 78%, transparent);">Monte campanhas com modelos reutilizáveis, agende envios e acompanhe taxas de abertura em tempo real.</p>
+      </div>
+      <div style="height:1px; background: linear-gradient(to right, transparent, var(--color-neutral-700) 48px calc(100% - 48px), transparent);"></div>
+
+      <div style="display:grid; grid-template-columns: minmax(64px,160px) minmax(0,420px) minmax(0,1fr); gap: 28px clamp(24px,4vw,72px); align-items:baseline; padding: 42px 0;">
+        <p style="font-family: var(--font-heading); font-weight:500; font-size:15px; color: var(--color-accent); margin:0;">03</p>
+        <h2 style="font-family: var(--font-heading); font-weight:500; font-size:24px; letter-spacing:-0.01em; margin:0;">Formulários &amp; Canais</h2>
+        <p style="font-size:15.5px; line-height:28px; margin:0; max-width:52ch; color: color-mix(in srgb, var(--color-text) 78%, transparent);">Capture novos contatos com formulários incorporáveis e envie por múltiplos canais além do e-mail.</p>
+      </div>
+    </section>
+
+    <sc-if value="{{ showImageSection }}" hint-placeholder-val="{{ true }}">
+      <section id="recursos" style="display:grid; grid-template-columns: minmax(0,5fr) minmax(0,7fr); gap: 28px clamp(24px,5vw,96px); align-items:center; padding: 56px 0 84px;">
+        <div>
+          <div style="display:flex; align-items:center; gap: var(--space-3); margin-bottom: var(--space-6);">
+            <span style="width:32px; height:1px; background: var(--color-accent); flex:none;"></span>
+            <span style="font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color: var(--color-accent);">Painel</span>
+          </div>
+          <h2 style="font-family: var(--font-heading); font-weight:500; font-size:32px; line-height:42px; letter-spacing:-0.012em; margin:0;">Um painel, todos os números</h2>
+          <p style="font-size:15.5px; line-height:28px; color: color-mix(in srgb, var(--color-text) 78%, transparent); margin: var(--space-4) 0 0; max-width:48ch;">Acompanhe contatos, listas ativas e desempenho de campanhas em um dashboard único — sem planilhas paralelas.</p>
+        </div>
+        <figure class="lighten" style="margin:0;">
+          <image-slot id="landing-photo" shape="rounded" radius="12" placeholder="Foto do painel do Cliker" style="width:100%; aspect-ratio: 1600/1261;"></image-slot>
+        </figure>
+      </section>
+    </sc-if>
+
+    <hr style="height:1px; border:0; margin: 0; background: linear-gradient(to right, transparent, var(--color-divider) 48px calc(100% - 48px), transparent);">
+
+    <section id="comecar" style="padding: 70px 0 56px;">
+      <h3 style="font-family: var(--font-heading); font-weight:500; font-size:24px; margin:0;">Comece a usar o Cliker</h3>
+      <p style="font-size:15.5px; line-height:28px; color: color-mix(in srgb, var(--color-text) 78%, transparent); margin: var(--space-3) 0 0; max-width:58ch;">Crie sua primeira lista em minutos. Sem cartão de crédito, sem contrato.</p>
+      <div style="display:flex; gap: var(--space-3); align-items:stretch; max-width:480px; margin-top: var(--space-6);">
+        <input class="input" type="email" placeholder="voce@empresa.com" aria-label="Endereço de e-mail" style="flex:1; min-height:36px;">
+        <button type="button" class="btn btn-primary" style="min-height:36px;">Criar conta</button>
+      </div>
+    </section>
+
+    <footer style="padding: var(--space-8) 0; font-size:13px; color: color-mix(in srgb, var(--color-text) 55%, transparent);">© 2026 Cliker. <a href="#" style="font-size:13px;">Fonte no GitHub</a></footer>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;ctaLabel&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Começar grátis&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;showImageSection&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      ctaLabel: this.props.ctaLabel ?? 'Começar grátis',
+      ctaHoverStyle: { background: 'color-mix(in srgb, var(--color-accent-2) 14%, transparent)', borderColor: 'var(--color-accent-2)', color: 'var(--color-accent-2)' },
+      showImageSection: this.props.showImageSection ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

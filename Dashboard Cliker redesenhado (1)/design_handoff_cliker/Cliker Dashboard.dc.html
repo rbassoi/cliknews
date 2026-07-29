@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/nocturne-a6f60d6f-7f3c-4745-91bd-990412b80345/styles.css">
+  <script src="_ds/nocturne-a6f60d6f-7f3c-4745-91bd-990412b80345/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
+    a { color: var(--color-accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .navlink { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--color-neutral-200); font-size: 14px; }
+    .navlink:hover { background: var(--color-neutral-800); color: var(--color-text); text-decoration: none; }
+    .navlink.active { background: color-mix(in oklch, var(--color-accent) 16%, transparent); color: var(--color-accent-100); }
+    .navlink svg { flex: none; opacity: 0.85; }
+    .navlink.active svg { opacity: 1; color: var(--color-accent-100); }
+    .empty-card { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-6); }
+    .metric-card { display: flex; flex-direction: column; gap: var(--space-2); }
+  </style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <aside style="width:248px; flex:none; display:flex; flex-direction:column; border-right:1px solid var(--color-neutral-800); background: linear-gradient(180deg, var(--color-neutral-900), var(--color-bg) 60%); padding: var(--space-6) var(--space-4);">
+    <div style="display:flex; align-items:center; gap: var(--space-3); margin-bottom: var(--space-6); padding: 0 var(--space-1);">
+      <img src="assets/cliker-icon.png" alt="Cliker" style="width:28px; height:28px; border-radius: var(--radius-sm); flex:none; display:block;" />
+      <span style="font-family: var(--font-heading); font-weight: 500; font-size: 16px; color: var(--color-text);">Cliker</span>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap: 2px;">
+      <a class="navlink active" href="#">
+        <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><rect x="40" y="40" width="72" height="72" rx="8"/><rect x="144" y="40" width="72" height="72" rx="8"/><rect x="40" y="144" width="72" height="72" rx="8"/><rect x="144" y="144" width="72" height="72" rx="8"/></svg>
+        <span>Dashboard</span>
+      </a>
+
+      <div>
+        <button type="button" class="navlink" onClick="{{ toggleContatos }}" style="width:100%; background:none; border:none; cursor:pointer; text-align:left; font-family: var(--font-body);">
+          <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><circle cx="128" cy="96" r="48"/><path d="M32 216c0-44 43-80 96-80s96 36 96 80"/></svg>
+          <span style="flex:1;">Contatos</span>
+          <svg width="13" height="13" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20" style="{{ chevronContatosStyle }}"><polyline points="96 48 176 128 96 208"/></svg>
+        </button>
+        <sc-if value="{{ openContatos }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:2px; margin: 2px 0 2px var(--space-6);">
+            <a class="navlink" href="#" style="font-size:13px;"><span>Todos os contatos</span></a>
+            <a class="navlink" href="#" style="font-size:13px;"><span>Segmentos</span></a>
+          </div>
+        </sc-if>
+      </div>
+
+      <a class="navlink" href="#">
+        <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><rect x="40" y="88" width="176" height="128" rx="4"/><path d="M88 88V56a16 16 0 0 1 16-16h48a16 16 0 0 1 16 16v32"/></svg>
+        <span>Empresas</span>
+      </a>
+
+      <div>
+        <button type="button" class="navlink" onClick="{{ toggleListas }}" style="width:100%; background:none; border:none; cursor:pointer; text-align:left; font-family: var(--font-body);">
+          <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><line x1="48" y1="72" x2="208" y2="72"/><line x1="48" y1="128" x2="208" y2="128"/><line x1="48" y1="184" x2="208" y2="184"/></svg>
+          <span style="flex:1;">Listas</span>
+          <svg width="13" height="13" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20" style="{{ chevronListasStyle }}"><polyline points="96 48 176 128 96 208"/></svg>
+        </button>
+        <sc-if value="{{ openListas }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:2px; margin: 2px 0 2px var(--space-6);">
+            <a class="navlink" href="#" style="font-size:13px;"><span>Todas as listas</span></a>
+            <a class="navlink" href="#" style="font-size:13px;"><span>Importar</span></a>
+          </div>
+        </sc-if>
+      </div>
+
+      <a class="navlink" href="#">
+        <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><rect x="40" y="40" width="176" height="176" rx="8"/><line x1="76" y1="96" x2="180" y2="96"/><line x1="76" y1="136" x2="180" y2="136"/><line x1="76" y1="176" x2="140" y2="176"/></svg>
+        <span>Formulários</span>
+      </a>
+      <a class="navlink" href="#">
+        <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><circle cx="128" cy="128" r="24"/><path d="M88 88a56 56 0 0 0 0 80M168 88a56 56 0 0 1 0 80M56 56a96 96 0 0 0 0 144M200 56a96 96 0 0 1 0 144"/></svg>
+        <span>Channels</span>
+      </a>
+
+      <div>
+        <button type="button" class="navlink" onClick="{{ toggleModelos }}" style="width:100%; background:none; border:none; cursor:pointer; text-align:left; font-family: var(--font-body);">
+          <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><rect x="32" y="88" width="192" height="120" rx="8"/><path d="M76 88V64a16 16 0 0 1 16-16h72a16 16 0 0 1 16 16v24"/></svg>
+          <span style="flex:1;">Modelos</span>
+          <svg width="13" height="13" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20" style="{{ chevronModelosStyle }}"><polyline points="96 48 176 128 96 208"/></svg>
+        </button>
+        <sc-if value="{{ openModelos }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:2px; margin: 2px 0 2px var(--space-6);">
+            <a class="navlink" href="#" style="font-size:13px;"><span>E-mail</span></a>
+            <a class="navlink" href="#" style="font-size:13px;"><span>Landing pages</span></a>
+          </div>
+        </sc-if>
+      </div>
+
+      <div>
+        <button type="button" class="navlink" onClick="{{ toggleCampanhas }}" style="width:100%; background:none; border:none; cursor:pointer; text-align:left; font-family: var(--font-body);">
+          <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><path d="M32 112 208 48v128L32 144z"/><path d="M80 144v40a16 16 0 0 0 16 16h8a16 16 0 0 0 16-16v-24"/></svg>
+          <span style="flex:1;">Campanhas</span>
+          <svg width="13" height="13" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20" style="{{ chevronCampanhasStyle }}"><polyline points="96 48 176 128 96 208"/></svg>
+        </button>
+        <sc-if value="{{ openCampanhas }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; flex-direction:column; gap:2px; margin: 2px 0 2px var(--space-6);">
+            <a class="navlink" href="#" style="font-size:13px;"><span>Todas</span></a>
+            <a class="navlink" href="#" style="font-size:13px;"><span>Automações</span></a>
+          </div>
+        </sc-if>
+      </div>
+
+      <a class="navlink" href="#">
+        <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><line x1="56" y1="208" x2="56" y2="120"/><line x1="128" y1="208" x2="128" y2="72"/><line x1="200" y1="208" x2="200" y2="152"/></svg>
+        <span>Relatórios</span>
+      </a>
+    </nav>
+
+    <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-neutral-800);">
+      <button type="button" onClick="{{ toggleAdmin }}" style="display:flex; align-items:center; justify-content:space-between; width:100%; background:none; border:none; padding: var(--space-2) var(--space-3); cursor:pointer; font-family: var(--font-body); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-neutral-500);">
+        <span>Administração</span>
+        <svg width="14" height="14" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20" style="{{ chevronStyle }}"><polyline points="96 48 176 128 96 208"/></svg>
+      </button>
+      <sc-if value="{{ adminOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:2px; margin-top: var(--space-1);">
+          <a class="navlink" href="#" style="font-size:13px;"><span>Usuários</span></a>
+          <a class="navlink" href="#" style="font-size:13px;"><span>Integrações</span></a>
+          <a class="navlink" href="#" style="font-size:13px;"><span>Configurações</span></a>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <div style="border-top: 1px solid var(--color-neutral-800); padding-top: var(--space-4); display:flex; flex-direction:column; gap: var(--space-3);">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:12px; color: var(--color-neutral-400);">BR</span>
+        <div style="display:flex; align-items:center; gap: var(--space-2); font-size:13px; color: var(--color-neutral-200);">
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><circle cx="128" cy="96" r="48"/><path d="M32 216c0-44 43-80 96-80s96 36 96 80"/></svg>
+          <span>admin</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap: var(--space-2);">
+        <button type="button" class="btn btn-ghost" onClick="{{ toggleTheme }}" style="flex:1; display:flex; align-items:center; justify-content:center; gap: var(--space-2); font-size:13px;">
+          <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}">
+            <svg width="15" height="15" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><path d="M216 144a96 96 0 1 1-80-104 72 72 0 0 0 80 104z"/></svg>
+          </sc-if>
+          <sc-if value="{{ isLight }}" hint-placeholder-val="{{ false }}">
+            <svg width="15" height="15" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><circle cx="128" cy="128" r="48"/><line x1="128" y1="40" x2="128" y2="24"/><line x1="128" y1="232" x2="128" y2="216"/><line x1="66" y1="66" x2="54" y2="54"/><line x1="190" y1="190" x2="202" y2="202"/><line x1="40" y1="128" x2="24" y2="128"/><line x1="216" y1="128" x2="232" y2="128"/><line x1="66" y1="190" x2="54" y2="202"/><line x1="190" y1="66" x2="202" y2="54"/></svg>
+          </sc-if>
+          <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}"><span>Escuro</span></sc-if>
+          <sc-if value="{{ isLight }}" hint-placeholder-val="{{ false }}"><span>Claro</span></sc-if>
+        </button>
+        <button type="button" class="btn btn-ghost" title="Sair" style="display:flex; align-items:center; gap: var(--space-2); font-size:13px;">
+          <svg width="15" height="15" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16"><path d="M112 216H56a16 16 0 0 1-16-16V56a16 16 0 0 1 16-16h56"/><polyline points="160 176 216 128 160 80"/><line x1="216" y1="128" x2="104" y2="128"/></svg>
+          <span>Sair</span>
+        </button>
+      </div>
+      <p style="font-size:11px; color: var(--color-neutral-500); margin:0;">© 2026 Cliker. <a href="#" style="font-size:11px;">Fonte no GitHub</a></p>
+    </div>
+  </aside>
+
+  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <div style="padding: var(--space-3) var(--space-6); border-bottom: 1px solid var(--color-neutral-800); font-size:13px; color: var(--color-neutral-400);">Início</div>
+
+    <main style="padding: var(--space-8) var(--space-6); display:flex; flex-direction:column; gap: var(--space-6);">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: var(--space-4); flex-wrap:wrap;">
+        <div>
+          <h1 style="font-family: var(--font-heading); font-weight:500; font-size:28px; margin:0 0 var(--space-2);">Dashboard</h1>
+          <p style="margin:0; color: var(--color-neutral-400); font-size:14px;">Visão geral das suas listas e campanhas</p>
+        </div>
+        <button type="button" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="20"><line x1="128" y1="56" x2="128" y2="200"/><line x1="56" y1="128" x2="200" y2="128"/></svg>
+          Nova campanha
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4);">
+        <div class="card metric-card">
+          <span class="card-kicker">Total de contatos</span>
+          <span style="font-family: var(--font-heading); font-weight:500; font-size:32px;">0</span>
+        </div>
+        <div class="card metric-card">
+          <span class="card-kicker">Listas ativas</span>
+          <span style="font-family: var(--font-heading); font-weight:500; font-size:32px;">0</span>
+        </div>
+        <div class="card metric-card">
+          <span class="card-kicker">Newsletters enviadas</span>
+          <span style="font-family: var(--font-heading); font-weight:500; font-size:32px;">0</span>
+        </div>
+        <div class="card metric-card">
+          <span class="card-kicker">Taxa média de abertura</span>
+          <span style="font-family: var(--font-heading); font-weight:500; font-size:32px;">0%</span>
+        </div>
+      </div>
+
+      <section>
+        <h2 style="font-family: var(--font-heading); font-weight:500; font-size:16px; margin:0 0 var(--space-3);">Suas listas</h2>
+        <div class="card empty-card">
+          <svg width="28" height="28" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="14" style="color: var(--color-neutral-500);"><line x1="48" y1="72" x2="208" y2="72"/><line x1="48" y1="128" x2="208" y2="128"/><line x1="48" y1="184" x2="208" y2="184"/></svg>
+          <div>
+            <p style="margin:0 0 var(--space-1); font-size:14px; color: var(--color-text);">Nenhuma lista ainda</p>
+            <p style="margin:0; font-size:13px; color: var(--color-neutral-400);">Crie uma lista para começar a organizar seus contatos.</p>
+          </div>
+          <button type="button" class="btn btn-secondary">Criar lista</button>
+        </div>
+      </section>
+
+      <section>
+        <h2 style="font-family: var(--font-heading); font-weight:500; font-size:16px; margin:0 0 var(--space-3);">Campanhas recentes</h2>
+        <div class="card empty-card">
+          <svg width="28" height="28" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="14" style="color: var(--color-neutral-500);"><path d="M32 112 208 48v128L32 144z"/><path d="M80 144v40a16 16 0 0 0 16 16h8a16 16 0 0 0 16-16v-24"/></svg>
+          <div>
+            <p style="margin:0 0 var(--space-1); font-size:14px; color: var(--color-text);">Nenhuma campanha ainda</p>
+            <p style="margin:0; font-size:13px; color: var(--color-neutral-400);">Suas campanhas de e-mail aparecerão aqui quando forem criadas.</p>
+          </div>
+          <button type="button" class="btn btn-secondary">Nova campanha</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { theme: 'dark', open: { contatos: false, listas: false, modelos: false, campanhas: false, administracao: false } };
+  toggle(key) {
+    this.setState(s => ({ open: { ...s.open, [key]: !s.open[key] } }));
+  }
+  renderVals() {
+    const isLight = this.state.theme === 'light';
+    const chevron = (key) => ({ transform: this.state.open[key] ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' });
+    const brandVars = {
+      '--color-accent': '#2ba98a',
+      '--color-accent-100': '#eafaf4',
+      '--color-accent-200': '#cdf0e2',
+      '--color-accent-300': '#a3e2c9',
+      '--color-accent-400': '#6cc9a8',
+      '--color-accent-500': '#239478',
+      '--color-accent-600': '#1c7d65',
+      '--color-accent-700': '#15654f',
+      '--color-accent-800': '#124f3f',
+      '--color-accent-900': '#0c3529',
+      '--color-accent-2': '#e0703b',
+      '--color-accent-2-100': '#fdece2',
+      '--color-accent-2-200': '#fad1b8',
+      '--color-accent-2-300': '#f4ac81',
+      '--color-accent-2-400': '#ea8452',
+      '--color-accent-2-500': '#e0703b',
+      '--color-accent-2-600': '#bf5a2c',
+      '--color-accent-2-700': '#984522',
+      '--color-accent-2-800': '#6e3119',
+      '--color-accent-2-900': '#452010'
+    };
+    const lightVars = {
+      '--color-bg': '#eef0f8',
+      '--color-surface': '#f8f9fc',
+      '--color-text': '#242631',
+      '--color-divider': 'color-mix(in srgb, #242631 16%, transparent)',
+      '--color-neutral-200': '#3a3d4a',
+      '--color-neutral-400': '#585c6d',
+      '--color-neutral-500': '#6b6f80',
+      '--color-neutral-800': '#dfe2ef',
+      '--color-neutral-900': '#e4e7f5',
+      '--color-accent': '#15654f',
+      '--color-accent-100': '#15654f'
+    };
+    return {
+      rootStyle: { display: 'flex', minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)', ...brandVars, ...(isLight ? lightVars : {}) },
+      isDark: !isLight,
+      isLight,
+      toggleTheme: () => this.setState(s => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
+      openContatos: this.state.open.contatos,
+      toggleContatos: () => this.toggle('contatos'),
+      chevronContatosStyle: chevron('contatos'),
+      openListas: this.state.open.listas,
+      toggleListas: () => this.toggle('listas'),
+      chevronListasStyle: chevron('listas'),
+      openModelos: this.state.open.modelos,
+      toggleModelos: () => this.toggle('modelos'),
+      chevronModelosStyle: chevron('modelos'),
+      openCampanhas: this.state.open.campanhas,
+      toggleCampanhas: () => this.toggle('campanhas'),
+      chevronCampanhasStyle: chevron('campanhas'),
+      adminOpen: this.state.open.administracao,
+      toggleAdmin: () => this.toggle('administracao'),
+      chevronStyle: chevron('administracao')
+    };
+  }
+}
+</script>
+</body>
+</html>
