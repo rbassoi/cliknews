@@ -8,13 +8,14 @@ const contacts = require('../models/contacts');
 const lists = require('../models/lists');
 const subscriptions = require('../models/subscriptions');
 const campaigns = require('../models/campaigns');
+const sendConfigurations = require('../models/send-configurations');
 const shares = require('../models/shares');
 const messageSender = require('../lib/message-sender');
 const planLimits = require('../lib/plan-limits');
 const accountUsageModel = require('../models/account-usage');
 const interoperableErrors = require('../../shared/interoperable-errors');
 const {SubscriptionSource} = require('../../shared/lists');
-const {CampaignStatus} = require('../../shared/campaigns');
+const {CampaignStatus, CampaignType, CampaignSource} = require('../../shared/campaigns');
 
 router.use(apiKeyAuth, apiRateLimit);
 
@@ -118,6 +119,91 @@ router.getAsync('/campaigns', requireScope('campaigns'), async (req, res) => {
     const data = await campaigns.listForAccount(contextForApiKey(req), limit);
 
     return res.json({data});
+});
+
+// Lightweight lookups so an API caller can discover valid list_id/
+// send_configuration_id values for POST /campaigns below without needing
+// UI access. Scoped directly by account_id, same as every other tenant-
+// scoped query (server/lib/tenant-scope.js) — an API key has no user to
+// check ACL permissions against, only the account it belongs to.
+router.getAsync('/lists', requireScope('campaigns'), async (req, res) => {
+    const data = await knex('lists').where('account_id', req.account.id).select(['id', 'name', 'subscribers']);
+    return res.json({data});
+});
+
+router.getAsync('/send-configurations', requireScope('campaigns'), async (req, res) => {
+    const data = await knex('send_configurations').where('account_id', req.account.id).select(['id', 'name']);
+    return res.json({data});
+});
+
+router.postAsync('/campaigns', requireScope('campaigns'), async (req, res) => {
+    const context = contextForApiKey(req);
+
+    const {name, subject, html, text, list_id, list_ids, send_configuration_id, sender, unsubscribe_url, click_tracking_disabled, open_tracking_disabled} = req.body;
+
+    if (!name) {
+        throw badRequest('name is required');
+    }
+    if (!subject) {
+        throw badRequest('subject is required');
+    }
+    if (!html) {
+        throw badRequest('html is required');
+    }
+
+    const rawListIds = list_ids || (list_id !== undefined ? [list_id] : []);
+    const listIds = rawListIds.map(x => parseInt(x));
+    if (listIds.length === 0 || listIds.some(x => !Number.isInteger(x))) {
+        throw badRequest('list_id (or list_ids: [...]) is required and must be an integer id');
+    }
+
+    const sendConfigurationId = parseInt(send_configuration_id);
+    if (!Number.isInteger(sendConfigurationId)) {
+        throw badRequest('send_configuration_id is required and must be an integer — see GET /api-v1/send-configurations');
+    }
+
+    // Every account has exactly one root namespace (namespace: null); API-created
+    // campaigns always go there rather than asking the caller to know a
+    // namespace id, matching how contacts.js resolves it for import-created
+    // contacts.
+    const rootNamespace = await knex('namespaces').where({account_id: context.account.id, namespace: null}).first();
+
+    const entity = {
+        type: CampaignType.REGULAR,
+        source: CampaignSource.CUSTOM,
+        name,
+        description: '',
+        namespace: rootNamespace.id,
+        channel: null,
+        send_configuration: sendConfigurationId,
+        from_name_override: (sender && sender.name) || null,
+        from_email_override: (sender && sender.email) || null,
+        reply_to_override: null,
+        subject,
+        click_tracking_disabled: !!click_tracking_disabled,
+        open_tracking_disabled: !!open_tracking_disabled,
+        unsubscribe_url: unsubscribe_url || '',
+        data: {
+            // 'codeeditor' is the same source type the UI's own "Editor de
+            // código" option produces, so the campaign still opens cleanly
+            // in Conteúdo if someone looks at it there later — but sending
+            // only ever reads .html/.text/.tag_language directly
+            // (server/lib/message-sender.js), so this shape is enough on
+            // its own for API-created campaigns even without an edit pass.
+            sourceCustom: {
+                type: 'codeeditor',
+                tag_language: 'simple',
+                data: {sourceType: 'html', data: {source: html}},
+                html,
+                text: text || ''
+            }
+        },
+        lists: listIds.map(id => ({list: id, segment: null}))
+    };
+
+    const id = await campaigns.create(context, entity);
+
+    return res.status(201).json({id});
 });
 
 router.postAsync('/campaigns/:id/send', requireScope('campaigns'), async (req, res) => {
