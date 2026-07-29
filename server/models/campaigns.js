@@ -213,7 +213,11 @@ async function listTestUsersDTAjax(context, campaignId, params) {
             return await dtHelpers.ajaxListWithPermissionsTx(
                 tx,
                 context,
-                [{ entityTypeId: 'list', requiredOperations: ['viewTestSubscriptions'], column: 'subs.list_id' }],
+                // `lists` is nested inside the `subs` derived table below, not joined
+                // directly in the outer query, so both the permission join and the
+                // account-scope check need to go through columns `subs` actually
+                // exposes (list_id, list_account_id) rather than `lists.id`/`lists.account_id`.
+                [{ entityTypeId: 'list', requiredOperations: ['viewTestSubscriptions'], column: 'subs.list_id', accountIdColumn: 'subs.list_account_id' }],
                 params,
                 builder => {
                     return builder.from(function () {
@@ -223,7 +227,8 @@ async function listTestUsersDTAjax(context, campaignId, params) {
                             .select([
                                 knex.raw('CONCAT_WS(":", lists.cid, test_subscriptions.cid) AS cid'),
                                 'test_subscriptions.email', 'test_subscriptions.cid AS subscription_cid', 'lists.cid AS list_cid',
-                                'lists.name as list_name', 'namespaces.name AS namespace_name', 'lists.id AS list_id'
+                                'lists.name as list_name', 'namespaces.name AS namespace_name', 'lists.id AS list_id',
+                                'lists.account_id AS list_account_id'
                             ])
                             .as('subs');
                     });

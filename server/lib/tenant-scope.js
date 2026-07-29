@@ -38,7 +38,12 @@ function requireAccountId(context) {
     return context.account.id;
 }
 
-function requireAccountScopeOn(tableName) {
+// Like requireAccountScopeOn, but takes the full account_id column expression
+// directly instead of assuming `${tableName}.account_id` — needed when the
+// entity's own table isn't directly joined in the outer query (e.g. it's
+// nested inside a derived subquery under a different alias, which exposes
+// its own column for this, such as `subs.list_account_id`).
+function requireAccountScopeOnColumn(accountIdColumn) {
     return (query, context) => {
         if (isBypassed(context)) {
             return query;
@@ -48,8 +53,12 @@ function requireAccountScopeOn(tableName) {
             throw new Error('SECURITY: query executed without a resolved account — blocked');
         }
 
-        return query.andWhere(`${tableName}.account_id`, context.account.id);
+        return query.andWhere(accountIdColumn, context.account.id);
     };
+}
+
+function requireAccountScopeOn(tableName) {
+    return requireAccountScopeOnColumn(`${tableName}.account_id`);
 }
 
 // Entity types (per server/lib/entity-settings.js) whose base table already
@@ -65,6 +74,7 @@ const ACCOUNT_SCOPED_ENTITY_TYPES = new Set([
 module.exports = {
     requireAccountScope,
     requireAccountScopeOn,
+    requireAccountScopeOnColumn,
     requireAccountId,
     ACCOUNT_SCOPED_ENTITY_TYPES
 };

@@ -4,7 +4,7 @@ const knex = require('./knex');
 const entitySettings = require('./entity-settings');
 const { enforce } = require('./helpers');
 const shares = require('../models/shares');
-const { requireAccountScopeOn, ACCOUNT_SCOPED_ENTITY_TYPES } = require('./tenant-scope');
+const { requireAccountScopeOnColumn, ACCOUNT_SCOPED_ENTITY_TYPES } = require('./tenant-scope');
 
 async function ajaxListTx(tx, params, queryFun, columns, options) {
     options = options || {};
@@ -142,7 +142,14 @@ async function ajaxListWithPermissionsTx(tx, context, fetchSpecs, params, queryF
                 const entityType = entitySettings.getEntityType(fetchSpec.entityTypeId);
 
                 if (ACCOUNT_SCOPED_ENTITY_TYPES.has(fetchSpec.entityTypeId)) {
-                    query = query.modify(requireAccountScopeOn(entityType.entitiesTable), context);
+                    // Normally the entity's own table is directly joined in the outer
+                    // query, so `${entitiesTable}.account_id` resolves fine. But when
+                    // it's nested inside a derived subquery under a different alias
+                    // (see campaigns.js's listTestUsersDTAjax), that column isn't
+                    // visible at this level — fetchSpec.accountIdColumn lets the caller
+                    // point at whatever column the outer query actually exposes for it.
+                    const accountIdColumn = fetchSpec.accountIdColumn || `${entityType.entitiesTable}.account_id`;
+                    query = query.modify(requireAccountScopeOnColumn(accountIdColumn), context);
                 }
 
                 if (fetchSpec.requiredOperations) {
