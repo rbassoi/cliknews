@@ -359,9 +359,16 @@ class Table extends Component {
         // by the checkbox column itself, which has data:null → `ORDER BY undefined`).
         const columnIndexOffset = this.props.selectMode === TableSelectMode.MULTI ? 1 : 0;
 
+        // `order` is documented/defaulted as an array of [col, dir] pairs (e.g.
+        // [[0, 'asc']]), but several existing call sites (campaigns/List.js,
+        // campaigns/Clone.js, campaigns/Status.js) pass a single un-nested pair
+        // (e.g. [6, 'desc']) — DataTables tolerated that directly, so normalize
+        // it here rather than crashing on `.map()` over a flat pair.
+        const orderPairs = Array.isArray(this.props.order[0]) ? this.props.order : [this.props.order];
+
         const dtOptions = {
             columns,
-            order: this.props.order.map(([col, dir]) => [col + columnIndexOffset, dir]),
+            order: orderPairs.map(([col, dir]) => [col + columnIndexOffset, dir]),
             autoWidth: false,
             pageLength: this.props.pageLength,
             dom: // This overrides Bootstrap 4 settings. It may need to be updated if there are updates in the DataTables Bootstrap 4 plugin.
