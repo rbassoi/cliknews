@@ -322,7 +322,7 @@
   "previewCampaign - TODO: update line above and then delete this line to mark that the translation has been fixed": "Preview Campaign",
   "previewAndTest": "Pré-visualizar e testar",
   "mobile": "Celular",
-  "configureATestContactOnOneOfThisCampaignsListsToSeeAPreview": "Configure um contato de teste em uma das listas desta campanha para ver uma prévia.",
+  "noSubscribersAvailableToPreview": "Nenhuma lista desta campanha tem contatos inscritos para pré-visualizar ainda.",
   "preview": "Prever",
   "close": "Fechar",
   "previewAs": "Preview as",

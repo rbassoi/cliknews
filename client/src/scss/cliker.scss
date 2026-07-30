@@ -642,7 +642,7 @@ body.cliker {
   }
 
   .cn-preview-modal .modal-dialog {
-    max-width: 900px;
+    max-width: 1180px;
   }
 
   .cn-preview-modal-body {
@@ -650,7 +650,7 @@ body.cliker {
     align-items: flex-start;
     gap: var(--cn-space-8);
 
-    @include media-breakpoint-down(md) {
+    @include media-breakpoint-down(lg) {
       flex-direction: column;
     }
   }
@@ -664,9 +664,13 @@ body.cliker {
   }
 
   .cn-preview-modal-picker-col {
-    flex: 1 1 280px;
-    min-width: 0;
+    flex: 1 1 480px;
+    min-width: 420px;
     width: 100%;
+
+    @include media-breakpoint-down(lg) {
+      min-width: 0;
+    }
   }
 
   .cn-preview-modal-toggle {

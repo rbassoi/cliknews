@@ -27,6 +27,7 @@ import campaignsStyles from "./styles.scss";
 import {withComponentMixins} from "../lib/decorator-helpers";
 import {TestSendModalDialog, TestSendModalDialogMode} from "./TestSendModalDialog";
 import {PreviewModalDialog} from "./PreviewModalDialog";
+import {CampaignReportHeader} from "./CampaignReportHeader";
 import styles from "../lib/styles.scss";
 
 @withComponentMixins([
@@ -555,6 +556,8 @@ export default class Status extends Component {
         return (
             <div>
                 <Title>{t('campaignStatus')}</Title>
+
+                <CampaignReportHeader entity={entity}/>
 
                 <AlignedRow label={t('name')}>{entity.name}</AlignedRow>
                 <AlignedRow label={t('sent')}>{entity.delivered}</AlignedRow>

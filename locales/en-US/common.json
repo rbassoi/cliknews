@@ -283,7 +283,7 @@
   "previewCampaign": "Preview Campaign",
   "previewAndTest": "Preview and test",
   "mobile": "Mobile",
-  "configureATestContactOnOneOfThisCampaignsListsToSeeAPreview": "Configure a test contact on one of this campaign's lists to see a preview.",
+  "noSubscribersAvailableToPreview": "None of this campaign's lists have any subscribed contacts to preview yet.",
   "preview": "Preview",
   "close": "Close",
   "previewAs": "Preview as",

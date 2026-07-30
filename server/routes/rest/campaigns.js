@@ -35,6 +35,10 @@ router.postAsync('/campaigns-test-users-table/:campaignId', passport.loggedIn, a
     return res.json(await campaigns.listTestUsersDTAjax(req.context, castToInteger(req.params.campaignId), req.body));
 });
 
+router.postAsync('/campaigns-subscribers-table/:campaignId', passport.loggedIn, async (req, res) => {
+    return res.json(await campaigns.listSubscribersDTAjax(req.context, castToInteger(req.params.campaignId), req.body));
+});
+
 router.getAsync('/campaigns-settings/:campaignId', passport.loggedIn, async (req, res) => {
     const campaign = await campaigns.getById(req.context, castToInteger(req.params.campaignId), true, campaigns.Content.WITHOUT_SOURCE_CUSTOM);
     campaign.hash = campaigns.hash(campaign, campaigns.Content.WITHOUT_SOURCE_CUSTOM);

@@ -9,9 +9,8 @@ import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import axios from "../lib/axios";
 import {getUrl} from "../lib/urls";
 import {AlignedRow} from "../lib/form";
-import {Button, Icon, StatCard} from "../lib/bootstrap-components";
-import {buildCampaignPreviewUrl, campaignStatusPill, fetchDefaultTestUser, getCampaignLabels} from "./helpers";
-import {PreviewModalDialog} from "./PreviewModalDialog";
+import {Icon, StatCard} from "../lib/bootstrap-components";
+import {CampaignReportHeader} from "./CampaignReportHeader";
 
 import styles from "./styles.scss";
 import {Link} from "react-router-dom";
@@ -32,13 +31,8 @@ export default class Statistics extends Component {
 
         this.state = {
             entity: props.entity,
-            opensByDay: null,
-            thumbnailPreviewUrl: null,
-            previewVisible: false
+            opensByDay: null
         };
-
-        const {campaignStatusLabels} = getCampaignLabels(t);
-        this.campaignStatusLabels = campaignStatusLabels;
 
         this.refreshTimeoutHandler = ::this.periodicRefreshTask;
         this.refreshTimeoutId = 0;
@@ -68,15 +62,6 @@ export default class Statistics extends Component {
         });
     }
 
-    @withAsyncErrorHandler
-    async fetchThumbnailPreview() {
-        const defaultTestUser = await fetchDefaultTestUser(this.props.entity.id);
-        if (defaultTestUser) {
-            const url = await buildCampaignPreviewUrl(this.props.entity, defaultTestUser.listCid, defaultTestUser.subscriptionCid);
-            this.setState({thumbnailPreviewUrl: url});
-        }
-    }
-
     async periodicRefreshTask() {
         // The periodic task runs all the time, so that we don't have to worry about starting/stopping it as a reaction to the buttons.
         await this.refreshEntity();
@@ -90,8 +75,6 @@ export default class Statistics extends Component {
         this.periodicRefreshTask();
         // noinspection JSIgnoredPromiseFromCall
         this.fetchOpensByDay();
-        // noinspection JSIgnoredPromiseFromCall
-        this.fetchThumbnailPreview();
     }
 
     componentWillUnmount() {
@@ -144,32 +127,7 @@ export default class Statistics extends Component {
 
         return (
             <div>
-                <PreviewModalDialog
-                    visible={this.state.previewVisible}
-                    onHide={() => this.setState({previewVisible: false})}
-                    entity={entity}
-                />
-
-                <div className="cn-card cn-campaign-report-header">
-                    <div className="cn-campaign-thumbnail" onClick={() => this.setState({previewVisible: true})}>
-                        {this.state.thumbnailPreviewUrl ?
-                            <iframe src={this.state.thumbnailPreviewUrl} className="cn-campaign-thumbnail-frame" title={t('preview')} tabIndex="-1" scrolling="no"/>
-                            :
-                            <div className="cn-campaign-thumbnail-empty"><Icon icon="envelope"/></div>
-                        }
-                    </div>
-                    <div className="cn-campaign-report-header-text">
-                        <h1 className="cn-page-title">{entity.name}</h1>
-                        {entity.subject && <div className="cn-campaign-report-subject">{entity.subject}</div>}
-                        <div className="cn-campaign-report-meta">
-                            {campaignStatusPill(t, this.campaignStatusLabels, entity.status)}
-                            {entity.scheduled && <span>{moment(entity.scheduled).format('LLL')}</span>}
-                        </div>
-                    </div>
-                    <div className="cn-campaign-report-header-actions">
-                        <Button className="btn-secondary" icon="eye" label={t('previewAndTest')} onClickAsync={async () => this.setState({previewVisible: true})}/>
-                    </div>
-                </div>
+                <CampaignReportHeader entity={entity}/>
 
                 <div className="cn-page-header">
                     <div>

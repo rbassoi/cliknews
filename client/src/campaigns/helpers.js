@@ -8,11 +8,10 @@ import React from "react";
 import axios from "../lib/axios";
 import {getPublicUrl, getSandboxUrl, getUrl} from "../lib/urls";
 
-// Fetches the first test contact (a subscriber explicitly flagged is_test) configured on
-// any of the campaign's lists, going through the same permission-checked endpoint the
-// "preview as" pickers use (rest/campaigns-test-users-table), just asking for 1 row
-// ordered by e-mail instead of rendering a full DataTables widget.
-export async function fetchDefaultTestUser(campaignId) {
+// Asks a campaign contact-picker endpoint (either the is_test-only table or the
+// all-subscribers table below) for exactly 1 row ordered by e-mail, instead of rendering
+// a full DataTables widget just to read its first result.
+async function fetchFirstRow(endpoint, campaignId) {
     const params = {
         draw: 1,
         start: 0,
@@ -29,7 +28,7 @@ export async function fetchDefaultTestUser(campaignId) {
         ]
     };
 
-    const resp = await axios.post(getUrl(`rest/campaigns-test-users-table/${campaignId}`), params);
+    const resp = await axios.post(getUrl(`rest/${endpoint}/${campaignId}`), params);
     const row = resp.data.data[0];
 
     if (!row) {
@@ -38,6 +37,29 @@ export async function fetchDefaultTestUser(campaignId) {
 
     const [listCid, subscriptionCid] = row[0].split(':');
     return {listCid, subscriptionCid, email: row[1]};
+}
+
+// Fetches the first test contact (a subscriber explicitly flagged is_test) configured on
+// any of the campaign's lists.
+export async function fetchDefaultTestUser(campaignId) {
+    return fetchFirstRow('campaigns-test-users-table', campaignId);
+}
+
+// Fetches the first subscriber (regardless of is_test) on any of the campaign's lists.
+export async function fetchDefaultSubscriber(campaignId) {
+    return fetchFirstRow('campaigns-subscribers-table', campaignId);
+}
+
+// Picks a contact to default the preview to: prefer a dedicated test contact if one is
+// configured, otherwise fall back to any real subscriber - most campaigns don't have a
+// test contact set up, and requiring one just to see a preview isn't worth the friction.
+export async function fetchDefaultPreviewContact(campaignId) {
+    const testUser = await fetchDefaultTestUser(campaignId);
+    if (testUser) {
+        return testUser;
+    }
+
+    return fetchDefaultSubscriber(campaignId);
 }
 
 // Builds the URL that renders the campaign fully compiled (merge tags substituted) for a

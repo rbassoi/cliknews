@@ -249,6 +249,82 @@ async function listTestUsersDTAjax(context, campaignId, params) {
     });
 }
 
+// Same shape as listTestUsersDTAjax above, but across *all* subscribed subscribers of the
+// campaign's lists rather than just the ones flagged is_test. Used by the "preview as"
+// contact picker, which needs to find any real subscriber to render the campaign for -
+// most campaigns don't have a dedicated test subscriber configured.
+async function listSubscribersDTAjax(context, campaignId, params) {
+    return await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'campaign', campaignId, 'view');
+
+        const subsQrys = [];
+        const cpgLists = await tx('campaign_lists').where('campaign', campaignId);
+
+        for (const cpgList of cpgLists) {
+            const addSegmentQuery = cpgList.segment ? await segments.getQueryGeneratorTx(tx, cpgList.list, cpgList.segment) : () => {};
+            const subsTable = subscriptions.getSubscriptionTableName(cpgList.list);
+
+            const sqlQry = knex.from(subsTable)
+                .where(subsTable + '.status', SubscriptionStatus.SUBSCRIBED)
+                .where(function() {
+                    addSegmentQuery(this);
+                })
+                .select([subsTable + '.email', subsTable + '.cid', knex.raw('? AS list', [cpgList.list]), knex.raw('? AS segment', [cpgList.segment])])
+                .toSQL().toNative();
+
+            subsQrys.push(sqlQry);
+        }
+
+        if (subsQrys.length > 0) {
+            let subsQry;
+
+            if (subsQrys.length === 1) {
+                const subsUnionSql = '(' + subsQrys[0].sql + ') as `all_subscriptions`';
+                subsQry = knex.raw(subsUnionSql, subsQrys[0].bindings);
+
+            } else {
+                const subsUnionSql = '(' +
+                    subsQrys.map(qry => '(' + qry.sql + ')').join(' UNION ALL ') +
+                    ') as `all_subscriptions`';
+                const subsUnionBindings = Array.prototype.concat(...subsQrys.map(qry => qry.bindings));
+                subsQry = knex.raw(subsUnionSql, subsUnionBindings);
+            }
+
+            return await dtHelpers.ajaxListWithPermissionsTx(
+                tx,
+                context,
+                [{ entityTypeId: 'list', requiredOperations: ['viewSubscriptions'], column: 'subs.list_id', accountIdColumn: 'subs.list_account_id' }],
+                params,
+                builder => {
+                    return builder.from(function () {
+                        return this.from(subsQry)
+                            .innerJoin('lists', 'all_subscriptions.list', 'lists.id')
+                            .innerJoin('namespaces', 'lists.namespace', 'namespaces.id')
+                            .select([
+                                knex.raw('CONCAT_WS(":", lists.cid, all_subscriptions.cid) AS cid'),
+                                'all_subscriptions.email', 'all_subscriptions.cid AS subscription_cid', 'lists.cid AS list_cid',
+                                'lists.name as list_name', 'namespaces.name AS namespace_name', 'lists.id AS list_id',
+                                'lists.account_id AS list_account_id'
+                            ])
+                            .as('subs');
+                    });
+                },
+                [ 'subs.cid', 'subs.email', 'subs.subscription_cid', 'subs.list_cid', 'subs.list_name', 'subs.namespace_name' ]
+            );
+
+        } else {
+            const result = {
+                draw: params.draw,
+                recordsTotal: 0,
+                recordsFiltered: 0,
+                data: []
+            };
+
+            return result;
+        }
+    });
+}
+
 async function _listSubscriberResultsDTAjax(context, campaignId, getSubsQrys, columns, params) {
     return await knex.transaction(async tx => {
         await shares.enforceEntityPermissionTx(tx, context, 'campaign', campaignId, 'view');
@@ -1212,6 +1288,7 @@ module.exports.listChildrenDTAjax = listChildrenDTAjax;
 module.exports.listWithContentDTAjax = listWithContentDTAjax;
 module.exports.listOthersWhoseListsAreIncludedDTAjax = listOthersWhoseListsAreIncludedDTAjax;
 module.exports.listTestUsersDTAjax = listTestUsersDTAjax;
+module.exports.listSubscribersDTAjax = listSubscribersDTAjax;
 module.exports.listSentByStatusDTAjax = listSentByStatusDTAjax;
 module.exports.listOpensDTAjax = listOpensDTAjax;
 module.exports.listLinkClicksDTAjax = listLinkClicksDTAjax;

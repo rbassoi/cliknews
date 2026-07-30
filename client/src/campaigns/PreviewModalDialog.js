@@ -8,7 +8,7 @@ import {Form, TableSelect, withForm} from '../lib/form';
 import {withAsyncErrorHandler, withErrorHandling} from '../lib/error-handling';
 import {Button, ModalDialog} from '../lib/bootstrap-components';
 import {withComponentMixins} from '../lib/decorator-helpers';
-import {buildCampaignPreviewUrl, fetchDefaultTestUser} from './helpers';
+import {buildCampaignPreviewUrl, fetchDefaultPreviewContact} from './helpers';
 
 @withComponentMixins([
     withTranslation,
@@ -66,9 +66,9 @@ export class PreviewModalDialog extends Component {
             return;
         }
 
-        const defaultTestUser = await fetchDefaultTestUser(this.props.entity.id);
-        if (defaultTestUser) {
-            const value = `${defaultTestUser.listCid}:${defaultTestUser.subscriptionCid}`;
+        const defaultContact = await fetchDefaultPreviewContact(this.props.entity.id);
+        if (defaultContact) {
+            const value = `${defaultContact.listCid}:${defaultContact.subscriptionCid}`;
             this.populateFormValues({testUser: value});
             // noinspection JSIgnoredPromiseFromCall
             this.fetchPreviewUrl(value);
@@ -99,12 +99,9 @@ export class PreviewModalDialog extends Component {
     render() {
         const t = this.props.t;
 
-        const testUsersColumns = [
+        const subscribersColumns = [
             {data: 1, title: t('email')},
-            {data: 2, title: t('subscriptionId'), render: data => <code>{data}</code>},
-            {data: 3, title: t('listId'), render: data => <code>{data}</code>},
-            {data: 4, title: t('list')},
-            {data: 5, title: t('listNamespace')}
+            {data: 4, title: t('list')}
         ];
 
         const frameClass = 'cn-editor-preview-frame' + (this.state.device === 'mobile' ? ' cn-editor-preview-frame--mobile' : '');
@@ -122,12 +119,12 @@ export class PreviewModalDialog extends Component {
                         {this.state.previewUrl ?
                             <iframe src={this.state.previewUrl} className={frameClass} title={t('preview')}/>
                             :
-                            <div className="cn-editor-preview-empty">{t('configureATestContactOnOneOfThisCampaignsListsToSeeAPreview')}</div>
+                            <div className="cn-editor-preview-empty">{t('noSubscribersAvailableToPreview')}</div>
                         }
                     </div>
                     <div className="cn-preview-modal-picker-col">
                         <Form stateOwner={this}>
-                            <TableSelect id="testUser" label={t('previewAs')} withHeader dropdown dataUrl={`rest/campaigns-test-users-table/${this.props.entity.id}`} columns={testUsersColumns} selectionLabelIndex={1}/>
+                            <TableSelect id="testUser" label={t('previewAs')} withHeader dropdown dataUrl={`rest/campaigns-subscribers-table/${this.props.entity.id}`} columns={subscribersColumns} selectionLabelIndex={1}/>
                         </Form>
                     </div>
                 </div>
