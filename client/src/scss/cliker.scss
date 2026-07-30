@@ -668,7 +668,11 @@ body.cliker {
     min-width: 420px;
     max-width: 100%;
     width: 100%;
-    overflow-x: auto;
+    // Without a height cap, a 50-row page (DataTables' default length) makes the whole
+    // modal grow to match, pushing the close button far below the fold. Cap it to the
+    // same height as the preview frame and let this column scroll on its own instead.
+    max-height: 70vh;
+    overflow: auto;
 
     // DataTables' generated length/search row (see table.js's `dom` option) is a plain
     // Bootstrap `.row`, whose -15px negative margins are meant to be cancelled out by a
