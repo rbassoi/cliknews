@@ -9,6 +9,7 @@ const triggers = require('./services/triggers');
 const gdprCleanup = require('./services/gdpr-cleanup');
 const usageAlerts = require('./services/usage-alerts');
 const dnsVerification = require('./services/dns-verification');
+const campaignNotifications = require('./services/campaign-notifications');
 const importer = require('./lib/importer');
 const feedcheck = require('./lib/feedcheck');
 const verpServer = require('./services/verp-server');
@@ -120,6 +121,7 @@ async function init() {
     gdprCleanup.start();
     usageAlerts.start();
     dnsVerification.start();
+    campaignNotifications.start();
 
     await postfixBounceServer.start();
 

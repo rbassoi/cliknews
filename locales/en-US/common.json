@@ -1270,6 +1270,7 @@
   "invalidEmailAddressEmail": "Invalid email address  \"{{email}}\"",
   "mailerPasswordChangeRequest": "Mailer password change request",
   "mailerUsageAlert80Subject": "You're close to your monthly e-mail limit",
+  "mailerCampaignSentSubject": "[Cliker] Your campaign \"{{name}}\" was sent",
   "cliker": "Cliker",
   "emailAddressChanged": "Email address changed",
   "emailAddressNotSet": "Email address not set",

@@ -1471,6 +1471,7 @@
   "invalidEmailAddressEmail": "Endereço de e-mail inválido \"{{email}} \"",
   "mailerPasswordChangeRequest": "Solicitação de mudança de senha do Mailer",
   "mailerUsageAlert80Subject": "Você está perto do limite mensal de e-mails",
+  "mailerCampaignSentSubject": "[Cliker] Sua campanha \"{{name}}\" foi enviada",
   "cliker": "Cliker",
   "emailAddressChanged": "Endereço de e-mail alterado",
   "emailAddressNotSet": "Endereço de email não definido",
