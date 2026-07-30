@@ -258,13 +258,19 @@ export class TestSendModalDialog extends Component {
         }
 
         if ((mode === TestSendModalDialogMode.CAMPAIGN_CONTENT || mode === TestSendModalDialogMode.CAMPAIGN_STATUS) && target === Target.CAMPAIGN_ONE) {
-            const subscribersColumns = [
+            // Unlike the preview picker, this one has to stay scoped to is_test contacts:
+            // server-side, subscriptions.js's _getByTx hard-rejects (PermissionDeniedError)
+            // a test-send to any subscription that isn't flagged is_test, regardless of the
+            // user's actual permissions - it's a deliberate guardrail against test-sends
+            // reaching arbitrary real subscribers. Broadening this picker would just let you
+            // pick someone and then fail.
+            const testUsersColumns = [
                 {data: 1, title: t('email')},
                 {data: 4, title: t('list')}
             ];
 
             content.push(
-                <TableSelect key="testUserListAndSubscriptionCid" id="testUserListAndSubscriptionCid" format="wide" label={t('subscription')} withHeader dropdown dataUrl={`rest/campaigns-subscribers-table/${this.props.campaign.id}`} columns={subscribersColumns} selectionLabelIndex={1} />
+                <TableSelect key="testUserListAndSubscriptionCid" id="testUserListAndSubscriptionCid" format="wide" label={t('subscription')} withHeader dropdown dataUrl={`rest/campaigns-test-users-table/${this.props.campaign.id}`} columns={testUsersColumns} selectionLabelIndex={1} />
             );
         }
 
