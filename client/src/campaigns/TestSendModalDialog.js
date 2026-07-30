@@ -258,16 +258,13 @@ export class TestSendModalDialog extends Component {
         }
 
         if ((mode === TestSendModalDialogMode.CAMPAIGN_CONTENT || mode === TestSendModalDialogMode.CAMPAIGN_STATUS) && target === Target.CAMPAIGN_ONE) {
-            const testUsersColumns = [
+            const subscribersColumns = [
                 {data: 1, title: t('email')},
-                {data: 2, title: t('subscriptionId'), render: data => <code>{data}</code>},
-                {data: 3, title: t('listId'), render: data => <code>{data}</code>},
-                {data: 4, title: t('list')},
-                {data: 5, title: t('listNamespace')}
+                {data: 4, title: t('list')}
             ];
 
             content.push(
-                <TableSelect key="testUserListAndSubscriptionCid" id="testUserListAndSubscriptionCid" format="wide" label={t('subscription')} withHeader dropdown dataUrl={`rest/campaigns-test-users-table/${this.props.campaign.id}`} columns={testUsersColumns} selectionLabelIndex={1} />
+                <TableSelect key="testUserListAndSubscriptionCid" id="testUserListAndSubscriptionCid" format="wide" label={t('subscription')} withHeader dropdown dataUrl={`rest/campaigns-subscribers-table/${this.props.campaign.id}`} columns={subscribersColumns} selectionLabelIndex={1} />
             );
         }
 

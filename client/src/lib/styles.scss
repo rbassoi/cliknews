@@ -87,6 +87,15 @@
   margin-top: -15px;
 }
 
+// Without this, a picker with many rows (DataTables' dropdown-mode default page length is
+// effectively uncapped - see TableSelect's dropdown render branch, which doesn't forward
+// the `pageLength` prop) grows the whole modal to fit them, pushing its close button far
+// below the fold. Cap it and let the table scroll internally instead.
+.tableSelectTable:not(.tableSelectTableHidden) {
+  max-height: 50vh;
+  overflow: auto;
+}
+
 .tableSelectDropdown input[readonly] {
   background-color: white;
 }
