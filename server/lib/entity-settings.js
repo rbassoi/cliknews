@@ -23,6 +23,16 @@ const entityTypes = {
         entitiesTable: 'custom_forms',
         sharesTable: 'shares_custom_form',
         permissionsTable: 'permissions_custom_form',
+        files: {
+            file: {
+                table: 'files_custom_form_file',
+                permissions: {
+                    view: 'viewFiles',
+                    manage: 'manageFiles'
+                },
+                defaultReplacementBehavior: ReplacementBehavior.REPLACE
+            }
+        },
         clientLink: id => `/lists/forms/${id}`
     },
     campaign: {

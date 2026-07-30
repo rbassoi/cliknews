@@ -318,7 +318,7 @@ defaultRoles:
       children:
         sendConfiguration: [viewPublic, viewPrivate, edit, delete, share, sendWithoutOverrides, sendWithAllowedOverrides, sendWithAnyOverrides]
         list: [view, edit, delete, share, viewFields, manageFields, viewSubscriptions, viewTestSubscriptions, manageSubscriptions, viewSegments, manageSegments, viewImports, manageImports, send, sendToTestUsers]
-        customForm: [view, edit, delete, share]
+        customForm: [view, edit, delete, share, viewFiles, manageFiles]
         company: [view, edit, delete, share]
         contact: [view, edit, delete, share]
         channel: [view, edit, delete, createCampaign, share]
@@ -336,7 +336,7 @@ defaultRoles:
       children:
         sendConfiguration: [viewPublic, sendWithoutOverrides, sendWithAllowedOverrides]
         list: [view, edit, delete, share, viewFields, manageFields, viewSubscriptions, viewTestSubscriptions, manageSubscriptions, viewSegments, manageSegments, viewImports, manageImports, send, sendToTestUsers]
-        customForm: [view, edit, delete, share]
+        customForm: [view, edit, delete, share, viewFiles, manageFiles]
         company: [view, edit, delete, share]
         contact: [view, edit, delete, share]
         channel: [view, edit, delete, createCampaign, share]
@@ -398,7 +398,7 @@ defaultRoles:
     master:
       name: Master
       description: All permissions
-      permissions: [view, edit, delete, share]
+      permissions: [view, edit, delete, share, viewFiles, manageFiles]
 
   company:
     master:
