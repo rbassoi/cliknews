@@ -571,6 +571,110 @@ body.cliker {
     max-width: 260px;
   }
 
+  .cn-editor-preview-frame--mobile {
+    max-width: 375px;
+  }
+
+  // ---------------------------------------------------------------------
+  // Campaign report header: thumbnail + title/subject, and the inline
+  // "preview and test" modal opened from it (or from the campaign status page)
+  // ---------------------------------------------------------------------
+
+  .cn-campaign-report-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--cn-space-8);
+    padding: var(--cn-space-8);
+    margin-bottom: var(--cn-space-9);
+  }
+
+  .cn-campaign-thumbnail {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 128px;
+    border: 1px solid var(--cn-border);
+    border-radius: var(--cn-radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    background: white;
+  }
+
+  .cn-campaign-thumbnail-frame {
+    width: 800px;
+    height: 1067px;
+    border: 0;
+    transform: scale(0.12);
+    transform-origin: top left;
+    pointer-events: none;
+  }
+
+  .cn-campaign-thumbnail-empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cn-text-muted);
+    font-size: 24px;
+  }
+
+  .cn-campaign-report-header-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cn-campaign-report-subject {
+    color: var(--cn-text-muted);
+    margin-top: var(--cn-space-2);
+  }
+
+  .cn-campaign-report-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--cn-space-4);
+    margin-top: var(--cn-space-4);
+    color: var(--cn-text-muted);
+    font-size: 13px;
+  }
+
+  .cn-campaign-report-header-actions {
+    flex: 0 0 auto;
+  }
+
+  .cn-preview-modal .modal-dialog {
+    max-width: 900px;
+  }
+
+  .cn-preview-modal-body {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--cn-space-8);
+
+    @include media-breakpoint-down(md) {
+      flex-direction: column;
+    }
+  }
+
+  .cn-preview-modal-frame-col {
+    flex: 1 1 480px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cn-preview-modal-picker-col {
+    flex: 1 1 280px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .cn-preview-modal-toggle {
+    display: flex;
+    gap: var(--cn-space-3);
+    margin-bottom: var(--cn-space-6);
+  }
+
   // Full-bleed auth screens (login, forgot/reset password). Rendered via
   // panelInFullScreen so none of the sidebar/breadcrumb chrome above applies;
   // this owns the whole viewport on its own.

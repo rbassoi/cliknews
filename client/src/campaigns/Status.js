@@ -19,109 +19,15 @@ import {getCampaignLabels} from './helpers';
 import {Table} from "../lib/table";
 import {Button, Icon, ModalDialog} from "../lib/bootstrap-components";
 import axios from "../lib/axios";
-import {getPublicUrl, getSandboxUrl, getUrl} from "../lib/urls";
+import {getUrl} from "../lib/urls";
 import interoperableErrors from '../../../shared/interoperable-errors';
 import {CampaignStatus, CampaignType} from "../../../shared/campaigns";
 import moment from 'moment-timezone';
 import campaignsStyles from "./styles.scss";
 import {withComponentMixins} from "../lib/decorator-helpers";
 import {TestSendModalDialog, TestSendModalDialogMode} from "./TestSendModalDialog";
+import {PreviewModalDialog} from "./PreviewModalDialog";
 import styles from "../lib/styles.scss";
-
-@withComponentMixins([
-    withTranslation,
-    withForm,
-    withErrorHandling,
-    withPageHelpers,
-    requiresAuthenticatedUser
-])
-class PreviewForTestUserModalDialog extends Component {
-    constructor(props) {
-        super(props);
-        this.initForm({
-            leaveConfirmation: false
-        });
-    }
-
-    static propTypes = {
-        visible: PropTypes.bool.isRequired,
-        onHide: PropTypes.func.isRequired,
-        entity: PropTypes.object.isRequired,
-    }
-
-    localValidateFormValues(state) {
-        const t = this.props.t;
-
-        if (!state.getIn(['testUser', 'value'])) {
-            state.setIn(['testUser', 'error'], t('subscriptionHasToBeSelectedToShowThe'))
-        } else {
-            state.setIn(['testUser', 'error'], null);
-        }
-    }
-
-    componentDidMount() {
-        this.populateFormValues({
-            testUser: null,
-        });
-    }
-
-    async previewAsync() {
-        if (this.isFormWithoutErrors()) {
-            const entity = this.props.entity;
-            const campaignCid = entity.cid;
-            const [listCid, subscriptionCid] = this.getFormValue('testUser').split(':');
-
-            if (entity.type === CampaignType.RSS) {
-                const result = await axios.post(getUrl('rest/restricted-access-token'), {
-                    method: 'rssPreview',
-                    params: {
-                        campaignCid,
-                        listCid
-                    }
-                });
-
-                const accessToken = result.data;
-                window.open(getSandboxUrl(`cpgs/rss-preview/${campaignCid}/${listCid}/${subscriptionCid}`, accessToken, {withLocale: true}), '_blank');
-
-            } else if (entity.type === CampaignType.REGULAR || entity.type === CampaignType.RSS_ENTRY) {
-                window.open(getPublicUrl(`archive/${campaignCid}/${listCid}/${subscriptionCid}`, {withLocale: true}), '_blank');
-
-            } else {
-                throw new Error('Preview not supported');
-            }
-
-        } else {
-            this.showFormValidation();
-        }
-    }
-
-    async hideModal() {
-        this.props.onHide();
-    }
-
-    render() {
-        const t = this.props.t;
-
-        const testUsersColumns = [
-            { data: 1, title: t('email') },
-            { data: 2, title: t('subscriptionId'), render: data => <code>{data}</code> },
-            { data: 3, title: t('listId'), render: data => <code>{data}</code> },
-            { data: 4, title: t('list') },
-            { data: 5, title: t('listNamespace') }
-        ];
-
-        return (
-            <ModalDialog hidden={!this.props.visible} title={t('previewCampaign')} onCloseAsync={() => this.hideModal()} buttons={[
-                { label: t('preview'), className: 'btn-primary', onClickAsync: ::this.previewAsync },
-                { label: t('close'), className: 'btn-danger', onClickAsync: ::this.hideModal }
-            ]}>
-                <Form stateOwner={this}>
-                    <TableSelect id="testUser" label={t('previewAs')} withHeader dropdown dataUrl={`rest/campaigns-test-users-table/${this.props.entity.id}`} columns={testUsersColumns} selectionLabelIndex={1} />
-                </Form>
-            </ModalDialog>
-        );
-    }
-}
 
 @withComponentMixins([
     withTranslation,
@@ -331,14 +237,13 @@ class SendControls extends Component {
 
         const dialogs = (
             <>
-                PreviewForTestUserModalDialog
                 <TestSendModalDialog
                     mode={TestSendModalDialogMode.CAMPAIGN_STATUS}
                     visible={this.state.showTestSendModal}
                     onHide={() => this.setState({showTestSendModal: false})}
                     campaign={this.props.entity}
                 />
-                <PreviewForTestUserModalDialog
+                <PreviewModalDialog
                     visible={this.state.previewForTestUserVisible}
                     onHide={() => this.setState({previewForTestUserVisible: false})}
                     entity={this.props.entity}

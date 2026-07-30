@@ -29,6 +29,7 @@ import {Check} from '@phosphor-icons/react/dist/csr/Check.es.js';
 import {CheckCircle} from '@phosphor-icons/react/dist/csr/CheckCircle.es.js';
 import {ClipboardText} from '@phosphor-icons/react/dist/csr/ClipboardText.es.js';
 import {Copy} from '@phosphor-icons/react/dist/csr/Copy.es.js';
+import {DeviceMobile} from '@phosphor-icons/react/dist/csr/DeviceMobile.es.js';
 import {DownloadSimple} from '@phosphor-icons/react/dist/csr/DownloadSimple.es.js';
 import {Envelope} from '@phosphor-icons/react/dist/csr/Envelope.es.js';
 import {Eye} from '@phosphor-icons/react/dist/csr/Eye.es.js';
@@ -91,6 +92,7 @@ export const iconMap = {
     'cog': Gear,
     'dot-circle': RadioButton,
     'download': DownloadSimple,
+    'mobile': DeviceMobile,
     'edit': PencilSimple,
     'envelope': Envelope,
     'eye': Eye,

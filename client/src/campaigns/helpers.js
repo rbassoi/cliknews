@@ -5,6 +5,55 @@ import campaignsStyles from "./styles.scss";
 import {Button, Pill} from "../lib/bootstrap-components";
 import {CheckBox, Fieldset, TableSelect} from "../lib/form";
 import React from "react";
+import axios from "../lib/axios";
+import {getPublicUrl, getSandboxUrl, getUrl} from "../lib/urls";
+
+// Fetches the first test contact (a subscriber explicitly flagged is_test) configured on
+// any of the campaign's lists, going through the same permission-checked endpoint the
+// "preview as" pickers use (rest/campaigns-test-users-table), just asking for 1 row
+// ordered by e-mail instead of rendering a full DataTables widget.
+export async function fetchDefaultTestUser(campaignId) {
+    const params = {
+        draw: 1,
+        start: 0,
+        length: 1,
+        search: {value: ''},
+        order: [{column: 1, dir: 'asc'}],
+        columns: [
+            {data: 0, searchable: false},
+            {data: 1, searchable: true},
+            {data: 2, searchable: false},
+            {data: 3, searchable: false},
+            {data: 4, searchable: false},
+            {data: 5, searchable: false}
+        ]
+    };
+
+    const resp = await axios.post(getUrl(`rest/campaigns-test-users-table/${campaignId}`), params);
+    const row = resp.data.data[0];
+
+    if (!row) {
+        return null;
+    }
+
+    const [listCid, subscriptionCid] = row[0].split(':');
+    return {listCid, subscriptionCid, email: row[1]};
+}
+
+// Builds the URL that renders the campaign fully compiled (merge tags substituted) for a
+// given test subscriber. Same logic CUD.js's editor-preview panel already uses.
+export async function buildCampaignPreviewUrl(entity, listCid, subscriptionCid) {
+    if (entity.type === CampaignType.RSS) {
+        const result = await axios.post(getUrl('rest/restricted-access-token'), {
+            method: 'rssPreview',
+            params: {campaignCid: entity.cid, listCid}
+        });
+
+        return getSandboxUrl(`cpgs/rss-preview/${entity.cid}/${listCid}/${subscriptionCid}`, result.data, {withLocale: true});
+    }
+
+    return getPublicUrl(`archive/${entity.cid}/${listCid}/${subscriptionCid}`, {withLocale: true});
+}
 
 export function campaignStatusPill(t, campaignStatusLabels, status) {
     if (status === CampaignStatus.FINISHED || status === CampaignStatus.ACTIVE) {
