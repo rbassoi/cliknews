@@ -666,7 +666,19 @@ body.cliker {
   .cn-preview-modal-picker-col {
     flex: 1 1 480px;
     min-width: 420px;
+    max-width: 100%;
     width: 100%;
+    overflow-x: auto;
+
+    // DataTables' generated length/search row (see table.js's `dom` option) is a plain
+    // Bootstrap `.row`, whose -15px negative margins are meant to be cancelled out by a
+    // parent `.col-*`'s matching padding. This column isn't part of that grid, so with
+    // nothing to cancel them, the row bleeds 15px past our edge - right into the modal's
+    // edge, since this column sits flush against it. Neutralize the margins instead.
+    .dataTables_wrapper > .row {
+      margin-left: 0;
+      margin-right: 0;
+    }
 
     @include media-breakpoint-down(lg) {
       min-width: 0;
