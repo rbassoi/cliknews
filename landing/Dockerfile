@@ -7,6 +7,11 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, not read at
+# container runtime - so this has to be a build ARG, not just a compose `environment:`
+# entry (which only reaches the running container, too late for `next build` below).
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 RUN npm run build
 
 FROM node:20-alpine AS runner

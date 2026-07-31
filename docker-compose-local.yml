@@ -33,6 +33,8 @@ services:
   landing:
     build:
       context: ./landing
+      args:
+        NEXT_PUBLIC_APP_URL: http://localhost:3000
     environment:
     - NEXT_PUBLIC_APP_URL=http://localhost:3000
     - PLANS_API_URL=http://cliker:3004/api/public/plans
