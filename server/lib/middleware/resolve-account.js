@@ -16,7 +16,7 @@ async function resolveAccount(req, res, next) {
     try {
         const account = await accountsModel.getByIdWithPlan(req.user.account_id);
 
-        if (!account || account.status === 'suspended' || account.status === 'canceled') {
+        if (!account || account.status === 'suspended' || account.status === 'canceled' || account.status === 'pending') {
             return next(new interoperableErrors.AccountInactiveError());
         }
 

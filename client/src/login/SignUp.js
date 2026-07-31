@@ -16,7 +16,6 @@ import {withErrorHandling} from '../lib/error-handling';
 import {withPageHelpers} from '../lib/page';
 import passwordValidator from '../../../shared/password-validator';
 import interoperableErrors from '../../../shared/interoperable-errors';
-import {getUrl} from '../lib/urls';
 import {withComponentMixins} from '../lib/decorator-helpers';
 import AuthLayout from './AuthLayout';
 
@@ -32,7 +31,7 @@ export default class SignUp extends Component {
 
         this.passwordValidator = passwordValidator(props.t);
 
-        this.state = {};
+        this.state = {submitted: false};
 
         this.initForm({
             leaveConfirmation: false
@@ -90,7 +89,8 @@ export default class SignUp extends Component {
             const submitSuccessful = await this.validateAndSendFormValuesToURL(FormSendMethod.POST, 'rest/signup');
 
             if (submitSuccessful) {
-                window.location = getUrl();
+                this.clearFormStatusMessage();
+                this.setState({submitted: true});
             } else {
                 this.enableForm();
                 this.setFormStatusMessage('warning', t('thereAreErrorsInTheFormPleaseFixThemAnd'));
@@ -108,6 +108,17 @@ export default class SignUp extends Component {
 
     render() {
         const t = this.props.t;
+
+        if (this.state.submitted) {
+            return (
+                <AuthLayout eyebrow={t('startForFree')} title={t('yourAccountAwaitingApprovalTitle')}>
+                    <p>{t('yourAccountAwaitingApprovalText')}</p>
+                    <p className="cn-auth-hint" style={{marginTop: 24, marginBottom: 0}}>
+                        <Link to="/login">{t('signIn')}</Link>
+                    </p>
+                </AuthLayout>
+            );
+        }
 
         return (
             <AuthLayout eyebrow={t('startForFree')} title={t('createYourAccount')} subtitle={t('noCreditCardRequired')}>

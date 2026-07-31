@@ -19,6 +19,7 @@ import templates from './templates/root';
 import users from './users/root';
 import sendConfigurations from './send-configurations/root';
 import settings from './settings/root';
+import accounts from './accounts/root';
 
 import {getLanguageChooser, NavGroup, NavLink, Section} from "./lib/page";
 
@@ -70,7 +71,7 @@ class Root extends Component {
 
             async logout() {
                 await axios.post(getUrl('rest/logout'));
-                window.location = getUrl();
+                window.location = clikerConfig.landingUrlBase || getUrl();
             }
 
             handleToggleTheme() {
@@ -94,7 +95,7 @@ class Root extends Component {
                 const mosaicoEntry = templatesEntry.children.mosaico;
                 const isModelosActive = path.startsWith('/templates');
 
-                const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api'];
+                const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api', '/pending-accounts'];
                 const isAdminActive = adminLinks.some(link => path.startsWith(link));
 
                 const isDark = this.state.theme !== 'light';
@@ -121,6 +122,7 @@ class Root extends Component {
                                 <NavLink className={activeClass('/send-configurations')} to="/send-configurations">{t('sendConfigurations')}</NavLink>
                                 {clikerConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
                                 <NavLink className={activeClass('/account/api')} to="/account/api">{t('api')}</NavLink>
+                                {clikerConfig.isPlatformAdmin && <NavLink className={activeClass('/pending-accounts')} to="/pending-accounts">{t('pendingAccounts')}</NavLink>}
                             </NavGroup>
 
                             <div className="cn-sidebar-footer">
@@ -181,7 +183,8 @@ class Root extends Component {
                 ...settings.getMenus(t),
                 ...sendConfigurations.getMenus(t),
                 ...campaigns.getMenus(t),
-                ...channels.getMenus(t)
+                ...channels.getMenus(t),
+                ...accounts.getMenus(t)
             }
         };
 

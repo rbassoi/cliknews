@@ -101,6 +101,19 @@ export default class Login extends Component {
                 return;
             }
 
+            if (error instanceof interoperableErrors.AccountInactiveError) {
+                this.enableForm();
+
+                const status = error.data && error.data.status;
+                this.setFormStatusMessage('warning',
+                    <span>
+                        <strong>{status === 'pending' ? t('yourAccountIsAwaitingApproval') : t('yourAccountIsInactive')}</strong>
+                    </span>
+                );
+
+                return;
+            }
+
             throw error;
         }
     }

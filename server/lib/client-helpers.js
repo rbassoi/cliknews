@@ -7,6 +7,7 @@ const shares = require('../models/shares');
 const urls = require('./urls');
 const settings = require('../models/settings');
 const contextHelpers = require('./context-helpers');
+const {getAdminId} = require('../../shared/users');
 
 
 async function getAnonymousConfig(context, appType) {
@@ -23,6 +24,7 @@ async function getAnonymousConfig(context, appType) {
         sandboxUrlBaseDir: urls.getSandboxUrlBaseDir(),
         publicUrlBase: urls.getPublicUrlBase(),
         publicUrlBaseDir: urls.getPublicUrlBaseDir(),
+        landingUrlBase: config.www.landingUrlBase || null,
         appType
     }
 }
@@ -42,6 +44,7 @@ async function getAuthenticatedConfig(context) {
             username: context.user.username,
             namespace: context.user.namespace
         },
+        isPlatformAdmin: context.user.id === getAdminId(),
         globalPermissions,
         editors: config.editors,
         tagLanguages: config.tagLanguages,

@@ -2,6 +2,7 @@
 
 const knex = require('../lib/knex');
 const hasher = require('node-object-hash')();
+const dtHelpers = require('../lib/dt-helpers');
 const shares = require('./shares');
 const plans = require('./plans');
 const interoperableErrors = require('../../shared/interoperable-errors');
@@ -12,6 +13,18 @@ const passwordValidator = require('../../shared/password-validator')();
 const bluebird = require('bluebird');
 const bcrypt = require('bcrypt-nodejs');
 const bcryptHash = bluebird.promisify(bcrypt.hash.bind(bcrypt));
+const {getAdminId} = require('../../shared/users');
+const messageSender = require('../lib/message-sender');
+const {getSystemSendConfigurationId} = require('../../shared/send-configurations');
+const {getTrustedUrl} = require('../lib/urls');
+const {tUI} = require('../lib/translate');
+const config = require('../lib/config');
+
+function enforceIsAdmin(context) {
+    if (!context.user || context.user.id !== getAdminId()) {
+        throw new interoperableErrors.PermissionDeniedError('Only the admin can manage account approvals');
+    }
+}
 
 // This model is intentionally infrastructure-level (no `context`/ACL
 // parameter): it's what resolves *which* account a request belongs to
@@ -90,7 +103,7 @@ async function signup(entity) {
     const passwordResult = passwordValidator.test(entity.password);
     enforce(passwordResult.errors.length === 0, 'Invalid password');
 
-    return await knex.transaction(async tx => {
+    const userId = await knex.transaction(async tx => {
         if (await tx('users').where('email', entity.email).first()) {
             throw new interoperableErrors.DuplicitEmailError();
         }
@@ -106,7 +119,7 @@ async function signup(entity) {
         const accountIds = await tx('accounts').insert({
             name: entity.companyName || entity.name,
             slug,
-            status: 'active',
+            status: 'pending',
             plan_id: freePlan.id
         });
         const accountId = accountIds[0];
@@ -159,6 +172,92 @@ async function signup(entity) {
 
         return userId;
     });
+
+    await notifyAdminOfPendingSignup(entity);
+
+    return userId;
+}
+
+// Alerts the platform admin (the one user allowed to approve/reject new accounts —
+// see enforceIsAdmin above) that a new signup is waiting on them. Fired after the
+// transaction commits, same reasoning as campaign-notifications.js: this is a
+// best-effort side notification, not something that should ever roll back the
+// signup itself if the mailer hiccups.
+async function notifyAdminOfPendingSignup(entity) {
+    const adminUser = await knex('users').where('id', getAdminId()).first();
+    if (!adminUser || !adminUser.email) {
+        return;
+    }
+
+    const locale = config.defaultLanguage;
+
+    await messageSender.queueSubscriptionMessage(
+        getSystemSendConfigurationId(),
+        {address: adminUser.email},
+        tUI('mailerPendingSignupSubject', locale, {name: entity.companyName || entity.name}),
+        null,
+        {
+            html: 'accounts/pending-signup-html.hbs',
+            text: 'accounts/pending-signup-text.hbs',
+            locale,
+            data: {
+                companyName: entity.companyName || entity.name,
+                contactName: entity.name,
+                contactEmail: entity.email,
+                approvalUrl: getTrustedUrl('accounts/pending')
+            }
+        }
+    );
+}
+
+async function listPendingDTAjax(context, params) {
+    enforceIsAdmin(context);
+
+    return await dtHelpers.ajaxList(
+        params,
+        builder => builder
+            .from('accounts')
+            .innerJoin('users', 'users.account_id', 'accounts.id')
+            .where('accounts.status', 'pending'),
+        ['accounts.id', 'accounts.name', 'users.name', 'users.email', 'accounts.created_at']
+    );
+}
+
+async function approvePending(context, accountId) {
+    enforceIsAdmin(context);
+
+    const updated = await knex('accounts').where({id: accountId, status: 'pending'}).update({status: 'active'});
+    if (!updated) {
+        throw new interoperableErrors.NotFoundError();
+    }
+}
+
+// Deletes everything a pending signup created (see server/models/accounts.js's
+// signup() above for the exhaustive list: the account itself, its one namespace,
+// its one user, the two default contact fields, and the namespace shares/permissions
+// rebuildPermissionsTx wrote for that user) - a pending account can't have created
+// anything else yet, since resolve-account.js blocks it from ever logging in.
+async function rejectPending(context, accountId) {
+    enforceIsAdmin(context);
+
+    await knex.transaction(async tx => {
+        const account = await tx('accounts').where({id: accountId, status: 'pending'}).first();
+        if (!account) {
+            throw new interoperableErrors.NotFoundError();
+        }
+
+        const namespaceIds = (await tx('namespaces').where('account_id', accountId).select('id')).map(n => n.id);
+
+        if (namespaceIds.length > 0) {
+            await tx('permissions_namespace').whereIn('entity', namespaceIds).del();
+            await tx('shares_namespace').whereIn('entity', namespaceIds).del();
+        }
+
+        await tx('users').where('account_id', accountId).del();
+        await tx('contact_fields').where('account_id', accountId).del();
+        await tx('namespaces').where('account_id', accountId).del();
+        await tx('accounts').where('id', accountId).del();
+    });
 }
 
 module.exports.getById = getById;
@@ -167,3 +266,6 @@ module.exports.setStatus = setStatus;
 module.exports.hash = hash;
 module.exports.updateOwnAccount = updateOwnAccount;
 module.exports.signup = signup;
+module.exports.listPendingDTAjax = listPendingDTAjax;
+module.exports.approvePending = approvePending;
+module.exports.rejectPending = rejectPending;

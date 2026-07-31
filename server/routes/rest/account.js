@@ -53,12 +53,11 @@ router.postAsync('/access-token-reset', passport.loggedIn, passport.csrfProtecti
 
 
 router.postAsync('/signup', passport.csrfProtection, async (req, res) => {
-    const userId = await accounts.signup(req.body);
-
-    await new Promise((resolve, reject) => {
-        req.logIn({id: userId}, err => err ? reject(err) : resolve());
-    });
-
+    // Doesn't log the new user in — the account starts out 'pending' (see
+    // accounts.signup()) and can't be used until the admin approves it, so there's
+    // nothing useful to log into yet. The client shows a "awaiting approval"
+    // message instead of redirecting into the app.
+    await accounts.signup(req.body);
     return res.json();
 });
 

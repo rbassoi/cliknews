@@ -1,4 +1,4 @@
-import {SIGNUP_URL} from '@/lib/config';
+import {LOGIN_URL, SIGNUP_URL} from '@/lib/config';
 
 export default function Header() {
     return (
@@ -25,6 +25,7 @@ export default function Header() {
             <a href="#recursos" style={{fontSize: 14}}>Recursos</a>
             <a href="#comecar" style={{fontSize: 14}}>Começar</a>
             <div style={{flex: 1}} />
+            <a href={LOGIN_URL} style={{fontSize: 14}}>Entrar</a>
             <a className="btn btn-primary" href={SIGNUP_URL}>Começar agora</a>
         </nav>
     );

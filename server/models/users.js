@@ -282,6 +282,11 @@ async function getByUsernameIfPasswordMatch(context, username, password) {
             throw new interoperableErrors.IncorrectPasswordError();
         }
 
+        const account = await knex('accounts').where('id', user.account_id).first();
+        if (account && account.status !== 'active') {
+            throw new interoperableErrors.AccountInactiveError(null, {status: account.status});
+        }
+
         delete user.password;
 
         return user;

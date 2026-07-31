@@ -325,7 +325,7 @@ class InputField extends Component {
 
     constructor() {
         super();
-        this.state = {showHints: false};
+        this.state = {showHints: false, showPassword: false};
         this.textInput = React.createRef();
     }
 
@@ -337,6 +337,10 @@ class InputField extends Component {
         this.setState({showHints: false});
     }
 
+    toggleShowPassword() {
+        this.setState({showPassword: !this.state.showPassword});
+    }
+
     render() {
         const props = this.props;
         const t = props.t;
@@ -344,11 +348,12 @@ class InputField extends Component {
         const id = props.id;
         const htmlId = 'form_' + id;
         const enableHints = !!(props.withHints && !props.disabled);
+        const isPassword = props.type === 'password';
 
 
         let type = 'text';
         if (props.type === 'password') {
-            type = 'password';
+            type = this.state.showPassword ? 'text' : 'password';
         } else if (props.type === 'hidden') {
             type = 'hidden';
         }
@@ -381,6 +386,20 @@ class InputField extends Component {
                    {...hintsFuns}
             />
         );
+
+        if (isPassword) {
+            inputContent = (
+                <div className="input-group">
+                    {inputContent}
+                    <div className="input-group-append" onMouseDown={evt => evt.preventDefault()}>
+                        <Button icon={this.state.showPassword ? 'eye-slash' : 'eye'}
+                                title={t(this.state.showPassword ? 'hidePassword' : 'showPassword')}
+                                className="btn-secondary"
+                                onClickAsync={::this.toggleShowPassword}/>
+                    </div>
+                </div>
+            );
+        }
 
         if (enableHints) {
             inputContent = (
