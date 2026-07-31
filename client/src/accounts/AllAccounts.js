@@ -182,7 +182,7 @@ export default class AllAccounts extends Component {
                 }
             },
             {data: 3, title: t('plan')},
-            {data: 4, title: t('users')},
+            {data: 4, title: t('users'), searchable: false, orderable: false},
             {data: 5, title: t('signedUp'), render: data => moment(data).fromNow()},
             {
                 actions: data => {
