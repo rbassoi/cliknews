@@ -38,7 +38,18 @@ i18n
         whitelist: config.enabledLanguages,
         load: 'currentOnly',
 
-        debug: false
+        debug: false,
+
+        // This instance backs tUI(), used only for e-mail subjects and hbs template
+        // data (see server/services/campaign-notifications.js, usage-alerts.js). Mail
+        // subjects are plain text, never HTML, so i18next's default HTML-escaping
+        // (which even encodes "/" as "&#x2F;") only corrupts them - e.g. a campaign
+        // name containing a date like "31/07/2026" rendered as "31&#x2F;07&#x2F;2026".
+        // Anything interpolated into the HTML templates already gets Handlebars' own
+        // {{ }} escaping there, so this isn't dropping any real protection.
+        interpolation: {
+            escapeValue: false
+        }
     })
 
 
