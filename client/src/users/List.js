@@ -5,7 +5,7 @@ import {withTranslation} from '../lib/i18n';
 import {LinkButton, requiresAuthenticatedUser, Title, Toolbar, withPageHelpers} from "../lib/page";
 import {Table} from "../lib/table";
 import clikerConfig from "clikerConfig";
-import {Icon} from "../lib/bootstrap-components";
+import {Icon, Pill} from "../lib/bootstrap-components";
 import {tableAddDeleteButton, tableRestActionDialogInit, tableRestActionDialogRender} from "../lib/modals";
 import {withComponentMixins} from "../lib/decorator-helpers";
 
@@ -38,6 +38,24 @@ export default class List extends Component {
 
         columns.push({ data: 3, title: t("namespace") });
         columns.push({ data: 4, title: t("role") });
+
+        // These two columns only come back populated when the query is the
+        // global-admin one (server/models/users.js's listAllDTAjax) - a regular
+        // user's own-account-scoped listDTAjax never reaches this branch, since
+        // clikerConfig.isPlatformAdmin only true for the hardcoded admin account.
+        if (clikerConfig.isPlatformAdmin) {
+            columns.push({ data: 5, title: t("account") });
+            columns.push({
+                data: 6,
+                title: t("status"),
+                render: status => {
+                    if (status === 'active') return <Pill color="green">{t('active')}</Pill>;
+                    if (status === 'suspended') return <Pill color="gray">{t('suspended')}</Pill>;
+                    if (status === 'pending') return <Pill color="amber">{t('pending')}</Pill>;
+                    return <Pill color="blue">{status}</Pill>;
+                }
+            });
+        }
 
         columns.push({
             actions: data => {

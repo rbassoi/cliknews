@@ -2,6 +2,7 @@
 
 const passport = require('../../lib/passport');
 const users = require('../../models/users');
+const {getAdminId} = require('../../../shared/users');
 
 const router = require('../../lib/router-async').create();
 const {castToInteger} = require('../../lib/helpers');
@@ -35,6 +36,13 @@ router.postAsync('/users-validate', passport.loggedIn, async (req, res) => {
 });
 
 router.postAsync('/users-table', passport.loggedIn, async (req, res) => {
+    // The global admin sees every user across every account here, not just their
+    // own account's - see users.js's listAllDTAjax for why that has to be a
+    // separate query rather than a tweak to the namespace-permission-scoped one.
+    if (req.context.user.id === getAdminId()) {
+        return res.json(await users.listAllDTAjax(req.context, req.body));
+    }
+
     return res.json(await users.listDTAjax(req.context, req.body));
 });
 

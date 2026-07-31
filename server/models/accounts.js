@@ -13,12 +13,22 @@ const passwordValidator = require('../../shared/password-validator')();
 const bluebird = require('bluebird');
 const bcrypt = require('bcrypt-nodejs');
 const bcryptHash = bluebird.promisify(bcrypt.hash.bind(bcrypt));
+const crypto = require('crypto');
 const {getAdminId} = require('../../shared/users');
 const messageSender = require('../lib/message-sender');
 const {getSystemSendConfigurationId} = require('../../shared/send-configurations');
 const {getTrustedUrl} = require('../lib/urls');
 const {tUI} = require('../lib/translate');
 const config = require('../lib/config');
+
+// Common personal-mailbox domains a real company would never register as its own -
+// a signup from one of these never gets a stored accounts.domain, and so is never
+// checked (or checkable) for a domain collision, since dozens of unrelated companies
+// legitimately share a @gmail.com contact address.
+const BLOCKED_GENERIC_EMAIL_DOMAINS = new Set([
+    'gmail.com', 'hotmail.com', 'outlook.com', 'live.com', 'yahoo.com', 'yahoo.com.br',
+    'icloud.com', 'aol.com', 'protonmail.com', 'uol.com.br', 'bol.com.br', 'terra.com.br', 'ig.com.br'
+]);
 
 function enforceIsAdmin(context) {
     if (!context.user || context.user.id !== getAdminId()) {
@@ -92,6 +102,33 @@ function slugify(name) {
         .slice(0, 60) || 'account';
 }
 
+// Guards signup() and createByAdmin() against creating a second account that collides
+// on display name, or (for a real company domain, not a generic mailbox provider) on
+// e-mail domain - closes the "Clikdata" duplicate-account bug this was written for:
+// three separate @gmail.com signups all named "Clikdata" with nothing stopping them
+// from being created as distinct, unrelated accounts. Returns the domain to store on
+// the new account (null for a blocked/generic domain), which the caller threads into
+// _createAccountWithOwnerTx.
+async function _validateAccountUniqueness(tx, name, email) {
+    const normalizedName = (name || '').trim().toLowerCase();
+    const nameCollision = await tx('accounts').whereRaw('TRIM(LOWER(name)) = ?', [normalizedName]).first();
+    if (nameCollision) {
+        throw new interoperableErrors.DuplicitNameError(`Já existe uma conta cadastrada com o nome "${name}". Escolha outro nome ou fale com o administrador.`);
+    }
+
+    const emailDomain = (email.split('@')[1] || '').toLowerCase();
+    const domain = BLOCKED_GENERIC_EMAIL_DOMAINS.has(emailDomain) ? null : emailDomain;
+
+    if (domain) {
+        const domainCollision = await tx('accounts').where('domain', domain).first();
+        if (domainCollision) {
+            throw new interoperableErrors.DuplicitNameError(`Já existe uma conta cadastrada com o domínio "${domain}". Fale com o administrador da sua empresa para ser adicionado.`);
+        }
+    }
+
+    return domain;
+}
+
 // Bootstraps a brand-new account + root namespace + owner user together, all in one
 // transaction - shared by the public signup() below and the admin-facing createByAdmin()
 // further down, which only differ in the account's initial `status`/`plan_id` and in
@@ -106,7 +143,8 @@ async function _createAccountWithOwnerTx(tx, accountFields, ownerFields) {
         name: accountFields.name,
         slug,
         status: accountFields.status,
-        plan_id: accountFields.planId
+        plan_id: accountFields.planId,
+        domain: accountFields.domain || null
     });
     const accountId = accountIds[0];
 
@@ -150,7 +188,11 @@ async function _createAccountWithOwnerTx(tx, accountFields, ownerFields) {
         // role grants full control of the new account's own namespace only.
         role: 'accountOwner',
         namespace: namespaceId,
-        account_id: accountId
+        account_id: accountId,
+        // Only set for createByAdmin() - an admin creating the account directly has
+        // already vetted it, so there's no signup e-mail-verification loop to run.
+        // A public signup() leaves this null and fills it in once verifyEmail() succeeds.
+        email_verified_at: ownerFields.emailVerifiedAt || null
     });
     const userId = userIds[0];
 
@@ -169,22 +211,39 @@ async function signup(entity) {
     const passwordResult = passwordValidator.test(entity.password);
     enforce(passwordResult.errors.length === 0, 'Invalid password');
 
-    const {userId} = await knex.transaction(async tx => {
+    const accountName = entity.companyName || entity.name;
+
+    const {userId, verifyToken} = await knex.transaction(async tx => {
         if (await tx('users').where('email', entity.email).first()) {
             throw new interoperableErrors.DuplicitEmailError();
         }
 
+        const domain = await _validateAccountUniqueness(tx, accountName, entity.email);
+
         const freePlan = await plans.getByCode('free');
         enforce(freePlan, 'Free plan is not configured');
 
-        return await _createAccountWithOwnerTx(
+        const {userId} = await _createAccountWithOwnerTx(
             tx,
-            {name: entity.companyName || entity.name, status: 'pending', planId: freePlan.id},
+            {name: accountName, status: 'pending', planId: freePlan.id, domain},
             {name: entity.name, email: entity.email, password: entity.password}
         );
+
+        // 7 days, not password-reset's 1 hour - missing this isn't a security issue,
+        // just an inconvenience, and a pending account isn't going anywhere in the
+        // meantime (resolve-account.js already blocks it from logging in either way).
+        const verifyToken = crypto.randomBytes(16).toString('base64').replace(/[^a-z0-9]/gi, '');
+        await tx('users').where('id', userId).update({
+            email_verify_token: verifyToken,
+            email_verify_expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        return {userId, verifyToken};
     });
 
-    await notifyAdminOfPendingSignup(entity);
+    // The admin's "pending approval" queue/notification only fires once the address
+    // is confirmed real - see verifyEmail() below, not here.
+    await queueVerificationEmail(entity, verifyToken);
 
     return userId;
 }
@@ -205,13 +264,16 @@ async function createByAdmin(context, entity) {
             throw new interoperableErrors.DuplicitEmailError();
         }
 
+        const accountName = entity.companyName || entity.name;
+        const domain = await _validateAccountUniqueness(tx, accountName, entity.email);
+
         const plan = await tx('plans').where('id', entity.planId).first();
         enforce(plan, 'Plan not found');
 
         const {accountId} = await _createAccountWithOwnerTx(
             tx,
-            {name: entity.companyName || entity.name, status: 'active', planId: plan.id},
-            {name: entity.name, email: entity.email, password: entity.password}
+            {name: accountName, status: 'active', planId: plan.id, domain},
+            {name: entity.name, email: entity.email, password: entity.password, emailVerifiedAt: new Date()}
         );
 
         return accountId;
@@ -250,6 +312,90 @@ async function notifyAdminOfPendingSignup(entity) {
     );
 }
 
+// Sends the new user the link they must click before their signup ever reaches the
+// admin's approval queue - see verifyEmail() below, and resendVerification() further
+// down for the admin-triggered re-send when the original link expired or got lost.
+async function queueVerificationEmail(entity, verifyToken) {
+    const locale = config.defaultLanguage;
+
+    await messageSender.queueSubscriptionMessage(
+        getSystemSendConfigurationId(),
+        {address: entity.email},
+        tUI('mailerVerifyEmailSubject', locale),
+        null,
+        {
+            html: 'accounts/verify-email-html.hbs',
+            text: 'accounts/verify-email-text.hbs',
+            locale,
+            data: {
+                companyName: entity.companyName || entity.name,
+                contactName: entity.name,
+                verifyUrl: getTrustedUrl(`login/verify-email/${encodeURIComponent(verifyToken)}`)
+            }
+        }
+    );
+}
+
+// Public, no context - reached from the link in queueVerificationEmail's e-mail before
+// the account has ever been approved (or logged into). Confirms the address is real,
+// then hands off to the same admin-notification signup() used to queue directly.
+async function verifyEmail(token) {
+    let notifyEntity;
+
+    await knex.transaction(async tx => {
+        const user = await tx('users')
+            .where('email_verify_token', token)
+            .andWhere('email_verify_expire', '>', new Date())
+            .first();
+
+        if (!user) {
+            throw new interoperableErrors.InvalidTokenError();
+        }
+
+        await tx('users').where('id', user.id).update({
+            email_verified_at: new Date(),
+            email_verify_token: null,
+            email_verify_expire: null
+        });
+
+        const account = await tx('accounts').where('id', user.account_id).first();
+        notifyEntity = {companyName: account.name, name: user.name, email: user.email};
+    });
+
+    await notifyAdminOfPendingSignup(notifyEntity);
+}
+
+// Regenerates and re-queues the verification e-mail for a pending account whose
+// owner never clicked (or lost) the original link - the only row action Pending
+// Accounts offers instead of Approve while a row is still unverified.
+async function resendVerification(context, accountId) {
+    enforceIsAdmin(context);
+
+    let entity, verifyToken;
+
+    await knex.transaction(async tx => {
+        const account = await tx('accounts').where({id: accountId, status: 'pending'}).first();
+        if (!account) {
+            throw new interoperableErrors.NotFoundError();
+        }
+
+        const user = await tx('users').where('account_id', accountId).first();
+        if (!user) {
+            throw new interoperableErrors.NotFoundError();
+        }
+
+        verifyToken = crypto.randomBytes(16).toString('base64').replace(/[^a-z0-9]/gi, '');
+        await tx('users').where('id', user.id).update({
+            email_verify_token: verifyToken,
+            email_verify_expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        entity = {companyName: account.name, name: user.name, email: user.email};
+    });
+
+    await queueVerificationEmail(entity, verifyToken);
+}
+
 async function listPendingDTAjax(context, params) {
     enforceIsAdmin(context);
 
@@ -259,7 +405,7 @@ async function listPendingDTAjax(context, params) {
             .from('accounts')
             .innerJoin('users', 'users.account_id', 'accounts.id')
             .where('accounts.status', 'pending'),
-        ['accounts.id', 'accounts.name', 'users.name', 'users.email', 'accounts.created_at']
+        ['accounts.id', 'accounts.name', 'users.name', 'users.email', 'accounts.created_at', 'users.email_verified_at']
     );
 }
 
@@ -344,6 +490,8 @@ module.exports.setStatus = setStatus;
 module.exports.hash = hash;
 module.exports.updateOwnAccount = updateOwnAccount;
 module.exports.signup = signup;
+module.exports.verifyEmail = verifyEmail;
+module.exports.resendVerification = resendVerification;
 module.exports.listPendingDTAjax = listPendingDTAjax;
 module.exports.approvePending = approvePending;
 module.exports.rejectPending = rejectPending;

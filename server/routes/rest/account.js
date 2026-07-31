@@ -61,6 +61,11 @@ router.postAsync('/signup', passport.csrfProtection, async (req, res) => {
     return res.json();
 });
 
+router.postAsync('/verify-email', passport.csrfProtection, async (req, res) => {
+    await accounts.verifyEmail(req.body.token);
+    return res.json();
+});
+
 router.post('/login', passport.csrfProtection, passport.restLogin);
 router.post('/logout', passport.csrfProtection, passport.restLogout);
 

@@ -5,6 +5,7 @@ import Login from './Login';
 import SignUp from './SignUp';
 import Reset from './Forgot';
 import ResetLink from './Reset';
+import VerifyEmail from './VerifyEmail';
 import clikerConfig from 'clikerConfig';
 
 
@@ -26,6 +27,14 @@ function getMenus(t) {
             extraParams: [':username', ':resetToken'],
             link: '/login/reset',
             panelComponent: ResetLink,
+            panelInFullScreen: true
+        };
+
+        subPaths.verifyEmail = {
+            title: t('verifyingYourEmail'),
+            extraParams: [':verifyToken'],
+            link: '/login/verify-email',
+            panelComponent: VerifyEmail,
             panelInFullScreen: true
         };
 

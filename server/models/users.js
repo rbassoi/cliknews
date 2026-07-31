@@ -32,6 +32,7 @@ const hashKeys = new Set(['username', 'name', 'email', 'namespace', 'role', 'pho
 const shares = require('./shares');
 const contextHelpers = require('../lib/context-helpers');
 const { requireAccountScope, requireAccountScopeOn, requireAccountId } = require('../lib/tenant-scope');
+const {getAdminId} = require('../../shared/users');
 
 function hash(entity) {
     return hasher.hash(filterObject(entity, hashKeys));
@@ -121,6 +122,32 @@ async function listDTAjax(context, params) {
             .where('generated_role_names.entity_type', 'global')
             .modify(requireAccountScopeOn('users'), context),
         [ 'users.id', 'users.username', 'users.name', 'namespaces.name', 'generated_role_names.name' ]
+    );
+}
+
+// Global-admin-only counterpart to listDTAjax above: that one is namespace-permission-scoped
+// (ajaxListWithPermissions's inner join on permissions_namespace, further narrowed to the
+// caller's own account by requireAccountScopeOn) and has no "sees everything" mode, so this
+// bypasses it entirely with a plain ajaxList - same pattern as accounts.js's listAllDTAjax -
+// rather than trying to make the permission machinery conditionally no-op. Appends the
+// user's account name/status so the client can show which account each row belongs to.
+async function listAllDTAjax(context, params) {
+    if (!context.user || context.user.id !== getAdminId()) {
+        throw new interoperableErrors.PermissionDeniedError();
+    }
+
+    return await dtHelpers.ajaxList(
+        params,
+        builder => builder
+            .from('users')
+            .innerJoin('namespaces', 'namespaces.id', 'users.namespace')
+            .innerJoin('generated_role_names', 'generated_role_names.role', 'users.role')
+            .innerJoin('accounts', 'accounts.id', 'users.account_id')
+            .where('generated_role_names.entity_type', 'global'),
+        [
+            'users.id', 'users.username', 'users.name', 'namespaces.name', 'generated_role_names.name',
+            'accounts.name', 'accounts.status'
+        ]
     );
 }
 
@@ -448,6 +475,7 @@ async function getByRestrictedAccessToken(token) {
 
 
 module.exports.listDTAjax = listDTAjax;
+module.exports.listAllDTAjax = listAllDTAjax;
 module.exports.remove = remove;
 module.exports.updateWithConsistencyCheck = updateWithConsistencyCheck;
 module.exports.create = create;

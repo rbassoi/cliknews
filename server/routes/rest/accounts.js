@@ -20,6 +20,11 @@ router.postAsync('/pending-accounts/:accountId/reject', passport.loggedIn, passp
     return res.json();
 });
 
+router.postAsync('/pending-accounts/:accountId/resend-verification', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    await accounts.resendVerification(req.context, castToInteger(req.params.accountId));
+    return res.json();
+});
+
 router.postAsync('/accounts-table', passport.loggedIn, async (req, res) => {
     return res.json(await accounts.listAllDTAjax(req.context, req.body));
 });

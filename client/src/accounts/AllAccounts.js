@@ -103,6 +103,12 @@ class CreateAccountModalDialog extends Component {
                 return;
             }
 
+            if (error instanceof interoperableErrors.DuplicitNameError) {
+                this.enableForm();
+                this.setFormStatusMessage('danger', error.message);
+                return;
+            }
+
             throw error;
         }
     }
