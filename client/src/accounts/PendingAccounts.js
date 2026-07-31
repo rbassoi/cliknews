@@ -19,6 +19,7 @@ import moment from 'moment';
 export default class PendingAccounts extends Component {
     constructor(props) {
         super(props);
+        this.state = {};
         tableRestActionDialogInit(this);
     }
 
