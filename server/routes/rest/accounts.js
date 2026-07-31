@@ -20,4 +20,23 @@ router.postAsync('/pending-accounts/:accountId/reject', passport.loggedIn, passp
     return res.json();
 });
 
+router.postAsync('/accounts-table', passport.loggedIn, async (req, res) => {
+    return res.json(await accounts.listAllDTAjax(req.context, req.body));
+});
+
+router.postAsync('/accounts', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    const accountId = await accounts.createByAdmin(req.context, req.body);
+    return res.json(accountId);
+});
+
+router.postAsync('/accounts/:accountId/ban', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    await accounts.banAccount(req.context, castToInteger(req.params.accountId));
+    return res.json();
+});
+
+router.postAsync('/accounts/:accountId/unban', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    await accounts.unbanAccount(req.context, castToInteger(req.params.accountId));
+    return res.json();
+});
+
 module.exports = router;

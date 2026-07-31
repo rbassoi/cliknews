@@ -92,18 +92,84 @@ function slugify(name) {
         .slice(0, 60) || 'account';
 }
 
-// Bootstraps a brand-new account + root namespace + master user together, all in
-// one shot — the one case where none of the usual context-scoped create() functions
-// apply, because there is no context (no account, no namespace, no user) yet for
-// them to be scoped by. See the file-level comment above for why this model is
-// infrastructure-level and takes no `context` param.
+// Bootstraps a brand-new account + root namespace + owner user together, all in one
+// transaction - shared by the public signup() below and the admin-facing createByAdmin()
+// further down, which only differ in the account's initial `status`/`plan_id` and in
+// whether a "pending approval" notification fires afterward.
+async function _createAccountWithOwnerTx(tx, accountFields, ownerFields) {
+    let slug = slugify(accountFields.name);
+    while (await tx('accounts').where('slug', slug).first()) {
+        slug = slugify(accountFields.name) + '-' + shortid.generate().slice(0, 6).toLowerCase();
+    }
+
+    const accountIds = await tx('accounts').insert({
+        name: accountFields.name,
+        slug,
+        status: accountFields.status,
+        plan_id: accountFields.planId
+    });
+    const accountId = accountIds[0];
+
+    const namespaceIds = await tx('namespaces').insert({
+        name: 'Root',
+        namespace: null,
+        account_id: accountId
+    });
+    const namespaceId = namespaceIds[0];
+
+    // Seed the two contact fields the Contacts CRM feature ships with by default
+    // (server/setup/knex/migrations/20260728120000_contacts.js does the same for
+    // pre-existing accounts) so a fresh account isn't starting from an empty
+    // fields list.
+    await tx('contact_fields').insert([
+        { account_id: accountId, namespace: namespaceId, name: 'Telefone', key: 'telefone', type: 'text' },
+        { account_id: accountId, namespace: namespaceId, name: 'WhatsApp', key: 'whatsapp', type: 'text' }
+    ]);
+
+    let username = (ownerFields.email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (!username) {
+        username = 'user';
+    }
+    let suffix = 0;
+    let candidateUsername = username;
+    while (await tx('users').where('username', candidateUsername).first()) {
+        suffix += 1;
+        candidateUsername = username + suffix;
+    }
+
+    const hashedPassword = await bcryptHash(ownerFields.password, null, null);
+
+    const userIds = await tx('users').insert({
+        username: candidateUsername,
+        name: ownerFields.name,
+        email: ownerFields.email,
+        password: hashedPassword,
+        // Not 'master' (Global Master) — that role carries rootNamespaceRole,
+        // a holdover from the pre-multi-tenant single-root-namespace design
+        // (see the comment on the rootNamespaceRole check in shares.js). This
+        // role grants full control of the new account's own namespace only.
+        role: 'accountOwner',
+        namespace: namespaceId,
+        account_id: accountId
+    });
+    const userId = userIds[0];
+
+    await shares.rebuildPermissionsTx(tx, { userId });
+
+    return {accountId, userId};
+}
+
+// The one case where none of the usual context-scoped create() functions apply,
+// because there is no context (no account, no namespace, no user) yet for them to be
+// scoped by. See the file-level comment above for why this model is infrastructure-level
+// and takes no `context` param.
 async function signup(entity) {
     enforce(await tools.validateEmail(entity.email) === 0, 'Invalid email');
 
     const passwordResult = passwordValidator.test(entity.password);
     enforce(passwordResult.errors.length === 0, 'Invalid password');
 
-    const userId = await knex.transaction(async tx => {
+    const {userId} = await knex.transaction(async tx => {
         if (await tx('users').where('email', entity.email).first()) {
             throw new interoperableErrors.DuplicitEmailError();
         }
@@ -111,71 +177,45 @@ async function signup(entity) {
         const freePlan = await plans.getByCode('free');
         enforce(freePlan, 'Free plan is not configured');
 
-        let slug = slugify(entity.companyName || entity.name);
-        while (await tx('accounts').where('slug', slug).first()) {
-            slug = slugify(entity.companyName || entity.name) + '-' + shortid.generate().slice(0, 6).toLowerCase();
-        }
-
-        const accountIds = await tx('accounts').insert({
-            name: entity.companyName || entity.name,
-            slug,
-            status: 'pending',
-            plan_id: freePlan.id
-        });
-        const accountId = accountIds[0];
-
-        const namespaceIds = await tx('namespaces').insert({
-            name: 'Root',
-            namespace: null,
-            account_id: accountId
-        });
-        const namespaceId = namespaceIds[0];
-
-        // Seed the two contact fields the Contacts CRM feature ships with by default
-        // (server/setup/knex/migrations/20260728120000_contacts.js does the same for
-        // pre-existing accounts) so a fresh account isn't starting from an empty
-        // fields list.
-        await tx('contact_fields').insert([
-            { account_id: accountId, namespace: namespaceId, name: 'Telefone', key: 'telefone', type: 'text' },
-            { account_id: accountId, namespace: namespaceId, name: 'WhatsApp', key: 'whatsapp', type: 'text' }
-        ]);
-
-        let username = (entity.email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9._-]/g, '');
-        if (!username) {
-            username = 'user';
-        }
-        let suffix = 0;
-        let candidateUsername = username;
-        while (await tx('users').where('username', candidateUsername).first()) {
-            suffix += 1;
-            candidateUsername = username + suffix;
-        }
-
-        const hashedPassword = await bcryptHash(entity.password, null, null);
-
-        const userIds = await tx('users').insert({
-            username: candidateUsername,
-            name: entity.name,
-            email: entity.email,
-            password: hashedPassword,
-            // Not 'master' (Global Master) — that role carries rootNamespaceRole,
-            // a holdover from the pre-multi-tenant single-root-namespace design
-            // (see the comment on the rootNamespaceRole check in shares.js). This
-            // role grants full control of the new account's own namespace only.
-            role: 'accountOwner',
-            namespace: namespaceId,
-            account_id: accountId
-        });
-        const userId = userIds[0];
-
-        await shares.rebuildPermissionsTx(tx, { userId });
-
-        return userId;
+        return await _createAccountWithOwnerTx(
+            tx,
+            {name: entity.companyName || entity.name, status: 'pending', planId: freePlan.id},
+            {name: entity.name, email: entity.email, password: entity.password}
+        );
     });
 
     await notifyAdminOfPendingSignup(entity);
 
     return userId;
+}
+
+// Same bootstrap as signup(), but run directly by the admin (server/routes/rest/accounts.js's
+// POST /accounts) - the account starts 'active' immediately (no self-serve approval to wait
+// on) on whatever plan the admin picked, and there's no "awaiting approval" notification to fire.
+async function createByAdmin(context, entity) {
+    enforceIsAdmin(context);
+
+    enforce(await tools.validateEmail(entity.email) === 0, 'Invalid email');
+
+    const passwordResult = passwordValidator.test(entity.password);
+    enforce(passwordResult.errors.length === 0, 'Invalid password');
+
+    return await knex.transaction(async tx => {
+        if (await tx('users').where('email', entity.email).first()) {
+            throw new interoperableErrors.DuplicitEmailError();
+        }
+
+        const plan = await tx('plans').where('id', entity.planId).first();
+        enforce(plan, 'Plan not found');
+
+        const {accountId} = await _createAccountWithOwnerTx(
+            tx,
+            {name: entity.companyName || entity.name, status: 'active', planId: plan.id},
+            {name: entity.name, email: entity.email, password: entity.password}
+        );
+
+        return accountId;
+    });
 }
 
 // Alerts the platform admin (the one user allowed to approve/reject new accounts —
@@ -260,6 +300,44 @@ async function rejectPending(context, accountId) {
     });
 }
 
+async function listAllDTAjax(context, params) {
+    enforceIsAdmin(context);
+
+    return await dtHelpers.ajaxList(
+        params,
+        builder => builder
+            .from('accounts')
+            .innerJoin('plans', 'plans.id', 'accounts.plan_id'),
+        [
+            'accounts.id', 'accounts.name', 'accounts.status', 'plans.name',
+            {
+                name: 'userCount',
+                query: builder => builder.from('users').whereRaw('users.account_id = accounts.id').count().as('userCount')
+            },
+            'accounts.created_at'
+        ]
+    );
+}
+
+async function banAccount(context, accountId) {
+    enforceIsAdmin(context);
+    enforce(accountId !== context.user.account_id, "You can't ban your own account");
+
+    const updated = await knex('accounts').where('id', accountId).update({status: 'suspended'});
+    if (!updated) {
+        throw new interoperableErrors.NotFoundError();
+    }
+}
+
+async function unbanAccount(context, accountId) {
+    enforceIsAdmin(context);
+
+    const updated = await knex('accounts').where('id', accountId).update({status: 'active'});
+    if (!updated) {
+        throw new interoperableErrors.NotFoundError();
+    }
+}
+
 module.exports.getById = getById;
 module.exports.getByIdWithPlan = getByIdWithPlan;
 module.exports.setStatus = setStatus;
@@ -269,3 +347,7 @@ module.exports.signup = signup;
 module.exports.listPendingDTAjax = listPendingDTAjax;
 module.exports.approvePending = approvePending;
 module.exports.rejectPending = rejectPending;
+module.exports.createByAdmin = createByAdmin;
+module.exports.listAllDTAjax = listAllDTAjax;
+module.exports.banAccount = banAccount;
+module.exports.unbanAccount = unbanAccount;

@@ -95,7 +95,7 @@ class Root extends Component {
                 const mosaicoEntry = templatesEntry.children.mosaico;
                 const isModelosActive = path.startsWith('/templates');
 
-                const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api', '/pending-accounts'];
+                const adminLinks = ['/users', '/namespaces', '/settings', '/sending-domains', '/api-keys', '/send-configurations', '/blacklist', '/account/api', '/accounts', '/pending-accounts'];
                 const isAdminActive = adminLinks.some(link => path.startsWith(link));
 
                 const isDark = this.state.theme !== 'light';
@@ -122,6 +122,7 @@ class Root extends Component {
                                 <NavLink className={activeClass('/send-configurations')} to="/send-configurations">{t('sendConfigurations')}</NavLink>
                                 {clikerConfig.globalPermissions.manageBlacklist && <NavLink className={activeClass('/blacklist')} to="/blacklist">{t('blacklist')}</NavLink>}
                                 <NavLink className={activeClass('/account/api')} to="/account/api">{t('api')}</NavLink>
+                                {clikerConfig.isPlatformAdmin && <NavLink className={activeClass('/accounts')} to="/accounts">{t('accounts')}</NavLink>}
                                 {clikerConfig.isPlatformAdmin && <NavLink className={activeClass('/pending-accounts')} to="/pending-accounts">{t('pendingAccounts')}</NavLink>}
                             </NavGroup>
 
