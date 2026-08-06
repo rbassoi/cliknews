@@ -89,8 +89,8 @@ export function getMailerTypes(t) {
         data.batchPauseSeconds = data.mailer_settings.batchPauseSeconds || '';
         data.logTransactions = data.mailer_settings.logTransactions;
         // Add extra throttling params
-        data.throttlingWarmUpDays = data.mailer_settings.throttlingWarmUpDays
-        data.throttlingWarmUpFrom  = data.mailer_settings.throttlingWarmUpFrom
+        data.throttlingWarmUpDays = data.mailer_settings.throttlingWarmUpDays || ''
+        data.throttlingWarmUpFrom  = data.mailer_settings.throttlingWarmUpFrom || ''
         data.enableSenderOnDaySun = data.mailer_settings.enableSenderOnDaySun ?? true;
         data.enableSenderOnDayMon = data.mailer_settings.enableSenderOnDayMon ?? true;
         data.enableSenderOnDayTue = data.mailer_settings.enableSenderOnDayTue ?? true;
@@ -329,10 +329,10 @@ export function getMailerTypes(t) {
         afterLoad: data => {
             afterLoadGenericSMTP(data);
             data.zoneMtaType = data.mailer_settings.zoneMtaType;
-            data.dkimApiKey = data.mailer_settings.dkimApiKey;
-            data.dkimDomain = data.mailer_settings.dkimDomain;
-            data.dkimSelector = data.mailer_settings.dkimSelector;
-            data.dkimPrivateKey = data.mailer_settings.dkimPrivateKey;
+            data.dkimApiKey = data.mailer_settings.dkimApiKey || '';
+            data.dkimDomain = data.mailer_settings.dkimDomain || '';
+            data.dkimSelector = data.mailer_settings.dkimSelector || '';
+            data.dkimPrivateKey = data.mailer_settings.dkimPrivateKey || '';
         },
         beforeSave: data => {
             const zoneMtaType = Number.parseInt(data.zoneMtaType);
