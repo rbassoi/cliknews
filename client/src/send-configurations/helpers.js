@@ -51,6 +51,8 @@ export function getMailerTypes(t) {
         return {
             maxConnections: '5',
             throttling: '',
+            batchSize: '',
+            batchPauseSeconds: '',
             logTransactions: false,
             // Add extra throttling params
             throttlingWarmUpDays: '', // Set warm up period in days
@@ -83,6 +85,8 @@ export function getMailerTypes(t) {
     function afterLoadCommon(data) {
         data.maxConnections = data.mailer_settings.maxConnections;
         data.throttling = data.mailer_settings.throttling || '';
+        data.batchSize = data.mailer_settings.batchSize || '';
+        data.batchPauseSeconds = data.mailer_settings.batchPauseSeconds || '';
         data.logTransactions = data.mailer_settings.logTransactions;
         // Add extra throttling params
         data.throttlingWarmUpDays = data.mailer_settings.throttlingWarmUpDays
@@ -112,6 +116,8 @@ export function getMailerTypes(t) {
         data.mailer_settings = {};
         data.mailer_settings.maxConnections = Number(data.maxConnections);
         data.mailer_settings.throttling = Number(data.throttling);
+        data.mailer_settings.batchSize = Number(data.batchSize);
+        data.mailer_settings.batchPauseSeconds = Number(data.batchPauseSeconds);
         data.mailer_settings.logTransactions = data.logTransactions;
         // Add extra throttling params
         data.mailer_settings.throttlingWarmUpDays = Number(data.throttlingWarmUpDays)
@@ -144,9 +150,11 @@ export function getMailerTypes(t) {
     function validateCommon(state) {
         validateNumber(state, 'maxConnections', 'Max connections');
         validateNumber(state, 'throttling', 'Throttling', true);
-        // Validate extra throttling params 
+        validateNumber(state, 'batchSize', 'Batch size', true);
+        validateNumber(state, 'batchPauseSeconds', 'Batch pause seconds', true);
+        // Validate extra throttling params
         validateNumber(state, 'throttlingWarmUpDays', 'Throttling Warm Up Days', true);
-        validateNumber(state, 'throttlingWarmUpFrom', 'Throttling Warm Up From', true); 
+        validateNumber(state, 'throttlingWarmUpFrom', 'Throttling Warm Up From', true);
     }
 
     function validateGenericSMTP(state) {
@@ -229,7 +237,9 @@ export function getMailerTypes(t) {
                     <InputField id="maxConnections" label={t('maxConnections')} placeholder={t('theCountOfMaxConnectionsEg10')} help={t('theCountOfMaximumSimultaneousConnections')}/>
                     <InputField id="smtpMaxMessages" label={t('maxMessages')} placeholder={t('theCountOfMaxMessagesEg100')} help={t('theNumberOfMessagesToSendThroughASingle')}/>
                     <InputField id="throttling" label={t('throttling')} placeholder={t('messagesPerHourEg1000')} help={t('maximumNumberOfMessagesToSendInAnHour')}/>
-                </Fieldset>                    
+                    <InputField id="batchSize" label={t('batchSize')} placeholder={t('messagesPerBatchEg50')} help={t('howManyMessagesToSendBeforePausingLeaveBlankToSendAllAtOnce')}/>
+                    <InputField id="batchPauseSeconds" label={t('batchPauseSeconds')} placeholder={t('pauseDurationInSecondsEg60')} help={t('howLongToWaitBetweenBatchesInSeconds')}/>
+                </Fieldset>
                 <Fieldset label={t('extraThrottlingMailerSettings')}>    
                     <InputField id="throttlingWarmUpDays" label={t('throttlingWarmUpDays')} placeholder={t('throttlingWarmUpDaysEg10')} help={t('senderWarmUpPeriodInDays')}/>
                     <InputField id="throttlingWarmUpFrom" label={t('throttlingWarmUpFrom')} placeholder={t('throttlingWarmUpFromDateInUnixTimestampEg1648735303000')} help={t('senderWarmUpPeriodStartingDayInUnixTimestamp')}/>
@@ -302,6 +312,8 @@ export function getMailerTypes(t) {
                         <InputField id="maxConnections" label={t('maxConnections')} placeholder={t('theCountOfMaxConnectionsEg10')} help={t('theCountOfMaximumSimultaneousConnections')}/>
                         <InputField id="smtpMaxMessages" label={t('maxMessages')} placeholder={t('theCountOfMaxMessagesEg100')} help={t('theNumberOfMessagesToSendThroughASingle')}/>
                         <InputField id="throttling" label={t('throttling')} placeholder={t('messagesPerHourEg1000')} help={t('maximumNumberOfMessagesToSendInAnHour')}/>
+                        <InputField id="batchSize" label={t('batchSize')} placeholder={t('messagesPerBatchEg50')} help={t('howManyMessagesToSendBeforePausingLeaveBlankToSendAllAtOnce')}/>
+                        <InputField id="batchPauseSeconds" label={t('batchPauseSeconds')} placeholder={t('pauseDurationInSecondsEg60')} help={t('howLongToWaitBetweenBatchesInSeconds')}/>
                     </Fieldset>
                 </div>
             );
@@ -361,6 +373,8 @@ export function getMailerTypes(t) {
                     <CheckBox id="logTransactions" text={t('logSmtpTransactions')}/>
                     <InputField id="maxConnections" label={t('maxConnections')} placeholder={t('theCountOfMaxConnectionsEg10')} help={t('theCountOfMaximumSimultaneousConnections')}/>
                     <InputField id="throttling" label={t('throttling')} placeholder={t('messagesPerHourEg1000')} help={t('maximumNumberOfMessagesToSendInAnHour')}/>
+                    <InputField id="batchSize" label={t('batchSize')} placeholder={t('messagesPerBatchEg50')} help={t('howManyMessagesToSendBeforePausingLeaveBlankToSendAllAtOnce')}/>
+                    <InputField id="batchPauseSeconds" label={t('batchPauseSeconds')} placeholder={t('pauseDurationInSecondsEg60')} help={t('howLongToWaitBetweenBatchesInSeconds')}/>
                 </Fieldset>
             </div>,
         initData: () => ({

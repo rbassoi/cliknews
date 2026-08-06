@@ -89,6 +89,54 @@ function getSendConfigurationPriority(sendConfigurationId) {
     return sendConfigurationPriority.get(sendConfigurationId) || 0;
 }
 
+// sendConfigurationId -> {batchSize, batchPauseSeconds} | null (null = batching not
+// configured for this send configuration, i.e. send the whole campaign at once).
+// Cached per process lifetime like sendConfigurationPriority above, but explicitly
+// invalidated on the 'reload-config' IPC message (see init() below) so an admin
+// tuning these values from the UI takes effect without a process restart.
+const sendConfigurationBatchSettings = new Map();
+
+async function getSendConfigurationBatchSettings(sendConfigurationId) {
+    if (sendConfigurationBatchSettings.has(sendConfigurationId)) {
+        return sendConfigurationBatchSettings.get(sendConfigurationId);
+    }
+
+    let result = null;
+    try {
+        const row = await knex('send_configurations').where('id', sendConfigurationId).select('mailer_settings').first();
+        const mailerSettings = row && row.mailer_settings && JSON.parse(row.mailer_settings);
+        const batchSize = mailerSettings && Number(mailerSettings.batchSize);
+        const batchPauseSeconds = mailerSettings && Number(mailerSettings.batchPauseSeconds);
+
+        if (batchSize > 0 && batchPauseSeconds > 0) {
+            result = {batchSize, batchPauseSeconds};
+        }
+    } catch (err) {
+        result = null;
+    }
+
+    sendConfigurationBatchSettings.set(sendConfigurationId, result);
+    return result;
+}
+
+// Sleeps in short increments instead of one long setTimeout, re-checking the
+// campaign's status each tick, so a manual Pause click takes effect within a couple
+// seconds even in the middle of a multi-minute inter-batch pause, instead of only
+// being noticed once the whole pause elapses.
+async function sleepUnlessCampaignLeavesSending(campaignId, totalSeconds) {
+    const pollIntervalMs = 2000;
+    const deadline = Date.now() + totalSeconds * 1000;
+
+    while (Date.now() < deadline) {
+        const cpg = await knex('campaigns').where('id', campaignId).select('status').first();
+        if (!cpg || cpg.status !== CampaignStatus.SENDING) {
+            return;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, Math.min(pollIntervalMs, deadline - Date.now())));
+    }
+}
+
 const sendConfigurationMessageQueue = new Map(); // sendConfigurationId -> [queuedMessage]
 const campaignMessageQueue = new Map(); // campaignId -> [campaignMessage]
 
@@ -393,6 +441,8 @@ async function processCampaign(campaignId) {
                 return await finish(true, CampaignStatus.SCHEDULED);
             }
 
+            const batchSettings = await getSendConfigurationBatchSettings(cpg.send_configuration);
+
             let messagesInProcessing = [...msgQueue];
             for (const wa of workAssignment.values()) {
                 if (wa.type === WorkAssignmentType.CAMPAIGN && wa.campaignId === campaignId) {
@@ -403,7 +453,7 @@ async function processCampaign(campaignId) {
             const subs = await knex('campaign_messages')
                 .where({status: CampaignMessageStatus.SCHEDULED, campaign: campaignId})
                 .whereNotIn('hash_email', messagesInProcessing.map(x => x.hash_email))
-                .limit(retrieveBatchSize);
+                .limit(batchSettings ? batchSettings.batchSize : retrieveBatchSize);
 
             if (subs.length === 0) {
                 if (isCompleted()) {
@@ -426,6 +476,20 @@ async function processCampaign(campaignId) {
 
             while (msgQueue.length > 0) {
                 await notifier.waitFor(`campaignMessageQueueEmpty:${campaignId}`);
+            }
+
+            // "Disparo por pacotes": pause between batches instead of blasting the whole
+            // list at once, when a batch size/pause is configured on this campaign's send
+            // configuration. Waits for the batch to actually finish sending first (not just
+            // leave the in-memory queue, which happens as soon as a worker claims the
+            // messages) so the pause genuinely spaces out delivery to the receiving MTAs.
+            if (batchSettings) {
+                while (!isCompleted()) {
+                    await notifier.waitFor('workerFinished');
+                }
+
+                log.verbose('Senders', `Campaign ${campaignId}: pausing ${batchSettings.batchPauseSeconds}s after a batch of ${subs.length} message(s)`);
+                await sleepUnlessCampaignLeavesSending(campaignId, batchSettings.batchPauseSeconds);
             }
         }
     } catch (err) {
@@ -742,6 +806,8 @@ async function init() {
                 scheduleCheck();
 
             } else if (type === 'reload-config') {
+                sendConfigurationBatchSettings.delete(msg.data.sendConfigurationId);
+
                 const sendConfigurationStatus = getSendConfigurationStatus(msg.data.sendConfigurationId);
                 if (sendConfigurationStatus.retryCount > 0) {
                     const sendConfigurationStatus = getSendConfigurationStatus(msg.data.sendConfigurationId)
