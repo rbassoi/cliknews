@@ -24,5 +24,14 @@ async function add(accountId, email, reason) {
     }
 }
 
+async function removeReactivated(accountId, emails, reason) {
+    if (!emails || emails.length === 0) {
+        return 0;
+    }
+
+    return await knex('suppression_list').where({account_id: accountId, reason}).whereIn('email', emails).del();
+}
+
 module.exports.isSuppressed = isSuppressed;
 module.exports.add = add;
+module.exports.removeReactivated = removeReactivated;

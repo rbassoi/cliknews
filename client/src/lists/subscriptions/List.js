@@ -17,7 +17,8 @@ import {
     tableAddDeleteButton,
     tableAddRestActionButton,
     tableRestActionDialogInit,
-    tableRestActionDialogRender
+    tableRestActionDialogRender,
+    RestActionModalDialog
 } from "../../lib/modals";
 import listStyles from "../styles.scss";
 import {withComponentMixins} from "../../lib/decorator-helpers";
@@ -38,7 +39,8 @@ export default class List extends Component {
         const t = props.t;
 
         this.state = {
-            isAddFromContactsModalOpen: false
+            isAddFromContactsModalOpen: false,
+            isReactivateBouncedModalOpen: false
         };
         tableRestActionDialogInit(this);
 
@@ -179,7 +181,31 @@ export default class List extends Component {
                             onClickAsync={() => this.setState({isAddFromContactsModalOpen: true})}
                         />
                     }
+                    {list.permissions.includes('manageSubscriptions') &&
+                        <Button
+                            className="btn-secondary"
+                            icon="power-off"
+                            label={t('reactivateBounced')}
+                            onClickAsync={() => this.setState({isReactivateBouncedModalOpen: true})}
+                        />
+                    }
                 </Toolbar>
+
+                <RestActionModalDialog
+                    title={t('confirmReactivateBounced')}
+                    message={t('areYouSureYouWantToReactivateAllBouncedContactsInThisList?')}
+                    visible={this.state.isReactivateBouncedModalOpen}
+                    actionMethod={HTTPMethod.POST}
+                    actionUrl={`rest/subscriptions-reactivate-bounced/${list.id}`}
+                    actionInProgressMsg={t('reactivatingBouncedContacts')}
+                    actionDoneMsg={t('bouncedContactsReactivated')}
+                    onBack={() => this.setState({isReactivateBouncedModalOpen: false})}
+                    onPerformingAction={() => this.setState({isReactivateBouncedModalOpen: false})}
+                    onSuccess={() => {
+                        this.setState({isReactivateBouncedModalOpen: false});
+                        this.table.refresh();
+                    }}
+                />
 
                 {this.state.isAddFromContactsModalOpen &&
                     <AddFromContactsModal

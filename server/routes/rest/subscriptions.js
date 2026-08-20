@@ -48,5 +48,9 @@ router.postAsync('/subscriptions-unsubscribe/:listId/:subscriptionId', passport.
     return res.json();
 });
 
+router.postAsync('/subscriptions-reactivate-bounced/:listId', passport.loggedIn, passport.csrfProtection, async (req, res) => {
+    return res.json(await subscriptions.reactivateBounced(req.context, castToInteger(req.params.listId)));
+});
+
 
 module.exports = router;

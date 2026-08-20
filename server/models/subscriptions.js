@@ -16,6 +16,7 @@ const moment = require('moment');
 const { formatDate, formatBirthday } = require('../../shared/date');
 const campaigns = require('./campaigns');
 const lists = require('./lists');
+const suppressionList = require('./suppression-list');
 
 const allowedKeysBase = new Set(['email', 'tz', 'is_test', 'status']);
 
@@ -813,6 +814,42 @@ async function changeStatusTx(tx, context, listId, subscriptionId, subscriptionS
     await _changeStatusTx(tx, context, listId, existing, subscriptionStatus);
 }
 
+/*
+    Bulk-reactivates every BOUNCED subscription in a list back to SUBSCRIBED and clears the
+    matching per-account suppression entries, so a false-positive bounce storm (e.g. a
+    temporary reverse-DNS misconfiguration on the sending provider) can be undone without
+    having to edit subscribers one by one.
+*/
+async function reactivateBounced(context, listId) {
+    const subsTable = getSubscriptionTableName(listId);
+
+    const {list, bounced} = await knex.transaction(async tx => {
+        await shares.enforceEntityPermissionTx(tx, context, 'list', listId, 'manageSubscriptions');
+
+        const list = await tx('lists').where('id', listId).first();
+        const bounced = await tx(subsTable).where('status', SubscriptionStatus.BOUNCED).select('id', 'email');
+
+        if (bounced.length > 0) {
+            await tx(subsTable).where('status', SubscriptionStatus.BOUNCED).update({
+                status: SubscriptionStatus.SUBSCRIBED,
+                status_change: new Date(),
+                unsubscribed: null
+            });
+
+            await tx('lists').where('id', listId).increment('subscribers', bounced.length);
+        }
+
+        return {list, bounced};
+    });
+
+    const emails = bounced.map(x => x.email).filter(x => x);
+    if (emails.length > 0) {
+        await suppressionList.removeReactivated(list.account_id, emails, 'bounce');
+    }
+
+    return {reactivated: bounced.length};
+}
+
 
 
 async function updateAddressAndGet(context, listId, subscriptionId, emailNew) {
@@ -908,4 +945,5 @@ module.exports.updateAddressAndGet = updateAddressAndGet;
 module.exports.updateManaged = updateManaged;
 module.exports.getListsWithEmail = getListsWithEmail;
 module.exports.changeStatusTx = changeStatusTx;
+module.exports.reactivateBounced = reactivateBounced;
 module.exports.purgeSensitiveData = purgeSensitiveData;
