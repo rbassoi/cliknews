@@ -4,6 +4,8 @@ Este documento responde ao checklist de integração enviado pelo VoxBase, item
 por item. Todos os endpoints ficam sob `/api-v1`, autenticados por uma única
 API Key de conta (header `Api-Key`), sem sessão de usuário.
 
+**Base URL (produção):** `https://app.cliker.com.br/api-v1`
+
 ## 1. Credenciais
 
 Gere uma API Key em **Configurações → API Keys** (ou `POST /rest/api-keys`
@@ -205,6 +207,17 @@ enquanto — isso fica para uma segunda etapa, se for necessário.
 `GET /api-v1/campaigns/:id` (itens 6/7 acima) para acompanhar o progresso.
 Notificação push (Cliker → voxbase a cada evento) fica para uma segunda
 etapa, seguindo o padrão já usado para GupShup/Evolution no voxbase.
+
+## Endpoints adicionais (já existentes, não fazem parte do checklist mas disponíveis)
+
+| Method | Path | Scope | Descrição |
+|---|---|---|---|
+| GET | `/account` | `read` | Dados da conta (nome, status, plano, limites) |
+| GET | `/lists` | `campaigns` | Lista todas as listas `{id, name, subscribers}` |
+| GET | `/contacts` | `contacts` | Lista contatos da conta (`?limit=`, `?status=`) |
+| GET | `/contacts/count` | `contacts` | Total de contatos da conta |
+| GET | `/campaigns` | `campaigns` | Lista campanhas da conta (`?limit=`) |
+| POST | `/transactional/send` | `transactional` | Envia um e-mail avulso (fora de campanha) |
 
 ## Exemplo de fluxo completo
 
