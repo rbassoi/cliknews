@@ -360,6 +360,45 @@ router.postAsync('/campaigns/:id/send', requireScope('campaigns'), async (req, r
     return res.json({status: CampaignStatus.SCHEDULED});
 });
 
+// Cancels a SCHEDULED or SENDING campaign (-> IDLE or PAUSING respectively,
+// same transition the admin UI's "Parar" button uses). Does not delete
+// anything — see DELETE /campaigns/:id below for that.
+router.postAsync('/campaigns/:id/stop', requireScope('campaigns'), async (req, res) => {
+    const context = contextForApiKey(req);
+    const campaignId = parseInt(req.params.id);
+
+    if (!Number.isInteger(campaignId)) {
+        throw badRequest('invalid campaign id');
+    }
+
+    try {
+        await campaigns.stop(context, campaignId);
+    } catch (err) {
+        if (err instanceof interoperableErrors.InvalidStateError) {
+            err.status = 409;
+        }
+        throw err;
+    }
+
+    return res.json({status: CampaignStatus.PAUSING});
+});
+
+// Deletes a campaign regardless of status, including SENDING/PAUSING — it
+// stops the campaign first (see campaigns.js's _removeTx) so nothing new
+// gets sent, then removes the campaign and all its dependent rows.
+router.deleteAsync('/campaigns/:id', requireScope('campaigns'), async (req, res) => {
+    const context = contextForApiKey(req);
+    const campaignId = parseInt(req.params.id);
+
+    if (!Number.isInteger(campaignId)) {
+        throw badRequest('invalid campaign id');
+    }
+
+    await campaigns.remove(context, campaignId);
+
+    return res.json({success: true});
+});
+
 router.postAsync('/transactional/send', requireScope('transactional'), async (req, res) => {
     const context = contextForApiKey(req);
     const {send_configuration_id, to, subject, html, text} = req.body;

@@ -746,8 +746,18 @@ async function _removeTx(tx, context, id, existing = null, overrideTypeCheck = f
         existing = await tx('campaigns').where('id', id).modify(requireAccountScope, context).select(['id', 'status', 'type']).first();
     }
 
-    if (existing.status === CampaignStatus.SENDING) {
-        return new interoperableErrors.InvalidStateError;
+    if (existing.status === CampaignStatus.SENDING || existing.status === CampaignStatus.PAUSING) {
+        // Previously this just refused (and did so by *returning* an error
+        // object instead of throwing it, which the caller never checked —
+        // so a delete attempt on a SENDING campaign silently no-opped while
+        // reporting success). Signal the sender to stop assigning this
+        // campaign any new work before deleting it out from under whatever
+        // batch a worker might currently be mid-way through sending — the
+        // same PAUSING transition stop() uses for SENDING campaigns
+        // (updates already in flight against now-deleted rows just affect
+        // 0 rows, they don't throw).
+        await tx('campaigns').where('id', id).update({status: CampaignStatus.PAUSING});
+        senders.scheduleCheck();
     }
 
     if (!overrideTypeCheck) {
