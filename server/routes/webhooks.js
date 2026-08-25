@@ -189,6 +189,17 @@ router.postAsync('/mailgun', uploads.any(), async (req, res) => {
 });
 
 
+// Bounce categories (see zone-mta's config/bounces.txt) that mean the
+// recipient address itself is invalid/malicious — worth permanently
+// suppressing account-wide. Everything else (block/policy/spam/greylist/
+// rate/auth/network/...) is typically about OUR sending reputation or
+// throttling rather than the address being bad, so it's recorded on this
+// message/list but does NOT blacklist the address for all future sends —
+// see the account-wide bounce spike from 2026-08-01/02 that suppressed 223
+// addresses (including genuinely-good ones) off the back of what looks like
+// a new-sender reputation/throttling problem, not 223 dead mailboxes.
+const PERMANENT_BOUNCE_CATEGORIES = ['recipient', 'dmarc', 'virus', 'sender'];
+
 router.postAsync('/zone-mta', async (req, res) => {
     try {
         if (typeof req.body === 'string') {
@@ -199,8 +210,14 @@ router.postAsync('/zone-mta', async (req, res) => {
             const message = await campaigns.getMessageByResponseId(req.body.id);
 
             if (message) {
-                await campaigns.changeStatusByMessage(contextHelpers.getAdminContext(), message, CampaignMessageStatus.BOUNCED, true);
-                log.verbose('ZoneMTA', 'Marked message (campaign:%s, list:%s, subscription:%s) as bounced', message.campaign, message.list, message.subscription);
+                // req.body.response is the real SMTP response text from the
+                // receiving server (zone-mta's core/http-bounce plugin) —
+                // previously discarded entirely, making bounces undebuggable.
+                await campaigns.updateMessageResponse(contextHelpers.getAdminContext(), message, req.body.response || null, req.body.id);
+
+                const isPermanent = PERMANENT_BOUNCE_CATEGORIES.includes(req.body.category);
+                await campaigns.changeStatusByMessage(contextHelpers.getAdminContext(), message, CampaignMessageStatus.BOUNCED, isPermanent, isPermanent);
+                log.verbose('ZoneMTA', 'Marked message (campaign:%s, list:%s, subscription:%s) as bounced (category:%s, permanent:%s)', message.campaign, message.list, message.subscription, req.body.category, isPermanent);
             }
         }
 

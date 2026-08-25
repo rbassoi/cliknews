@@ -875,7 +875,7 @@ suppressionReasonMapping.set(CampaignMessageStatus.BOUNCED, 'bounce');
 suppressionReasonMapping.set(CampaignMessageStatus.COMPLAINED, 'spam_complaint');
 suppressionReasonMapping.set(CampaignMessageStatus.UNSUBSCRIBED, 'unsubscribe');
 
-async function _changeStatusByMessageTx(tx, context, message, campaignMessageStatus) {
+async function _changeStatusByMessageTx(tx, context, message, campaignMessageStatus, suppressAccountWide = true) {
     enforce(statusFieldMapping.has(campaignMessageStatus));
 
     if (message.status === CampaignMessageStatus.SENT) {
@@ -895,7 +895,12 @@ async function _changeStatusByMessageTx(tx, context, message, campaignMessageSta
         // Per-account suppression (separate from the global, manually-curated
         // `blacklist`) — one account's bounce/complaint/unsubscribe should
         // never affect another account's ability to send to the same address.
-        if (suppressionReasonMapping.has(campaignMessageStatus)) {
+        // suppressAccountWide lets a caller record the bounce on this message
+        // without permanently blacklisting the address account-wide — for a
+        // bounce whose cause looks like OUR sending reputation/throttling
+        // rather than the recipient address being genuinely invalid, that
+        // account-wide block is premature (see routes/webhooks.js '/zone-mta').
+        if (suppressAccountWide && suppressionReasonMapping.has(campaignMessageStatus)) {
             const campaign = await tx('campaigns').where('id', message.campaign).select('account_id').first();
             const subsTable = subscriptions.getSubscriptionTableName(message.list);
             const subscription = await tx(subsTable).where('id', message.subscription).select('email').first();
@@ -928,14 +933,14 @@ campaignMessageStatusToSubscriptionStatusMapping.set(CampaignMessageStatus.BOUNC
 campaignMessageStatusToSubscriptionStatusMapping.set(CampaignMessageStatus.UNSUBSCRIBED, SubscriptionStatus.UNSUBSCRIBED);
 campaignMessageStatusToSubscriptionStatusMapping.set(CampaignMessageStatus.COMPLAINED, SubscriptionStatus.COMPLAINED);
 
-async function changeStatusByMessage(context, message, campaignMessageStatus, updateSubscription) {
+async function changeStatusByMessage(context, message, campaignMessageStatus, updateSubscription, suppressAccountWide = true) {
     await knex.transaction(async tx => {
         if (updateSubscription) {
             enforce(campaignMessageStatusToSubscriptionStatusMapping.has(campaignMessageStatus));
             await subscriptions.changeStatusTx(tx, context, message.list, message.subscription, campaignMessageStatusToSubscriptionStatusMapping.get(campaignMessageStatus));
         }
 
-        await _changeStatusByMessageTx(tx, context, message, campaignMessageStatus);
+        await _changeStatusByMessageTx(tx, context, message, campaignMessageStatus, suppressAccountWide);
     });
 }
 

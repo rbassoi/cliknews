@@ -172,14 +172,14 @@ class MessageSender {
                 this.rssEntry = this.campaign.data.rssEntry;
             }
 
-            enforce(this.renderedHtml || (this.campaign && this.campaign.source === CampaignSource.URL) || this.tagLanguage);
+            enforce(this.renderedHtml || (this.campaign && this.campaign.source === CampaignSource.URL) || this.tagLanguage, 'Message has no renderedHtml, campaign is not source URL, and no tagLanguage was set');
 
             if (settings.subject !== undefined) {
                 this.subject = settings.subject;
             } else if (this.campaign && this.campaign.subject !== undefined) {
                 this.subject = this.campaign.subject;
             } else {
-                enforce(false);
+                enforce(false, 'Message has no subject and no campaign to take one from');
             }
         });
     }
@@ -197,7 +197,7 @@ class MessageSender {
             renderTags = false;
 
         } else if (this.html !== undefined) {
-            enforce(mergeTags);
+            enforce(mergeTags, 'mergeTags must be set (use {} if there are none) when sending literal html/text');
 
             html = this.html;
             text = this.text;
@@ -415,7 +415,11 @@ class MessageSender {
             email = to.address;
             subject = this.subject;
             encryptionKeys = subData.encryptionKeys;
-            message = await this._getMessage(mergeTags);
+            // A direct-recipient send (transactional/test) has no list to pull
+            // merge tags from, so mergeTags is legitimately absent — default to
+            // {} rather than leaving it undefined, which fails _getMessage's
+            // enforce(mergeTags) even though "no tags" is a valid, common case.
+            message = await this._getMessage(mergeTags || {});
         }
 
         if (await blacklist.isBlacklisted(email)) {
@@ -557,6 +561,25 @@ class MessageSender {
             throw err;
         }
 
+        if (!result) {
+            // _sendMessage returns undefined (not a throw) when the
+            // recipient is on the blacklist or the account's suppression
+            // list — a deliberate skip, not a failure. The status update
+            // above optimistically set SENT before we knew this; correct it
+            // to FAILED (matches the "won't be retried" semantics FAILED
+            // already has above) instead of leaving a misleading SENT row
+            // with no response, and instead of the TypeError this used to
+            // throw from the enforce() calls below on an undefined result.
+            await knex('campaign_messages')
+                .where({id: campaignMessage.id})
+                .update({
+                    status: CampaignMessageStatus.FAILED,
+                    response: 'Skipped: recipient is blacklisted or suppressed for this account',
+                    updated: new Date()
+                });
+            return;
+        }
+
         enforce(result.list);
         enforce(result.subscriptionGrouped);
 
@@ -620,6 +643,16 @@ async function sendQueuedMessage(queuedMessage) {
         });
 
         throw err;
+    }
+
+    if (!result) {
+        // _sendMessage returns undefined (not a throw) when the recipient is
+        // on the blacklist or the account's suppression list — a deliberate
+        // skip, not a failure. Nothing was sent, so there's nothing to
+        // record; just stop here instead of crashing on result.list/
+        // result.subscriptionGrouped below being undefined.
+        log.verbose('MessageSender', `Skipping queued message ${queuedMessage.id}: recipient is blacklisted or suppressed for this account`);
+        return;
     }
 
     if (messageType === MessageType.TRIGGERED) {

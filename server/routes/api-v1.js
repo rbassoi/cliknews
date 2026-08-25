@@ -385,7 +385,11 @@ router.postAsync('/transactional/send', requireScope('transactional'), async (re
     await planLimits.checkEmailSendLimit(context, 1);
 
     await knex.transaction(async tx => {
-        await messageSender.queueAPITransactionalMessageTx(tx, sendConfigurationId, to, subject, html, text);
+        // tagLanguage must be non-empty or message-sender.js's _init() enforce()
+        // check fails (empty message, since this call never passed one) —
+        // 'simple' matches the square-bracket tag convention POST /campaigns
+        // above already uses for API-created content.
+        await messageSender.queueAPITransactionalMessageTx(tx, sendConfigurationId, to, subject, html, text, 'simple');
     });
 
     await accountUsageModel.recordEmailsSent(context.account.id, 1);
