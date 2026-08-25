@@ -432,7 +432,12 @@ class MessageSender {
 
         const mailer = await mailers.getOrCreateMailer(sendConfiguration.id);
 
-        await mailer.throttleWait();
+        // Warm-up/bulk throttling exists to pace real campaign volume — a
+        // one-off "Testar envio" click shouldn't be forced to wait behind
+        // the same multi-minute-per-message ramp a bulk send is subject to.
+        if (this.type !== MessageType.TEST) {
+            await mailer.throttleWait();
+        }
 
         const getOverridable = key => {
             if (campaign && sendConfiguration[key + '_overridable'] && campaign[key + '_override'] !== null) {
