@@ -7,3 +7,5 @@ npm-debug.log
 .DS_Store
 dump.rdb
 
+docker-compose-prod.yml
+

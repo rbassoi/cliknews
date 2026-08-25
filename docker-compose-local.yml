@@ -24,9 +24,9 @@ services:
   cliker:
     build: .
     ports:
-    - "3000:3000"
-    - "3003:3003"
-    - "3004:3004"
+    - "3100:3000"
+    - "3103:3003"
+    - "3104:3004"
     volumes:
     - cliker-files:/app/server/files
 
