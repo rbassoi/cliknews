@@ -6,6 +6,7 @@ const {apiKeyAuth, requireScope} = require('../lib/middleware/api-key-auth');
 const {apiRateLimit} = require('../lib/api-rate-limit');
 const contacts = require('../models/contacts');
 const lists = require('../models/lists');
+const fields = require('../models/fields');
 const subscriptions = require('../models/subscriptions');
 const campaigns = require('../models/campaigns');
 const sendConfigurations = require('../models/send-configurations');
@@ -14,8 +15,17 @@ const messageSender = require('../lib/message-sender');
 const planLimits = require('../lib/plan-limits');
 const accountUsageModel = require('../models/account-usage');
 const interoperableErrors = require('../../shared/interoperable-errors');
-const {SubscriptionSource} = require('../../shared/lists');
+const {SubscriptionSource, UnsubscriptionMode} = require('../../shared/lists');
 const {CampaignStatus, CampaignType, CampaignSource} = require('../../shared/campaigns');
+
+const CAMPAIGN_STATUS_LABELS = {
+    [CampaignStatus.IDLE]: 'idle',
+    [CampaignStatus.SCHEDULED]: 'scheduled',
+    [CampaignStatus.SENDING]: 'sending',
+    [CampaignStatus.FINISHED]: 'sent',
+    [CampaignStatus.PAUSED]: 'paused',
+    [CampaignStatus.PAUSING]: 'pausing'
+};
 
 router.use(apiKeyAuth, apiRateLimit);
 
@@ -100,8 +110,18 @@ router.postAsync('/contacts', requireScope('contacts'), async (req, res) => {
 
     await planLimits.checkContactLimit(context);
 
-    const entity = {...req.body};
-    delete entity.list_id;
+    // Custom fields are addressed by their stable `key` (see GET
+    // /lists/:id/fields), not by the internal auto-generated DB column —
+    // fields.fromAPI resolves key -> column for us, same mapping the legacy
+    // POST /api/subscribe route already relies on (server/routes/api.js).
+    // Unrecognized keys in the body are silently ignored.
+    const entity = {};
+    for (const k of ['email', 'tz', 'status', 'is_test']) {
+        if (req.body[k] !== undefined) {
+            entity[k] = req.body[k];
+        }
+    }
+    Object.assign(entity, await fields.fromAPI(context, listId, req.body));
 
     const id = await subscriptions.create(context, listId, entity, SubscriptionSource.API, {
         ip: req.ip,
@@ -121,6 +141,43 @@ router.getAsync('/campaigns', requireScope('campaigns'), async (req, res) => {
     return res.json({data});
 });
 
+router.postAsync('/lists', requireScope('campaigns'), async (req, res) => {
+    const context = contextForApiKey(req);
+    const {name, description, contact_email, homepage, to_name} = req.body;
+
+    if (!name) {
+        throw badRequest('name is required');
+    }
+
+    // Every account has exactly one root namespace (namespace: null); same
+    // resolution POST /campaigns below uses.
+    const rootNamespace = await knex('namespaces').where({account_id: context.account.id, namespace: null}).first();
+
+    const entity = {
+        name,
+        description: description || '',
+        namespace: rootNamespace.id,
+        contact_email: contact_email || '',
+        homepage: homepage || '',
+        to_name: to_name !== undefined ? to_name : null,
+        // API-created lists are for imported contacts, not public signup
+        // forms — no public subscribe page, no send configuration needed
+        // since they never send a subscribe-confirmation email.
+        default_form: null,
+        public_subscribe: false,
+        unsubscription_mode: UnsubscriptionMode.ONE_STEP,
+        listunsubscribe_disabled: false,
+        send_configuration: null
+    };
+
+    const id = await lists.create(context, entity);
+
+    return res.status(201).json({id});
+});
+
+// Note: lists.create() (server/models/lists.js) only returns the new id, not
+// the generated cid — callers that need the cid can fetch it via GET /lists.
+
 // Lightweight lookups so an API caller can discover valid list_id/
 // send_configuration_id values for POST /campaigns below without needing
 // UI access. Scoped directly by account_id, same as every other tenant-
@@ -131,9 +188,70 @@ router.getAsync('/lists', requireScope('campaigns'), async (req, res) => {
     return res.json({data});
 });
 
+// Lets a caller discover the custom-field `key`s available on a list before
+// calling POST /contacts (see the field-addressing note there) — the same
+// `key` also doubles as the merge tag name in campaign HTML ([<key>]).
+router.getAsync('/lists/:id/fields', requireScope('contacts'), async (req, res) => {
+    const context = contextForApiKey(req);
+    const listId = parseInt(req.params.id);
+
+    if (!Number.isInteger(listId)) {
+        throw badRequest('invalid list id');
+    }
+
+    await lists.getById(context, listId);
+
+    const flds = await fields.list(context, listId);
+    const data = flds.map(fld => ({
+        key: fld.key,
+        name: fld.name,
+        type: fld.type,
+        required: fld.required,
+        default_value: fld.default_value,
+        group: fld.group,
+        settings: fld.settings
+    }));
+
+    return res.json({data});
+});
+
 router.getAsync('/send-configurations', requireScope('campaigns'), async (req, res) => {
     const data = await knex('send_configurations').where('account_id', req.account.id).select(['id', 'name']);
     return res.json({data});
+});
+
+router.getAsync('/campaigns/:id', requireScope('campaigns'), async (req, res) => {
+    const context = contextForApiKey(req);
+    const campaignId = parseInt(req.params.id);
+
+    if (!Number.isInteger(campaignId)) {
+        throw badRequest('invalid campaign id');
+    }
+
+    // Content.SETTINGS_WITH_STATS strips the (potentially large) HTML source
+    // and adds `total` (recipient count) alongside the aggregate counters
+    // that already live directly on the campaigns row (delivered/opened/
+    // clicks/bounced/complained/unsubscribed/blacklisted) — same query the
+    // admin UI's campaign stats page uses (server/routes/rest/campaigns.js).
+    const entity = await campaigns.getById(context, campaignId, false, campaigns.Content.SETTINGS_WITH_STATS);
+
+    return res.json({
+        id: entity.id,
+        name: entity.name,
+        cid: entity.cid,
+        subject: entity.subject,
+        status: entity.status,
+        status_label: CAMPAIGN_STATUS_LABELS[entity.status],
+        scheduled: entity.scheduled,
+        delivered: entity.delivered,
+        opened: entity.opened,
+        clicks: entity.clicks,
+        bounced: entity.bounced,
+        complained: entity.complained,
+        unsubscribed: entity.unsubscribed,
+        blacklisted: entity.blacklisted,
+        total: entity.total
+    });
 });
 
 router.postAsync('/campaigns', requireScope('campaigns'), async (req, res) => {
@@ -214,8 +332,24 @@ router.postAsync('/campaigns/:id/send', requireScope('campaigns'), async (req, r
         throw badRequest('invalid campaign id');
     }
 
+    // send_at is optional — omit it to send immediately (today's behavior).
+    // When present it must be an ISO-8601 datetime WITH a UTC offset/Z, since
+    // it's parsed into an absolute point in time here and compared as-is
+    // against the clock by the background sender; a date/time that has
+    // already passed by the time it's processed is not an error, it's just
+    // treated as "send now" (same as campaigns.start's existing behavior).
+    let startAt = null;
+    if (req.body.send_at !== undefined && req.body.send_at !== null) {
+        startAt = new Date(req.body.send_at);
+        if (isNaN(startAt.valueOf())) {
+            throw badRequest('send_at must be a valid ISO-8601 datetime with a UTC offset or Z');
+        }
+    }
+
+    const extraData = startAt ? {startAt, timezone: req.body.timezone} : {};
+
     try {
-        await campaigns.start(context, campaignId, {});
+        await campaigns.start(context, campaignId, extraData);
     } catch (err) {
         if (err instanceof interoperableErrors.InvalidStateError) {
             err.status = 409;

@@ -1297,6 +1297,7 @@ module.exports.listLinkClicksDTAjax = listLinkClicksDTAjax;
 module.exports.getByIdTx = getByIdTx;
 module.exports.getById = getById;
 module.exports.getByCid = getByCid;
+module.exports.Content = Content;
 module.exports.create = create;
 module.exports.createRssTx = createRssTx;
 module.exports.updateWithConsistencyCheck = updateWithConsistencyCheck;
