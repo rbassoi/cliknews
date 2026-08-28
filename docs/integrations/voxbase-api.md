@@ -56,7 +56,8 @@ Só `name` é obrigatório. A lista é criada sem formulário público de inscri
   "sender": { "name": "opcional", "email": "opcional" },
   "unsubscribe_url": "opcional",
   "click_tracking_disabled": false,
-  "open_tracking_disabled": false
+  "open_tracking_disabled": false,
+  "idempotency_key": "opcional — ver abaixo"
 }
 // response 201
 { "id": 8 }
@@ -64,6 +65,16 @@ Só `name` é obrigatório. A lista é criada sem formulário público de inscri
 
 Campos obrigatórios: `name`, `subject`, `html`, `list_id` (ou `list_ids: [...]`
 para múltiplas listas) e `send_configuration_id` (ver item 4).
+
+### Evitando campanhas duplicadas — `idempotency_key`
+
+Se essa chamada for repetida (retry por timeout, reenvio de fila/webhook do
+lado do voxbase etc.), cada repetição criava uma campanha nova antes desta
+mudança. Envie um `idempotency_key` estável (ex: o id da solicitação de envio
+no voxbase) e chamadas repetidas com a mesma chave retornam o `id` da
+campanha já criada em vez de criar outra. A chave é única por conta — é
+seguro reusar o mesmo valor entre contas diferentes, mas não reuse a mesma
+chave para duas campanhas realmente distintas na mesma conta.
 
 ### Sintaxe de merge tag
 

@@ -36,7 +36,7 @@ const activityLog = require('../lib/activity-log');
 const allowedKeysCommon = ['name', 'description', 'namespace', 'channel',
     'send_configuration', 'from_name_override', 'from_email_override', 'reply_to_override', 'subject', 'data', 'click_tracking_disabled', 'open_tracking_disabled', 'unsubscribe_url'];
 
-const allowedKeysCreate = new Set(['type', 'source', ...allowedKeysCommon]);
+const allowedKeysCreate = new Set(['type', 'source', 'idempotency_key', ...allowedKeysCommon]);
 const allowedKeysCreateRssEntry = new Set(['type', 'source', 'parent', ...allowedKeysCommon]);
 const allowedKeysUpdate = new Set([...allowedKeysCommon]);
 
@@ -584,6 +584,18 @@ async function _validateAndPreprocess(tx, context, entity, isCreate, content) {
 
 async function _createTx(tx, context, entity, content) {
     return await knex.transaction(async tx => {
+        const accountId = requireAccountId(context);
+
+        // idempotency_key lets a retried API request (see POST
+        // /api-v1/campaigns) recover the campaign an earlier, already-
+        // successful call created instead of inserting a duplicate.
+        if (entity.idempotency_key) {
+            const existing = await tx('campaigns').where({account_id: accountId, idempotency_key: entity.idempotency_key}).first();
+            if (existing) {
+                return existing.id;
+            }
+        }
+
         await shares.enforceEntityPermissionTx(tx, context, 'namespace', entity.namespace, 'createCampaign');
 
         if (entity.channel) {
@@ -623,7 +635,7 @@ async function _createTx(tx, context, entity, content) {
 
         const filteredEntity = filterObject(entity, entity.type === CampaignType.RSS_ENTRY ? allowedKeysCreateRssEntry : allowedKeysCreate);
         filteredEntity.cid = shortid.generate();
-        filteredEntity.account_id = requireAccountId(context);
+        filteredEntity.account_id = accountId;
 
         const data = filteredEntity.data;
 
@@ -638,8 +650,22 @@ async function _createTx(tx, context, entity, content) {
             filteredEntity.status = CampaignStatus.IDLE;
         }
 
-        const ids = await tx('campaigns').insert(filteredEntity);
-        const id = ids[0];
+        let id;
+        try {
+            const ids = await tx('campaigns').insert(filteredEntity);
+            id = ids[0];
+        } catch (err) {
+            // Two concurrent retries of the same idempotency_key can both
+            // pass the check above before either commits; the unique index
+            // catches that race here.
+            if (entity.idempotency_key && err.code === 'ER_DUP_ENTRY') {
+                const existing = await tx('campaigns').where({account_id: accountId, idempotency_key: entity.idempotency_key}).first();
+                if (existing) {
+                    return existing.id;
+                }
+            }
+            throw err;
+        }
 
         await tx('campaign_lists').insert(entity.lists.map(x => ({campaign: id, ...x})));
 

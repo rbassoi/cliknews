@@ -257,7 +257,7 @@ router.getAsync('/campaigns/:id', requireScope('campaigns'), async (req, res) =>
 router.postAsync('/campaigns', requireScope('campaigns'), async (req, res) => {
     const context = contextForApiKey(req);
 
-    const {name, subject, html, text, list_id, list_ids, send_configuration_id, sender, unsubscribe_url, click_tracking_disabled, open_tracking_disabled} = req.body;
+    const {name, subject, html, text, list_id, list_ids, send_configuration_id, sender, unsubscribe_url, click_tracking_disabled, open_tracking_disabled, idempotency_key} = req.body;
 
     if (!name) {
         throw badRequest('name is required');
@@ -286,9 +286,14 @@ router.postAsync('/campaigns', requireScope('campaigns'), async (req, res) => {
     // contacts.
     const rootNamespace = await knex('namespaces').where({account_id: context.account.id, namespace: null}).first();
 
+    if (idempotency_key !== undefined && idempotency_key !== null && typeof idempotency_key !== 'string') {
+        throw badRequest('idempotency_key must be a string');
+    }
+
     const entity = {
         type: CampaignType.REGULAR,
         source: CampaignSource.CUSTOM,
+        idempotency_key: idempotency_key || null,
         name,
         description: '',
         namespace: rootNamespace.id,
