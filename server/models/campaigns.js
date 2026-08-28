@@ -23,6 +23,7 @@ const feedcheck = require('../lib/feedcheck');
 const contextHelpers = require('../lib/context-helpers');
 const {convertFileURLs} = require('../lib/campaign-content');
 const messageSender = require('../lib/message-sender');
+const zoneMta = require('../lib/builtin-zone-mta');
 const lists = require('./lists');
 const { requireAccountScope, requireAccountId } = require('../lib/tenant-scope');
 const planLimits = require('../lib/plan-limits');
@@ -1093,6 +1094,15 @@ async function start(context, campaignId, extraData) {
 
 async function stop(context, campaignId) {
     await _changeStatus(context, campaignId, [CampaignStatus.SCHEDULED, CampaignStatus.SENDING], [CampaignStatus.IDLE, CampaignStatus.PAUSING], 'Cannot stop campaign until it is in SCHEDULED or SENDING state');
+
+    // Messages already handed to the built-in MTA keep retrying on their own
+    // schedule regardless of the campaign's status in Cliker — stop those too.
+    const queuedMessages = await knex('campaign_messages')
+        .where({campaign: campaignId, status: CampaignMessageStatus.SCHEDULED})
+        .whereNotNull('response_id')
+        .select('response_id');
+
+    await zoneMta.purgeQueuedMessages(queuedMessages.map(m => m.response_id));
 }
 
 async function reset(context, campaignId) {

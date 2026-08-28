@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const bluebird = require('bluebird');
 const os = require('os');
 const knex = require('./knex');
+const http = require('http');
 
 let zoneMtaProcess = null;
 
@@ -252,7 +253,51 @@ function spawn(callback) {
     }
 }
 
+// ZoneMTA's own admin API, always bound to localhost (see
+// node_modules/zone-mta/config/default.js) regardless of what's configured
+// above for the SMTP feeder.
+const API_HOST = '127.0.0.1';
+const API_PORT = 12080;
+
+// Removes one message (all delivery attempts, any recipient/seq) from
+// ZoneMTA's own send queue. Best-effort: a message already delivered/gone is
+// not an error, and if the built-in MTA isn't running this just resolves.
+function removeQueuedMessage(id) {
+    return new Promise(resolve => {
+        const req = http.request({
+            host: API_HOST,
+            port: API_PORT,
+            path: `/message/${encodeURIComponent(id)}`,
+            method: 'DELETE',
+            auth: `${getUsername()}:${getPassword()}`,
+            timeout: 5000
+        }, res => {
+            res.resume();
+            resolve();
+        });
+        req.on('error', () => resolve());
+        req.on('timeout', () => {
+            req.destroy();
+            resolve();
+        });
+        req.end();
+    });
+}
+
+// Stopping/pausing a campaign in Cliker only stops it from handing NEW
+// messages to ZoneMTA — anything already submitted keeps retrying inside
+// ZoneMTA's own queue on its own schedule, completely independent of the
+// campaign's status. (Incident 2026-08-28: a campaign marked FINISHED days
+// earlier was still hammering blocked domains from this leftover queue.)
+// Call this with the response_ids of a campaign's still-queued messages
+// whenever a campaign is stopped, so the underlying send queue is stopped
+// along with it.
+async function purgeQueuedMessages(ids) {
+    await bluebird.map(ids, removeQueuedMessage, {concurrency: 20});
+}
+
 module.exports.spawn = bluebird.promisify(spawn);
 module.exports.getUsername = getUsername;
 module.exports.getPassword = getPassword;
 module.exports.getZoneNameForAccountId = getZoneNameForAccountId;
+module.exports.purgeQueuedMessages = purgeQueuedMessages;
